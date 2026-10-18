@@ -1621,9 +1621,9 @@
         const eventChips = dayEvents.slice(0, maxVisible).map((item) => {
           const label = `${escapeHtml(item.time ? `${item.time} ` : '')}${escapeHtml(item.title)}`;
           return item.type === 'task'
-            ? `<button type="button" class="calendar-event-chip task" data-edit-task="${item.taskId}" aria-label="Aufgabe bearbeiten: ${escapeHtml(item.title)}">${label}</button>`
+            ? `<span class="calendar-event-chip task">${label}</span>`
             : item.type === 'booking'
-              ? `<button type="button" class="calendar-event-chip booking" data-edit-booking="${escapeHtml(item.bookingId)}" aria-label="Buchung bearbeiten: ${escapeHtml(item.title)}">${label}</button>`
+              ? `<span class="calendar-event-chip booking">${label}</span>`
               : `<span class="calendar-event-chip">${label}</span>`;
         }).join('');
         const moreEvents = dayEvents.length > maxVisible ? `<span class="calendar-event-chip">+${dayEvents.length - maxVisible} weitere</span>` : '';
@@ -1632,7 +1632,7 @@
       const selectedLabel = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${calendarSelectedDate}T12:00:00`));
       return `<div class="welcome"><div><p class="eyebrow">Planung & Buchungen</p><h1>Kalender</h1><p class="subtitle">Buchungen und datierte Serviceaufgaben im Monatsüberblick.</p></div></div>
         <section class="card"><div class="card-head"><h2 class="card-title">Termine</h2><div class="calendar-toolbar"><button class="calendar-nav" data-calendar-step="-1" aria-label="${calendarView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat'}">‹</button><strong>${escapeHtml(monthTitle)}</strong><button class="calendar-nav" data-calendar-step="1" aria-label="${calendarView === 'week' ? 'Nächste Woche' : 'Nächster Monat'}">›</button><div class="calendar-view-toggle" aria-label="Kalenderansicht"><button type="button" data-calendar-view="month" class="${calendarView === 'month' ? 'active' : ''}" aria-pressed="${calendarView === 'month'}">Monat</button><button type="button" data-calendar-view="week" class="${calendarView === 'week' ? 'active' : ''}" aria-pressed="${calendarView === 'week'}">Woche</button></div></div></div>
-          <div class="calendar-grid ${calendarView === 'week' ? 'calendar-week-view' : ''}">${weekdayLabels.map((label) => `<div class="calendar-weekday">${label}</div>`).join('')}${cells.join('')}</div>
+          <div class="calendar-grid calendar-page-grid ${calendarView === 'week' ? 'calendar-week-view' : ''}">${weekdayLabels.map((label) => `<div class="calendar-weekday">${label}</div>`).join('')}${cells.join('')}</div>
           <div class="calendar-legend">${bookingsEnabled() ? '<span><i class="calendar-dot booking"></i>Buchungen</span>' : ''}<span><i class="calendar-dot task"></i>Serviceaufgabe</span></div>
         </section>
         <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">${escapeHtml(selectedLabel)}</h2><p class="card-caption">${selectedEvents.length} ${selectedEvents.length === 1 ? 'Termin' : 'Termine'}</p></div><button class="text-btn" data-page="tasks">Aufgaben ansehen →</button></div>
@@ -2669,6 +2669,7 @@
       }
       const bookingToEdit = event.target.closest('[data-edit-booking]');
       if (bookingToEdit) {
+        if (bookingToEdit.closest('.calendar-page-grid')) return;
         editBooking(bookings.find((booking) => booking.id === bookingToEdit.dataset.editBooking));
         return;
       }
@@ -2761,6 +2762,7 @@
       }
       const taskToEdit = event.target.closest('[data-edit-task]');
       if (taskToEdit) {
+        if (taskToEdit.closest('.calendar-page-grid')) return;
         const task = tasks.find((item) => item.id === Number(taskToEdit.dataset.editTask));
         if (task) openTaskEditor(task);
         return;
