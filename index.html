@@ -308,6 +308,23 @@
     .danger-btn:hover { color: white; background: #a84437; border-color: #a84437; }
     .property-card strong { font-size: 10px; line-height: 1.45; }
     .property-photo { display: block; width: 100%; max-height: 240px; margin-bottom: 14px; border-radius: 9px; object-fit: cover; }
+    .photo-gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .photo-thumb { position: relative; width: 96px; height: 72px; border: 2px solid transparent; border-radius: 8px; overflow: hidden; padding: 0; background: #eee; cursor: pointer; }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumb.cover { border-color: var(--green); }
+    .photo-thumb .cover-badge { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0; color: white; background: rgba(40, 92, 69, .85); font-size: 9px; font-weight: 700; text-align: center; }
+    .photo-thumb .thumb-remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border: 0; border-radius: 50%; color: white; background: rgba(0, 0, 0, .6); font-size: 12px; line-height: 18px; cursor: pointer; }
+    .photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .photo-strip img { width: 110px; height: 76px; border-radius: 8px; object-fit: cover; }
+    .property-grid.single { grid-template-columns: 1fr; }
+    .property-grid.single .property-card-photo { height: 260px; }
+    .property-top.has-photo { justify-content: flex-end; }
+    .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .detail-grid .property-card { padding: 18px 20px; border-radius: 12px; background: linear-gradient(180deg, #fbfcfa, var(--green-soft)); border: 1px solid var(--line); }
+    .detail-grid .form-label { margin-bottom: 8px; color: var(--green); font-size: 13px; letter-spacing: .3px; }
+    .detail-grid .property-card strong { display: block; font-size: 16px; line-height: 1.4; }
+    @media (max-width: 1050px) { .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 520px) { .detail-grid { grid-template-columns: 1fr; } }
     .property-card-photo { width: 100%; height: 150px; margin: -2px 0 12px; border-radius: 8px; object-fit: cover; }
     .photo-preview { display: none; width: min(100%, 320px); max-height: 180px; margin-top: 10px; border-radius: 8px; object-fit: cover; }
     .photo-preview.visible { display: block; }
@@ -772,7 +789,7 @@
             <label><span class="form-label">Kaminart</span><select class="form-control" name="fireplaceType"><option value="">Bitte auswählen</option><option>Kaminofen</option><option>Offener Kamin</option><option>Kachelofen</option><option>Holzherd</option><option>Pellet-Ofen</option><option>Sonstige</option></select></label>
             <label><span class="form-label">Letzte Kamin-/Schornsteinkontrolle</span><input class="form-control" name="fireplaceInspection" type="date"></label>
             <label class="full"><span class="form-label">Angaben zu Kamin / Feuerstätte</span><input class="form-control" name="fireplaceNotes" maxlength="300" placeholder="z. B. letzte Kehrung, Besonderheiten oder vereinbarter Prüfturnus"></label>
-            <label class="full"><span class="form-label">Hausfoto</span><input class="form-control" name="photo" type="file" accept="image/*"><span class="form-label" style="margin-top:6px">Das Bild wird verkleinert im Browser gespeichert.</span><img class="photo-preview" id="property-photo-preview" alt="Vorschau des Hausfotos"><button class="text-btn" type="button" id="remove-property-photo" style="display:none">Foto entfernen</button></label>
+            <div class="full"><span class="form-label">Hausfotos</span><input class="form-control" name="photo" type="file" accept="image/*" multiple><span class="form-label" style="margin-top:6px">Mehrere Bilder möglich (max. 6). Auf ein Bild tippen, um es als Titelbild zu wählen.</span><div class="photo-gallery" id="property-photo-gallery"></div></div>
             <label class="full"><span class="form-label">Zustand des Gebäudes</span><select class="form-control" name="condition"><option value="">Bitte auswählen</option><option>Sehr gut</option><option>Gut</option><option>Gepflegt, kleinere Arbeiten nötig</option><option>Sanierungsbedarf</option><option>Dringender Sanierungsbedarf</option><option>Noch nicht bewertet</option></select></label>
             <label class="full"><span class="form-label">Letzte Sanierungen (Jahr und Maßnahme)</span><textarea class="form-control textarea" name="lastRenovations" maxlength="1500" placeholder="z. B. 2021: Dach erneuert; 2018: Bad modernisiert"></textarea></label>
             <label class="full"><span class="form-label">Anstehende Sanierungen (Maßnahme und Zeitraum)</span><textarea class="form-control textarea" name="plannedRenovations" maxlength="1500" placeholder="z. B. Fenster in 1–2 Jahren; Fassade in 3–5 Jahren"></textarea></label>
@@ -859,6 +876,7 @@
       fireplaceInspection: '',
       fireplaceNotes: '',
       photo: '',
+      photos: [],
       lastRenovations: '',
       plannedRenovations: '',
       ...property
@@ -1281,6 +1299,10 @@
       });
     }
     let pendingPropertyPhoto = '';
+    let pendingPropertyPhotos = [];
+    function renderPhotoGallery() {
+      document.getElementById('property-photo-gallery').innerHTML = pendingPropertyPhotos.map((src, index) => `<div class="photo-thumb ${src === pendingPropertyPhoto ? 'cover' : ''}" data-photo-cover="${index}" role="button" tabindex="0" title="Als Titelbild wählen"><img src="${src}" alt="Hausfoto ${index + 1}">${src === pendingPropertyPhoto ? '<span class="cover-badge">Titelbild</span>' : ''}<button type="button" class="thumb-remove" data-photo-remove="${index}" aria-label="Foto entfernen">×</button></div>`).join('');
+    }
     function saveProperties() {
       try {
         localStorage.setItem('stugliv-properties', JSON.stringify(properties));
@@ -1403,11 +1425,9 @@
       form.elements.fireplaceType.value = property?.fireplaceType || '';
       form.elements.fireplaceInspection.value = property?.fireplaceInspection || '';
       form.elements.fireplaceNotes.value = property?.fireplaceNotes || '';
-      const preview = document.getElementById('property-photo-preview');
-      preview.src = property?.photo || '';
-      preview.classList.toggle('visible', Boolean(property?.photo));
-      document.getElementById('remove-property-photo').style.display = property?.photo ? 'inline' : 'none';
-      pendingPropertyPhoto = property?.photo || '';
+      pendingPropertyPhotos = [...new Set([...(property?.photos || []), ...(property?.photo ? [property.photo] : [])])];
+      pendingPropertyPhoto = property?.photo || pendingPropertyPhotos[0] || '';
+      renderPhotoGallery();
       document.getElementById('property-modal').classList.add('open');
       form.elements.name.focus();
     }
@@ -1524,7 +1544,7 @@
       const firstName = profileData.name.trim().split(/\s+/)[0] || 'Willkommen';
       return `<div class="welcome"><div><p class="eyebrow eyebrow-lg">Husora · Das Managementsystem für deine Stuga</p><p class="subtitle">${bookingsEnabled() ? 'Buchungen, Stugapflege' : 'Stugapflege'} und Serviceeinsätze für ${singleHouse() ? 'dein Ferienhaus' : 'deine Ferienhäuser'}.</p></div></div>
         <section class="stats" aria-label="Kennzahlen">
-          <button class="stat ${singleHouse() ? 'stat-wide' : ''}" data-page="properties"><img class="stat-art" src="assets/meine-haeuser.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>${singleHouse() ? 'Mein Haus' : 'Meine Häuser'}</span><span class="stat-icon">${icon('property')}</span></div><div class="stat-value">${singleHouse() ? escapeHtml(properties[0]?.name || '1') : properties.length}</div><div class="stat-note"><em>${singleHouse() ? escapeHtml(properties[0]?.region || 'Schweden') : 'Värmland · Dalarna · Bohuslän'}</em></div></button>
+          <button class="stat ${singleHouse() ? 'stat-wide' : ''}" data-page="properties"><img class="stat-art" src="${escapeHtml((singleHouse() && properties[0]?.photo) || properties.find((item) => item.photo)?.photo || 'assets/meine-haeuser.jpg')}" alt="" aria-hidden="true"><div class="stat-head"><span>${singleHouse() ? 'Mein Haus' : 'Meine Häuser'}</span><span class="stat-icon">${icon('property')}</span></div><div class="stat-value">${singleHouse() ? escapeHtml(properties[0]?.name || '1') : properties.length}</div><div class="stat-note"><em>${singleHouse() ? escapeHtml(properties[0]?.region || 'Schweden') : 'Värmland · Dalarna · Bohuslän'}</em></div></button>
           <button class="stat" data-page="tasks"><img class="stat-art" src="assets/hausservice.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Serviceaufgaben</span><span class="stat-icon amber">${icon('task')}</span></div><div class="stat-value">${open.filter((task) => taskStatus(task) !== 'In Bearbeitung').length} <span class="stat-open-word">offen</span></div><div class="stat-note"><em class="stat-urgent">${open.filter((task) => task.priority === 'urgent').length} dringend</em></div></button>
           ${bookingsEnabled() ? `<button class="stat" data-page="bookings"><img class="stat-art" src="assets/booking-planer.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Buchungen</span><span class="stat-icon">${icon('calendar')}</span></div><div class="stat-value">${bookings.length}</div><div class="stat-note">Buchungen <em>verwalten</em></div></button>` : ''}
           <button class="stat stat-inspection" data-page="inspections"><img class="stat-art" src="assets/hauskontrolle.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Hauskontrolle</span><span class="stat-icon">${icon('inspection')}</span></div><div class="stat-value">${properties.length - currentInspections} <span class="stat-open-word">offen</span></div></button>
@@ -1777,11 +1797,11 @@
     }
     function propertiesPage() {
       return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div><button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button></div>
-        <div class="property-grid">${properties.map((rawProperty) => {
+        <div class="property-grid ${singleHouse() ? 'single' : ''}">${properties.map((rawProperty) => {
           const property = propertyWithDefaults(rawProperty);
           const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
           const partnerSummary = assignedProviders.length ? assignedProviders.map((provider) => provider.name).join(', ') : 'Keine Servicepartner zugeordnet';
-          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top"><div class="property-symbol">${icon('home')}</div><span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><div class="property-assigned-partners"><strong>Servicepartner:</strong>${partnerListHtml(assignedProviders)}</div><div class="property-specs"><span class="property-spec">${escapeHtml(propertySummary(property))}</span></div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Kapazität</span><strong>${escapeHtml(property.beds || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}${property.heatingYear ? ` · ${escapeHtml(property.heatingYear)}` : ''}</strong></div><div><span>Kamin / Feuerstätte</span><strong>${property.fireplace === 'yes' ? escapeHtml(property.fireplaceType || 'Vorhanden') : property.fireplace === 'no' ? 'Nicht vorhanden' : '—'}</strong></div><div><span>Letzte Sanierungen</span><strong>${property.lastRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div><div><span>Sanierungsplanung</span><strong>${property.plannedRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div></div></article>`;
+          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top ${property.photo ? 'has-photo' : ''}">${property.photo ? '' : `<div class="property-symbol">${icon('home')}</div>`}<span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><div class="property-assigned-partners"><strong>Servicepartner:</strong>${partnerListHtml(assignedProviders)}</div><div class="property-specs"><span class="property-spec">${escapeHtml(propertySummary(property))}</span></div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Kapazität</span><strong>${escapeHtml(property.beds || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}${property.heatingYear ? ` · ${escapeHtml(property.heatingYear)}` : ''}</strong></div><div><span>Kamin / Feuerstätte</span><strong>${property.fireplace === 'yes' ? escapeHtml(property.fireplaceType || 'Vorhanden') : property.fireplace === 'no' ? 'Nicht vorhanden' : '—'}</strong></div><div><span>Letzte Sanierungen</span><strong>${property.lastRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div><div><span>Sanierungsplanung</span><strong>${property.plannedRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div></div></article>`;
         }).join('')}</div>`;
     }
     function partnerCategoryLabel(provider) {
@@ -1796,7 +1816,7 @@
       const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
       const partnerSummary = assignedProviders.length ? assignedProviders.map((provider) => provider.name).join(', ') : 'Keine Servicepartner zugeordnet';
       return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>${escapeHtml(property.name)}</h1><p class="subtitle">${escapeHtml(property.address)}</p>${inspectionStatusBadge(property.id)}</div><button class="primary-btn" data-action="edit-property" data-property="${escapeHtml(property.id)}">Bearbeiten</button></div>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Gebäude & Grundstück</h2><p class="card-caption">Stammdaten, Zustand und Kapazität</p></div><button class="text-btn" data-page="properties">${singleHouse() ? '← Mein Ferienhaus' : '← Alle Ferienhäuser'}</button></div><div style="padding:16px">${property.photo ? `<img class="property-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-grid">
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Gebäude & Grundstück</h2><p class="card-caption">Stammdaten, Zustand und Kapazität</p></div><button class="text-btn" data-page="properties">${singleHouse() ? '← Mein Ferienhaus' : '← Alle Ferienhäuser'}</button></div><div style="padding:16px">${property.photo ? `<img class="property-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}${(property.photos || []).length > 1 ? `<div class="photo-strip">${property.photos.map((src) => `<img src="${escapeHtml(src)}" alt="">`).join('')}</div>` : ''}<div class="detail-grid">
           <article class="property-card"><span class="form-label">Baujahr</span><strong>${escapeHtml(property.yearBuilt || 'Noch nicht eingetragen')}</strong></article>
           <article class="property-card"><span class="form-label">Wohnfläche</span><strong>${property.livingArea ? `${escapeHtml(property.livingArea)} m²` : 'Noch nicht eingetragen'}</strong></article>
           <article class="property-card"><span class="form-label">Grundstücksgröße</span><strong>${property.plotSize ? `${escapeHtml(property.plotSize)} m²` : 'Noch nicht eingetragen'}</strong></article>
@@ -2873,13 +2893,6 @@
           removeProperty(property.id);
         }
       }
-      if (action === 'remove-property-photo') {
-        pendingPropertyPhoto = '';
-        const preview = document.getElementById('property-photo-preview');
-        preview.removeAttribute('src');
-        preview.classList.remove('visible');
-        document.getElementById('remove-property-photo').style.display = 'none';
-      }
       if (action === 'view-property') {
         selectedPropertyId = event.target.closest('[data-action]').dataset.property;
         currentPage = 'propertyDetail';
@@ -3049,32 +3062,33 @@
     });
     document.getElementById('property-form').addEventListener('change', async (event) => {
       if (event.target.name !== 'photo') return;
-      const file = event.target.files?.[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) {
-        showToast('Bitte eine Bilddatei auswählen.');
-        event.target.value = '';
-        return;
+      const files = [...(event.target.files || [])];
+      event.target.value = '';
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) { showToast('Bitte nur Bilddateien auswählen.'); continue; }
+        if (pendingPropertyPhotos.length >= 6) { showToast('Maximal 6 Bilder pro Haus.'); break; }
+        try {
+          pendingPropertyPhotos.push(await compressPropertyPhoto(file));
+        } catch (error) {
+          console.error('Hausfoto konnte nicht verarbeitet werden:', error);
+          showToast('Hausfoto konnte nicht geladen werden.');
+        }
       }
-      try {
-        pendingPropertyPhoto = await compressPropertyPhoto(file);
-        const preview = document.getElementById('property-photo-preview');
-        preview.src = pendingPropertyPhoto;
-        preview.classList.add('visible');
-        document.getElementById('remove-property-photo').style.display = 'inline';
-      } catch (error) {
-        console.error('Hausfoto konnte nicht verarbeitet werden:', error);
-        showToast('Hausfoto konnte nicht geladen werden.');
-      }
+      if (!pendingPropertyPhoto) pendingPropertyPhoto = pendingPropertyPhotos[0] || '';
+      renderPhotoGallery();
     });
     document.getElementById('property-form').addEventListener('click', (event) => {
-      if (event.target.id === 'remove-property-photo') {
-        pendingPropertyPhoto = '';
-        const preview = document.getElementById('property-photo-preview');
-        preview.removeAttribute('src');
-        preview.classList.remove('visible');
-        document.getElementById('remove-property-photo').style.display = 'none';
-        document.querySelector('#property-form [name="photo"]').value = '';
+      const removeButton = event.target.closest('[data-photo-remove]');
+      if (removeButton) {
+        const [removed] = pendingPropertyPhotos.splice(Number(removeButton.dataset.photoRemove), 1);
+        if (removed === pendingPropertyPhoto) pendingPropertyPhoto = pendingPropertyPhotos[0] || '';
+        renderPhotoGallery();
+        return;
+      }
+      const thumb = event.target.closest('[data-photo-cover]');
+      if (thumb) {
+        pendingPropertyPhoto = pendingPropertyPhotos[Number(thumb.dataset.photoCover)];
+        renderPhotoGallery();
       }
     });
     pageContent.addEventListener('submit', (event) => {
@@ -3228,16 +3242,6 @@
       const form = event.currentTarget;
       const formData = new FormData(form);
       const previous = editingPropertyId ? properties.find((property) => property.id === editingPropertyId) : null;
-      const photoFile = form.elements.photo.files?.[0];
-      if (photoFile && !pendingPropertyPhoto) {
-        try {
-          pendingPropertyPhoto = await compressPropertyPhoto(photoFile);
-        } catch (error) {
-          console.error('Hausfoto konnte nicht verarbeitet werden:', error);
-          showToast('Hausfoto konnte nicht verarbeitet werden. Bitte erneut auswählen oder entfernen.');
-          return;
-        }
-      }
       const property = propertyWithDefaults({
         ...(previous || {}),
         id: previous?.id || `property-${Date.now()}`,
@@ -3256,6 +3260,7 @@
         fireplaceInspection: String(formData.get('fireplaceInspection') || ''),
         fireplaceNotes: String(formData.get('fireplaceNotes') || '').trim(),
         photo: pendingPropertyPhoto,
+        photos: pendingPropertyPhotos,
         condition: String(formData.get('condition')),
         lastRenovations: String(formData.get('lastRenovations')).trim(),
         plannedRenovations: String(formData.get('plannedRenovations')).trim()
