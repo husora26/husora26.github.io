@@ -194,8 +194,11 @@
     .assign-provider-btn svg { width: 15px; height: 15px; }
     .assign-provider-btn.selected { border-color: var(--green); color: white; background: var(--green); }
     .assign-provider-btn:hover, .assign-provider-btn:focus-visible { outline: 2px solid #9db9a5; outline-offset: 2px; }
-    .property-assigned-partners { margin: 9px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
-    .property-assigned-partners strong { color: var(--ink); font-size: 9px; }
+    .property-assigned-partners { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .property-assigned-partners strong { color: var(--ink); font-size: 11px; }
+    .partner-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
+    .partner-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink); }
+    .partner-list em { font-style: normal; color: var(--muted); white-space: nowrap; }
     .favorite-btn.active { border-color: #f0dfd4; color: #bd694e; background: #fff5ef; }
     .provider-details { display: flex; flex-wrap: wrap; gap: 7px 11px; margin: 14px 0 12px; color: #626c64; font-size: 10px; }
     .provider-town { color: #626c64; font-size: 10px; }
@@ -1778,8 +1781,14 @@
           const property = propertyWithDefaults(rawProperty);
           const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
           const partnerSummary = assignedProviders.length ? assignedProviders.map((provider) => provider.name).join(', ') : 'Keine Servicepartner zugeordnet';
-          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top"><div class="property-symbol">${icon('home')}</div><span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><p class="property-assigned-partners"><strong>Servicepartner:</strong> ${escapeHtml(partnerSummary)}</p><div class="property-specs"><span class="property-spec">${escapeHtml(propertySummary(property))}</span></div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Kapazität</span><strong>${escapeHtml(property.beds || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}${property.heatingYear ? ` · ${escapeHtml(property.heatingYear)}` : ''}</strong></div><div><span>Kamin / Feuerstätte</span><strong>${property.fireplace === 'yes' ? escapeHtml(property.fireplaceType || 'Vorhanden') : property.fireplace === 'no' ? 'Nicht vorhanden' : '—'}</strong></div><div><span>Letzte Sanierungen</span><strong>${property.lastRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div><div><span>Sanierungsplanung</span><strong>${property.plannedRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div></div></article>`;
+          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top"><div class="property-symbol">${icon('home')}</div><span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><div class="property-assigned-partners"><strong>Servicepartner:</strong>${partnerListHtml(assignedProviders)}</div><div class="property-specs"><span class="property-spec">${escapeHtml(propertySummary(property))}</span></div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Kapazität</span><strong>${escapeHtml(property.beds || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}${property.heatingYear ? ` · ${escapeHtml(property.heatingYear)}` : ''}</strong></div><div><span>Kamin / Feuerstätte</span><strong>${property.fireplace === 'yes' ? escapeHtml(property.fireplaceType || 'Vorhanden') : property.fireplace === 'no' ? 'Nicht vorhanden' : '—'}</strong></div><div><span>Letzte Sanierungen</span><strong>${property.lastRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div><div><span>Sanierungsplanung</span><strong>${property.plannedRenovations ? 'Hinterlegt' : 'Noch offen'}</strong></div></div></article>`;
         }).join('')}</div>`;
+    }
+    function partnerCategoryLabel(provider) {
+      return provider.category === 'renovation' ? 'Sanierung' : provider.category === 'inspection' ? 'Hauskontrolle' : 'Hausservice';
+    }
+    function partnerListHtml(list) {
+      return list.length ? `<ul class="partner-list">${list.map((provider) => `<li><span>${escapeHtml(provider.name)}</span><em>${partnerCategoryLabel(provider)}</em></li>`).join('')}</ul>` : 'Keine Servicepartner zugeordnet';
     }
     function propertyDetailPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
@@ -1799,7 +1808,7 @@
         </div></div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.lastRenovations ? escapeHtml(property.lastRenovations).replace(/\\n/g, '<br>') : 'Noch keine Sanierungen eingetragen.'}</div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
-        <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Auswahl und Verwaltung über „Servicepartner finden“.</p></div><button class="text-btn" data-action="find-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px">${escapeHtml(partnerSummary)}</div></section>
+        <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Auswahl und Verwaltung über „Servicepartner finden“.</p></div><button class="text-btn" data-action="find-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px;font-size:14px">${partnerListHtml(assignedProviders)}</div></section>
         <section class="remove-property-section" aria-label="Ferienhaus entfernen"><div><strong>Ferienhaus dauerhaft entfernen</strong><p>Das Haus und die zugehörigen Aufgaben, Kosten sowie Hauskontrolldaten werden gelöscht.</p></div><button class="danger-btn" data-action="remove-property" data-property="${escapeHtml(property.id)}">Haus entfernen</button></section>`;
     }
     function providersPage() {
@@ -1824,7 +1833,7 @@
           <div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town)}</span><span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span></div></div>
         </article>`;
       }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div></div>
+      return `<div class="welcome"><div><button class="text-btn" data-action="go-back" style="padding:0;margin-bottom:8px">← Zurück</button><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div></div>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Betriebe im Umkreis von ${providerRadius} km</h2><p class="card-caption">${matches.length} passende Betriebe · nächstgelegene zuerst</p></div><button class="secondary-btn" data-action="toggle-favorites">${onlyFavorites ? 'Alle anzeigen' : `☆ Favoriten (${favorites.length})`}</button></div>
           <div class="provider-filters">
             <label><span class="form-label">Ferienhaus</span><select id="provider-property" class="filter-select" aria-label="Ferienhaus wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label>
@@ -2825,6 +2834,7 @@
         currentPage = 'providers';
         render();
       }
+      if (action === 'go-back') { goBack(); return; }
       if (action === 'find-providers') {
         providerProperty = event.target.closest('[data-action]').dataset.property;
         currentPage = 'providers';
