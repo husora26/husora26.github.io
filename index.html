@@ -260,6 +260,13 @@
     .document-actions { display: flex; gap: 8px; align-items: center; }
     .document-actions a, .document-actions button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--green); background: white; font-size: 10px; font-weight: 650; text-decoration: none; cursor: pointer; }
     .document-actions .danger-btn { color: var(--red); }
+    .assigned-provider-list { display: grid; gap: 14px; }
+    .assigned-provider-card { padding: 18px; }
+    .assigned-provider-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .assigned-provider-head h3 { margin: 0 0 5px; font-size: 15px; }
+    .assigned-provider-documents { margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .assigned-provider-documents .document-list { padding: 0; }
+    @media (max-width: 520px) { .assigned-provider-head { flex-direction: column; } }
     .checklist { padding: 4px 18px; }
     .checklist-item { display: flex; align-items: flex-start; gap: 11px; padding: 12px 0; border-bottom: 1px solid #f0f1ee; }
     .checklist-item:last-child { border-bottom: 0; }
@@ -1040,6 +1047,7 @@
         || typeof document.propertyId !== 'string'
         || typeof document.name !== 'string'
         || typeof document.dataUrl !== 'string'
+        || (document.providerId !== undefined && typeof document.providerId !== 'string')
         || !/^data:(application\/pdf|image\/(jpeg|png|webp));base64,/.test(document.dataUrl))) {
         throw new Error('Ungültige Dokumentenliste');
       }
@@ -1810,6 +1818,18 @@
     function partnerListHtml(list) {
       return list.length ? `<ul class="partner-list">${list.map((provider) => `<li><span>${escapeHtml(provider.name)}</span><em>${partnerCategoryLabel(provider)}</em></li>`).join('')}</ul>` : 'Keine Servicepartner zugeordnet';
     }
+    function assignedProvidersPage() {
+      const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
+      const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
+      const fileSize = (bytes) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      const providerCards = assignedProviders.map((provider) => {
+        const providerDocuments = documents.filter((document) => document.propertyId === property.id && document.providerId === provider.id)
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div><h3>${escapeHtml(provider.name)}</h3><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
+      }).join('');
+      return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">${escapeHtml(property.name)} · Dokumente je Partner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
+        ${assignedProviders.length ? `<div class="assigned-provider-list">${providerCards}</div>` : '<section class="card empty">Diesem Ferienhaus sind noch keine Servicepartner zugeordnet.</section>'}`;
+    }
     function propertyDetailPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
       const beds = Number.parseInt(property.beds, 10);
@@ -1828,7 +1848,7 @@
         </div></div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.lastRenovations ? escapeHtml(property.lastRenovations).replace(/\\n/g, '<br>') : 'Noch keine Sanierungen eingetragen.'}</div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
-        <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Auswahl und Verwaltung über „Servicepartner finden“.</p></div><button class="text-btn" data-action="find-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px;font-size:14px">${partnerListHtml(assignedProviders)}</div></section>
+        <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Partner und deren Dokumente verwalten.</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px;font-size:14px">${partnerListHtml(assignedProviders)}</div></section>
         <section class="remove-property-section" aria-label="Ferienhaus entfernen"><div><strong>Ferienhaus dauerhaft entfernen</strong><p>Das Haus und die zugehörigen Aufgaben, Kosten sowie Hauskontrolldaten werden gelöscht.</p></div><button class="danger-btn" data-action="remove-property" data-property="${escapeHtml(property.id)}">Haus entfernen</button></section>`;
     }
     function providersPage() {
@@ -1896,7 +1916,7 @@
     }
     function documentsPage() {
       const property = properties.find((item) => item.id === documentsProperty) || properties[0];
-      const propertyDocuments = documents.filter((document) => document.propertyId === property.id)
+      const propertyDocuments = documents.filter((document) => document.propertyId === property.id && !document.providerId)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const fileSize = (bytes) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
       return `<div class="welcome"><div><p class="eyebrow">Unterlagen je Ferienhaus</p><h1>Dokumente</h1><p class="subtitle">Versicherungen, Bescheide, Anleitungen und weitere wichtige Dateien lokal im Browser verwalten.</p></div></div>
@@ -2587,8 +2607,8 @@
     function render() {
       document.body.classList.toggle('no-bookings', !bookingsEnabled());
       if (!bookingsEnabled() && currentPage === 'bookings') currentPage = 'dashboard';
-      const pages = { dashboard, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
-      const labels = { dashboard: 'Übersicht', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
+      const pages = { dashboard, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, assignedProviders: assignedProvidersPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
+      const labels = { dashboard: 'Übersicht', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', assignedProviders: 'Zugeordnete Servicepartner', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
       if (currentPage !== lastRenderedPage) {
         if (returningToPreviousPage) {
           returningToPreviousPage = false;
@@ -2860,6 +2880,16 @@
         currentPage = 'providers';
         render();
       }
+      if (action === 'manage-assigned-providers') {
+        selectedPropertyId = event.target.closest('[data-action]').dataset.property;
+        currentPage = 'assignedProviders';
+        render();
+      }
+      if (action === 'open-provider-search') {
+        providerProperty = event.target.closest('[data-action]').dataset.property;
+        currentPage = 'providers';
+        render();
+      }
       if (action === 'toggle-provider-assignment') {
         const button = event.target.closest('[data-action]');
         const { property: propertyId, provider: providerId } = button.dataset;
@@ -2974,9 +3004,10 @@
       if (event.target.id === 'provider-radius') { providerRadius = Number(event.target.value); render(); }
       if (event.target.id === 'cost-property') { costProperty = event.target.value; render(); }
       if (event.target.id === 'documents-property') { documentsProperty = event.target.value; render(); return; }
-      if (event.target.id === 'document-upload') {
+      if (event.target.id === 'document-upload' || event.target.matches('[data-provider-document-upload]')) {
         const file = event.target.files?.[0];
         if (!file) return;
+        const providerId = event.target.dataset.providerDocumentUpload;
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
           showToast('Bitte eine PDF-, JPG-, PNG- oder WebP-Datei auswählen.');
@@ -2997,7 +3028,8 @@
           });
           const nextDocuments = [...documents, {
             id: `document-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            propertyId: documentsProperty,
+            propertyId: providerId ? selectedPropertyId : documentsProperty,
+            ...(providerId ? { providerId } : {}),
             name: file.name,
             type: file.type,
             size: file.size,
@@ -3007,13 +3039,12 @@
           localStorage.setItem('stugliv-documents', JSON.stringify(nextDocuments));
           documents = nextDocuments;
           render();
-          showToast('Dokument wurde gespeichert.');
+          showToast(providerId ? 'Dokument für Servicepartner wurde gespeichert.' : 'Dokument wurde gespeichert.');
         } catch (error) {
           console.error('Dokument konnte nicht gespeichert werden:', error);
           showToast('Dokument konnte nicht gespeichert werden. Browser-Speicher prüfen.');
         } finally {
-          const upload = document.getElementById('document-upload');
-          if (upload) upload.value = '';
+          event.target.value = '';
         }
         return;
       }
