@@ -955,12 +955,12 @@
   <div class="modal-backdrop" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
     <section class="modal import-modal">
       <div class="modal-head"><div><h2 id="import-modal-title">Ferienhaus importieren</h2><p>Link zu einem Inserat einfügen</p></div><button class="close-btn" type="button" id="close-import-modal" aria-label="Schließen">✕</button></div>
-      <label><span class="form-label">Link zum Inserat</span><input class="form-control" id="import-url" type="url" inputmode="url" autocomplete="off" placeholder="https://www.fastighetsbyran.com/…/objekt/?objektID=…"></label>
+      <label><span class="form-label">Link zum Inserat</span><input class="form-control" id="import-url" type="url" inputmode="url" autocomplete="off" placeholder="Link zum Inserat, z. B. von fastighetsbyran.com oder lansfast.se"></label>
       <fieldset class="import-modes"><legend class="form-label">Umfang des Imports</legend>
         <label class="import-mode"><input type="radio" name="import-mode" value="simple" checked><span><strong>Einfacher Import</strong><small>Die üblichen Felder der Eingabemaske (Adresse, Baujahr, Flächen, Zimmer, Heizung, Kamin) und 1 Foto des Hauses.</small></span></label>
         <label class="import-mode"><input type="radio" name="import-mode" value="full"><span><strong>Umfangreicher Import</strong><small>Zusätzlich Beschreibungen, Gebäude-, Grundstücks- und Kostenangaben (automatisch ins Deutsche übersetzt), 4 Fotos und Grundrisse.</small></span></label>
       </fieldset>
-      <p class="import-hint">Du kannst alles vor dem Speichern prüfen und ändern. Für die Übersetzung werden die Inseratstexte an einen Übersetzungsdienst gesendet.<br><strong>Unterstützt:</strong> Fastighetsbyrån (fastighetsbyran.com). Hemnet blockiert automatische Abrufe und kann daher nicht eingelesen werden.</p>
+      <p class="import-hint">Du kannst alles vor dem Speichern prüfen und ändern. Für die Übersetzung werden die Inseratstexte an einen Übersetzungsdienst gesendet.<br><strong>Unterstützt:</strong> Fastighetsbyrån (fastighetsbyran.com) und Länsförsäkringar Fastighetsförmedling (lansfast.se). Hemnet blockiert automatische Abrufe und kann daher nicht eingelesen werden.</p>
       <p class="import-status" id="import-status" role="status" aria-live="polite" hidden></p>
       <div class="form-actions"><button type="button" class="secondary-btn" id="import-cancel">Abbrechen</button><button type="button" class="primary-btn" id="import-run">Daten einlesen</button></div>
     </section>
@@ -4375,6 +4375,108 @@
         }
       };
     }
+    function mapLansfast(estate, link) {
+      if (!estate || !estate.buildingInfo || !estate.addressInfo) throw importError('Das Inserat enthält keine lesbaren Objektdaten.');
+      const building = estate.buildingInfo;
+      const addr = estate.addressInfo;
+      const operation = estate.operation || {};
+      const assess = estate.assess || {};
+      const county = String(addr.county || '').replace(/(land|arna|holm|botten|borg)s$/i, '$1');
+      const street = importClean(addr.streetAddress);
+      const unique = (list) => list.filter((part, index, all) => part && all.findIndex((other) => other.toLowerCase() === part.toLowerCase()) === index);
+      const kr = (value, suffix = '') => (Number(value) > 0 ? `${Math.round(Number(value)).toLocaleString('de-DE')} kr${suffix}` : '');
+      const sqm = (value) => (Number(value) > 0 ? `${Math.round(Number(value))} m²` : '');
+      const rooms = (estate.rooms || []).filter((room) => room.heading && importClean(room.text));
+      const searchable = [building.heating, building.otherAboutTheBuildning, building.generealDescription, estate.descriptions?.longSellingDescription, rooms.map((room) => `${room.heading} ${room.text}`).join(' ')].join(' ');
+      const fireplace = importFireplace(searchable);
+      const heatingText = importClean(building.heating);
+      const costs = {};
+      const energy = (Number(operation.electricity) || 0) + (Number(operation.heating) || 0);
+      const water = (Number(operation.waterAndDrain) || 0) + (Number(operation.sanitation) || 0);
+      const grounds = (Number(operation.roadCommunity) || 0) + (Number(operation.roadCharge) || 0);
+      if (energy) costs.energy = energy;
+      if (water) costs.water = water;
+      if (operation.chimneySweeping) costs.fire = operation.chimneySweeping;
+      if (operation.insurance) costs.insurance = operation.insurance;
+      if (grounds) costs.grounds = grounds;
+      if (operation.maintenance) costs.maintenance = operation.maintenance;
+      if (assess.taxFee) costs.propertyFee = assess.taxFee;
+      const facts = [];
+      const add = (group, label, value, translate = true) => { const text = importClean(value); if (text) facts.push({ group, label, value: text, tv: translate }); };
+      const price = estate.priceInfo?.startPrice || estate.priceInfo?.priceMin;
+      add('Inserat', 'Preis (Ausgangspreis)', kr(price), false);
+      add('Inserat', 'Objekt-ID', estate.id, false);
+      const tenure = importClean(estate.tenure || estate.disposalForm);
+      add('Inserat', 'Besitzform', /^fri\s?köpt$/i.test(tenure) ? 'Freies Eigentum (friköpt)' : tenure, !/^fri\s?köpt$/i.test(tenure));
+      add('Inserat', 'Übergabe', estate.movingIn || estate.dates?.possibleAccessDate);
+      add('Gebäude', 'Zimmer', building.numberOfRooms ? String(Math.round(building.numberOfRooms)) : '', false);
+      add('Gebäude', 'Schlafzimmer', building.numberOfBedroom ? String(Math.round(building.numberOfBedroom)) : '', false);
+      add('Gebäude', 'Wohnfläche', sqm(building.livingSpace), false);
+      add('Gebäude', 'Nebenfläche', sqm(building.otherSpace), false);
+      add('Gebäude', 'Baujahr', building.buildingYear, false);
+      [['Gebäudetyp', 'buildingType'], ['Fundament', 'foundation'], ['Sockel', 'foundationWall'], ['Tragwerk', 'frame'], ['Fassade', 'facade'], ['Fenster', 'windows'], ['Geschossdecke', 'beam'], ['Dach', 'roof'], ['Blecharbeiten außen', 'externallySheetMetalWork'], ['Heizung', 'heating'], ['Weitere Angaben zum Gebäude', 'otherAboutTheBuildning'], ['Nebengebäude', 'otherBuildings']].forEach(([label, key]) => add('Gebäude', label, building[key]));
+      add('Grundstück', 'Grundstücksfläche', sqm(building.plotSize), false);
+      add('Grundstück', 'Grundstücksbezeichnung', building.propertyUnitDesignation, false);
+      add('Grundstück', 'Grundstück', building.otherPlot);
+      add('Grundstück', 'Wasser/Abwasser', estate.waterAndDrain);
+      add('Grundstück', 'Gemeinschaftsanlagen', estate.enrollments?.preferentialAndCommunity);
+      add('Grundstück', 'Dienstbarkeiten', estate.enrollments?.enrolledEasement);
+      add('Grundstück', 'Bebauungsplan', estate.enrollments?.planRegulations);
+      add('Kosten', 'Strom', kr(operation.electricity, '/Jahr'), false);
+      add('Kosten', 'Heizung', kr(operation.heating, '/Jahr'), false);
+      add('Kosten', 'Wasser/Abwasser', kr(operation.waterAndDrain, '/Jahr'), false);
+      add('Kosten', 'Müllabfuhr', kr(operation.sanitation, '/Jahr'), false);
+      add('Kosten', 'Schornsteinfeger', kr(operation.chimneySweeping, '/Jahr'), false);
+      add('Kosten', 'Straße & Gemeinschaftsanlagen', kr(grounds, '/Jahr'), false);
+      add('Kosten', 'Versicherung', kr(operation.insurance, '/Jahr'), false);
+      add('Kosten', 'Sonstiges', kr(operation.other, '/Jahr'), false);
+      add('Kosten', 'Summe', kr(operation.sum, '/Jahr'), false);
+      add('Kosten', 'Kommentar', operation.commentaryForOperation || operation.commentary);
+      add('Steuer', 'Steuerwert gesamt', kr(estate.assessments?.[0]?.totalAssessValue), false);
+      add('Steuer', 'Steuerwert Gebäude', kr(assess.buildingValue), false);
+      add('Steuer', 'Steuerwert Grundstück', kr(assess.landValue), false);
+      add('Steuer', 'Immobilienabgabe', kr(assess.taxFee, '/Jahr'), false);
+      add('Strom & Internet', 'Stromanbieter', estate.electricity?.company, false);
+      add('Strom & Internet', 'Netzbetreiber', estate.electricity?.distributor, false);
+      add('Strom & Internet', 'Stromverbrauch', estate.electricity?.powerConsumptionKWH ? `${Math.round(estate.electricity.powerConsumptionKWH).toLocaleString('de-DE')} kWh/Jahr` : '', false);
+      add('Strom & Internet', 'Breitband/TV', [estate.tvAndBroadband?.broadband, estate.tvAndBroadband?.tv].filter(Boolean).join(' '));
+      add('Energie', 'Energieklasse', estate.energyDeclaration?.energyClass, false);
+      add('Terrasse', 'Terrasse/Balkon', estate.balconyPatio?.summary);
+      add('Umgebung', 'Gegend', estate.surrounding?.generalAboutArea);
+      add('Umgebung', 'Entfernungen', estate.surrounding?.other);
+      rooms.forEach((room) => { add('Räume', room.heading, room.text); facts[facts.length - 1].tl = true; });
+      const broker = (estate.brokers || [])[0];
+      if (broker && broker.name) add('Kontakt', 'Makler', [broker.name, estate.officeInfo?.name ? `Länsförsäkringar Fastighetsförmedling ${estate.officeInfo.name}` : '', broker.phone].filter(Boolean).join(' · '), false);
+      const descriptions = estate.descriptions || {};
+      const body = importClean(descriptions.longSellingDescription || descriptions.shortSellingDescription || descriptions.generally);
+      const description = [importClean(descriptions.sellingHeading), body].filter((part, index, all) => part && all.indexOf(part) === index).join('\n\n');
+      const images = (estate.images || []).filter((image) => /^https:\/\//.test(image?.path || ''));
+      const floorplanUrls = images.filter((image) => /planl|planrit/i.test(image.category || '')).map((image) => image.path).slice(0, 2);
+      const photoUrls = images.filter((image) => !/planl|planrit/i.test(image.category || '') && !/karta/i.test(`${image.category} ${image.text}`)).map((image) => image.path).slice(0, 4);
+      const title = unique([street, importClean(addr.area), importClean(addr.municipality)]).join(', ');
+      return {
+        sourceName: 'Länsförsäkringar Fastighetsförmedling',
+        sourceUrl: link,
+        description,
+        photoUrls,
+        floorplanUrls,
+        heatingText,
+        costs,
+        facts,
+        fields: {
+          name: title || street,
+          address: unique([street, [addr.zipCode, addr.city].filter(Boolean).join(' '), importClean(addr.area), county, 'Schweden']).join(', '),
+          region: county,
+          yearBuilt: importNumber(building.buildingYear),
+          livingArea: building.livingSpace ? String(Math.round(building.livingSpace)) : '',
+          plotSize: building.plotSize ? String(Math.round(building.plotSize)) : '',
+          rooms: building.numberOfRooms ? String(Math.round(building.numberOfRooms)) : '',
+          heatingSystem: importHeating(heatingText),
+          fireplace: fireplace.fireplace,
+          fireplaceType: fireplace.fireplaceType
+        }
+      };
+    }
     const IMPORT_SOURCES = [{
       id: 'fastighetsbyran',
       match: (url) => /(^|\.)fastighetsbyran\.(com|se)$/i.test(url.hostname),
@@ -4389,6 +4491,22 @@
         if (response.status === 404 || response.status === 410) throw importError('Das Inserat wurde nicht gefunden. Möglicherweise ist es nicht mehr online.');
         if (!response.ok) throw importError(`Das Inserat konnte nicht geladen werden (Fehler ${response.status}).`);
         return mapFastighetsbyran(await response.json(), link);
+      }
+    }, {
+      id: 'lansfast',
+      match: (url) => /(^|\.)lansfast\.se$/i.test(url.hostname),
+      objectId: (url) => {
+        const segments = url.pathname.split('/').filter(Boolean);
+        const id = (url.searchParams.get('estateId') || [...segments].reverse().find((segment) => /^(cm|obj)[a-z0-9]{10,}$/i.test(segment)) || '').toUpperCase();
+        return /^[A-Z0-9]{12,}$/.test(id) ? id : '';
+      },
+      load: async (id, link) => {
+        let response;
+        try { response = await fetch(`https://app-lansfast-api.azurewebsites.net/api/Estates/GetEstate?estateId=${encodeURIComponent(id)}`); }
+        catch (error) { throw importError('Das Inserat konnte nicht geladen werden. Bitte Internetverbindung und Link prüfen.'); }
+        if (response.status === 404 || response.status === 410 || response.status === 400) throw importError('Das Inserat wurde nicht gefunden. Möglicherweise ist es nicht mehr online.');
+        if (!response.ok) throw importError(`Das Inserat konnte nicht geladen werden (Fehler ${response.status}).`);
+        return mapLansfast(await response.json(), link);
       }
     }];
     async function importPhoto(url, { edge = 1000, quality = 0.72, width = 1200 } = {}) {
@@ -4492,11 +4610,11 @@
       let url;
       try { url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`); } catch (error) { url = null; }
       if (!raw || !url) { setImportStatus('Bitte einen gültigen Link einfügen.', true); return; }
-      if (/(^|\.)hemnet\.se$/i.test(url.hostname)) { setImportStatus('Hemnet blockiert automatische Abrufe. Bitte ein Inserat von Fastighetsbyrån verwenden.', true); return; }
+      if (/(^|\.)hemnet\.se$/i.test(url.hostname)) { setImportStatus('Hemnet blockiert automatische Abrufe. Bitte ein Inserat von Fastighetsbyrån oder Länsförsäkringar Fastighetsförmedling verwenden.', true); return; }
       const source = IMPORT_SOURCES.find((entry) => entry.match(url));
-      if (!source) { setImportStatus('Diese Seite wird noch nicht unterstützt. Aktuell funktioniert der Import mit Fastighetsbyrån (fastighetsbyran.com).', true); return; }
+      if (!source) { setImportStatus('Diese Seite wird noch nicht unterstützt. Aktuell funktioniert der Import mit Fastighetsbyrån (fastighetsbyran.com) und Länsförsäkringar Fastighetsförmedling (lansfast.se).', true); return; }
       const id = source.objectId(url);
-      if (!id) { setImportStatus('Im Link fehlt die Objekt-ID (objektID=…). Bitte den Link der Objektseite verwenden.', true); return; }
+      if (!id) { setImportStatus('Im Link wurde keine Objekt-ID gefunden. Bitte den vollständigen Link der Objektseite verwenden.', true); return; }
       const full = document.querySelector('input[name="import-mode"]:checked')?.value === 'full';
       run.disabled = true;
       try {
