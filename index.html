@@ -210,6 +210,8 @@
     .partner-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink); }
     .partner-list em { font-style: normal; color: var(--muted); white-space: nowrap; }
     .favorite-btn.active { border-color: #f0dfd4; color: #bd694e; background: #fff5ef; }
+    .house-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 10px; color: #1f5a3f; background: #e4f0e8; font-size: 10px; font-weight: 700; }
+    .house-chip svg { width: 11px; height: 11px; flex: none; }
     .provider-details { display: flex; flex-wrap: wrap; gap: 7px 11px; margin: 14px 0 12px; color: #626c64; font-size: 10px; }
     .provider-town { color: #626c64; font-size: 10px; }
     .provider-type { display: inline-block; padding: 4px 7px; border-radius: 5px; color: var(--green); background: var(--green-soft); font-size: 9px; font-weight: 700; }
@@ -1873,7 +1875,7 @@
                 return `<button class="house-service-row" data-action="open-inspection" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small>${escapeHtml(property.region || property.address)}</small></span><span class="house-service-badges">${inspectionStatusBadge(property.id)}${winterStatusBadge(property.id)}</span></button>`;
               }).join('') || '<div class="empty">Noch keine Ferienhäuser vorhanden.</div>'}</div>
             </section>
-            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(properties[0]?.id || '')}">Servicepartner →</button></div>
+            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-action="manage-assigned-providers" data-scope="all" data-property="${escapeHtml(properties[0]?.id || '')}">Servicepartner →</button></div>
               <div class="house-service-list">${properties.map((property) => {
                 const assigned = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
                 return `<button class="house-service-row" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small class="house-service-partners">${assigned.length ? assigned.map((provider) => escapeHtml(provider.name)).join(' · ') : 'Noch keine Servicepartner ausgewählt'}</small></span></button>`;
@@ -2154,17 +2156,20 @@
     function partnerListHtml(list) {
       return list.length ? `<ul class="partner-list">${list.map((provider) => `<li><span>${escapeHtml(provider.name)}</span><em>${partnerCategoryLabel(provider)}</em></li>`).join('')}</ul>` : 'Keine Servicepartner zugeordnet';
     }
+    let assignedScope = 'single';
     function assignedProvidersPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
-      const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
+      const multiHouse = properties.length > 1;
+      const targets = assignedScope === 'all' && multiHouse ? properties.map((item) => propertyWithDefaults(item)) : [property];
+      const assignedPairs = targets.flatMap((target) => providers.filter((provider) => (servicePartnerAssignments[target.id] || []).includes(provider.id)).map((provider) => ({ property: target, provider })));
       const fileSize = (bytes) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-      const providerCards = assignedProviders.map((provider) => {
+      const providerCards = assignedPairs.map(({ property, provider }) => {
         const providerDocuments = documents.filter((document) => document.propertyId === property.id && document.providerId === provider.id)
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${provider.distances?.[property.id] != null ? `<span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span>` : ''}</div></div><div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
+        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" data-provider-property="${escapeHtml(property.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}${multiHouse ? `<span class="house-chip" title="Dieses Ferienhaus nutzt den Servicepartner">${icon('home')}${escapeHtml(property.name)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${provider.distances?.[property.id] != null ? `<span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span>` : ''}</div></div><div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
       }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">${escapeHtml(property.name)} · Dokumente je Partner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
-        ${assignedProviders.length ? `<div class="assigned-provider-list">${providerCards}</div>` : '<section class="card empty">Diesem Ferienhaus sind noch keine Servicepartner zugeordnet.</section>'}`;
+      return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">${assignedScope === 'all' && multiHouse ? 'Alle Ferienhäuser' : escapeHtml(property.name)} · Dokumente je Partner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
+        ${assignedPairs.length ? `<div class="assigned-provider-list">${providerCards}</div>` : `<section class="card empty">${targets.length > 1 ? 'Den Ferienhäusern' : 'Diesem Ferienhaus'} sind noch keine Servicepartner zugeordnet.</section>`}`;
     }
     function propertyDetailPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
@@ -2210,7 +2215,7 @@
             <button class="assign-provider-btn ${isAssigned ? 'selected' : ''}" data-action="toggle-provider-assignment" data-provider="${escapeHtml(provider.id)}" data-property="${escapeHtml(property.id)}" aria-label="${isAssigned ? 'Zuordnung für ' + escapeHtml(property.name) + ' entfernen' : 'Diesem Ferienhaus zuordnen'}" aria-pressed="${isAssigned}" title="${isAssigned ? 'Zugeordnet – Klick zum Entfernen' : 'Diesem Ferienhaus zuordnen'}">${icon('check')}</button>
             <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-favorite="${escapeHtml(provider.id)}" aria-label="${isFavorite ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}" aria-pressed="${isFavorite}" title="${isFavorite ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}"><svg viewBox="0 0 24 24" fill="${isFavorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg></button>
           </div>
-          <div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${categoryLabel}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}</div>
+          <div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${categoryLabel}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}${properties.length > 1 ? properties.filter((item) => (servicePartnerAssignments[item.id] || []).includes(provider.id)).map((item) => `<span class="house-chip" title="Dieses Ferienhaus nutzt den Servicepartner">${icon('home')}${escapeHtml(item.name)}</span>`).join('') : ''}</div>
           <div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town)}</span><span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span></div></div>
         </article>`;
       }).join('');
@@ -3631,7 +3636,9 @@
         render();
       }
       if (action === 'manage-assigned-providers') {
-        selectedPropertyId = event.target.closest('[data-action]').dataset.property;
+        const trigger = event.target.closest('[data-action]');
+        selectedPropertyId = trigger.dataset.property || properties[0]?.id;
+        assignedScope = trigger.dataset.scope === 'all' ? 'all' : 'single';
         currentPage = 'assignedProviders';
         render();
       }
@@ -3779,7 +3786,7 @@
           });
           const nextDocuments = [...documents, {
             id: `document-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            propertyId: providerId ? selectedPropertyId : documentsProperty,
+            propertyId: providerId ? (event.target.dataset.providerProperty || selectedPropertyId) : documentsProperty,
             ...(providerId ? { providerId } : {}),
             name: file.name,
             type: file.type,
