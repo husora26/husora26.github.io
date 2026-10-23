@@ -545,6 +545,13 @@
     @media (max-width: 520px) { .house-scene { height: 360px; } }
     .control-list { display: grid; gap: 10px; padding: 4px 18px 16px; }
     .control-list-title { margin: 0 18px 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .position-group { margin-bottom: 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .position-group-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; padding: 10px 14px; background: #f4f7f3; }
+    .position-group-head strong { font-size: 13px; }
+    .position-group-head span { color: var(--muted); font-size: 11px; }
+    .position-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); }
+    .position-row strong { display: block; font-size: 12px; }
+    .position-row small { display: block; margin-top: 2px; color: var(--muted); font-size: 10.5px; line-height: 1.4; }
     .control-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; }
     .control-card-main { min-width: 0; display: grid; gap: 3px; }
     .control-card-main strong { font-size: 13px; }
@@ -816,6 +823,13 @@
         </nav>
       </div>
     </div>
+  </div>
+  <div class="modal-backdrop" id="control-positions-modal" role="dialog" aria-modal="true" aria-labelledby="control-positions-title">
+    <section class="modal send-plan-modal">
+      <div class="modal-head"><div><h2 id="control-positions-title">Kontrollpositionen</h2><p id="control-positions-subtitle"></p></div><button class="close-btn" type="button" id="close-control-positions" aria-label="Schließen">✕</button></div>
+      <div id="control-positions-body"></div>
+      <div class="form-actions"><button type="button" class="secondary-btn" id="control-positions-close">Schließen</button></div>
+    </section>
   </div>
   <div class="modal-backdrop" id="inspection-plan-modal" role="dialog" aria-modal="true" aria-labelledby="inspection-plan-title">
     <section class="modal send-plan-modal">
@@ -2295,9 +2309,8 @@
             return `<div class="exchange-actions"><button class="primary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">${icon('plus')} Kontrolle erstellen</button></div><p class="control-list-title">Erstellte Kontrollen (${controls.length})</p>${controls.length ? `<div class="control-list">${controlCards}</div>` : '<div class="empty">Noch keine Kontrolle erstellt. Lege eine Kontrolle an und weise ihr einen Servicepartner zu.</div>'}`;
           })()}</div>
         </section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste</h2><p class="card-caption">${absenceChecklist.length} Positionen für ${escapeHtml(property.name)}</p></div></div>
-          <div class="checklist">${absenceChecklist.map((item) => `<div class="checklist-item"><span class="checklist-dot"></span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small>${planFor(property.id).items?.[item.id] ? `<span class="item-frequency">${planFrequencyLabel(planFor(property.id).items[item.id])}</span>` : ''}</span></div>`).join('')}</div>
-          <div class="manual-check-bar"><p>Hake die Positionen selbst ab und protokolliere die Kontrolle.</p><button class="primary-btn" type="button" data-action="toggle-manual-check" aria-expanded="${inspectionManual}">${inspectionManual ? 'Manuelles Abhaken schließen' : 'Prüfliste manuell abhaken'}</button></div>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Kontrollpositionen</h2><p class="card-caption">${controlsFor(property.id).length} ${controlsFor(property.id).length === 1 ? 'Kontrolle' : 'Kontrollen'} für ${escapeHtml(property.name)}</p></div></div>
+          <div class="manual-check-bar" style="border-top:0"><p>Alle Prüfpositionen deiner Kontrollen mit dem jeweiligen Servicepartner.</p><div class="control-card-actions"><button class="primary-btn" type="button" data-action="show-control-positions">Kontrollpositionen anzeigen</button><button class="secondary-btn" type="button" data-action="toggle-manual-check" aria-expanded="${inspectionManual}">${inspectionManual ? 'Manuelles Abhaken schließen' : 'Prüfliste manuell abhaken'}</button></div></div>
         </section>
         ${inspectionManual ? `<section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste manuell abhaken</h2><p class="card-caption">${complete} von ${selectedItems.length} ausgewählten Punkten erledigt</p></div>${selectedItems.length ? `<div class="winter-progress"><progress max="${selectedItems.length}" value="${complete}" aria-label="${complete} von ${selectedItems.length} Abwesenheitspunkten erledigt"></progress><strong>${absenceProgress} %</strong></div>` : ''}<span class="status ${selectedItems.length && complete === selectedItems.length ? '' : 'pending'}">${selectedItems.length && complete === selectedItems.length ? 'Bereit zum Protokollieren' : selectedItems.length ? 'Kontrolle offen' : 'Keine Prüfpunkte ausgewählt'}</span></div>
           ${selectedItems.length ? `<div class="checklist">${selectedItems.map((item) => `<label class="checklist-item"><input type="checkbox" data-inspection-check="${item.id}" ${checks[item.id] ? 'checked' : ''}><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small>${planFor(property.id).items?.[item.id] ? `<span class="item-frequency">${planFrequencyLabel(planFor(property.id).items[item.id])}</span>` : ''}</span></label>`).join('')}</div>` : '<div class="empty">Keine Prüfpunkte ausgewählt. Erstelle zuerst eine Kontrolle mit mindestens einer Position.</div>'}
@@ -2308,7 +2321,7 @@
           ${(planUploads[property.id] || []).length ? `<div class="inspection-archive-list">${(planUploads[property.id] || []).slice().reverse().map((upload) => `<article class="inspection-archive-row"><div class="inspection-archive-main"><strong>Hochgeladene PDF · ${escapeHtml(upload.name)}</strong><small>Archiviert ${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(upload.uploadedAt)))} · ${Math.max(1, Math.round(upload.size / 1024))} KB</small></div><div class="inspection-archive-actions"><button class="secondary-btn" type="button" data-open-upload="${escapeHtml(upload.id)}">PDF anzeigen</button><button class="secondary-btn" type="button" data-delete-upload="${escapeHtml(upload.id)}">Löschen</button></div></article>`).join('')}</div>` : ''}
           ${archiveEntries.length ? `<div class="inspection-archive-list">${archiveEntries.map(({ entry, index }) => {
             const checkedItems = Array.isArray(entry.checkedItemsSnapshot) ? entry.checkedItemsSnapshot.length : entry.checkedItems?.length || 0;
-            return `<article class="inspection-archive-row"><div class="inspection-archive-main"><strong>Abwesenheitskontrolle · ${escapeHtml(formatInspectionDate(entry.date))}</strong><small>${checkedItems} geprüfte ${checkedItems === 1 ? 'Position' : 'Positionen'}${entry.completedAt ? ` · gespeichert ${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(entry.completedAt)))}` : ''}</small></div><div class="inspection-archive-actions"><button class="secondary-btn" type="button" data-inspection-archive="${index}">Protokoll ansehen / PDF</button></div></article>`;
+            return `<article class="inspection-archive-row"><div class="inspection-archive-main"><strong>Abwesenheitskontrolle · ${escapeHtml(formatInspectionDate(entry.date))}</strong><small>${checkedItems} geprüfte ${checkedItems === 1 ? 'Position' : 'Positionen'}${entry.completedAt ? ` · gespeichert ${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(entry.completedAt)))}` : ''}</small></div><div class="inspection-archive-actions"><button class="secondary-btn" type="button" data-inspection-archive="${index}">Protokoll ansehen / PDF</button><button class="secondary-btn" type="button" data-delete-protocol="${index}">Löschen</button></div></article>`;
           }).join('')}</div><p class="inspection-archive-note">Das Archiv wird lokal in diesem Browser gespeichert. Für eine externe Ablage kannst du ein Protokoll öffnen und als PDF sichern.</p>` : (planUploads[property.id] || []).length ? '' : '<div class="empty">Für dieses Ferienhaus sind noch keine Prüfprotokolle archiviert.</div>'}
         </section>`;
     }
@@ -2424,6 +2437,22 @@
       }).join('');
       document.getElementById('inspection-plan-modal').classList.add('open');
     }
+    function openControlPositions() {
+      const property = properties.find((item) => item.id === inspectionProperty) || properties[0];
+      const controls = controlsFor(property.id);
+      const positionCount = controls.reduce((sum, control) => sum + Object.keys(control.items || {}).length, 0);
+      document.getElementById('control-positions-subtitle').textContent = `${property.name} · ${positionCount} ${positionCount === 1 ? 'Position' : 'Positionen'} in ${controls.length} ${controls.length === 1 ? 'Kontrolle' : 'Kontrollen'}`;
+      document.getElementById('control-positions-body').innerHTML = controls.length
+        ? controls.map((control) => {
+          const provider = providers.find((entry) => entry.id === control.providerId);
+          const partnerName = provider ? provider.name : 'Servicepartner nicht mehr verfügbar';
+          const rows = controlItems(control);
+          return `<div class="position-group"><div class="position-group-head"><strong>${escapeHtml(control.name)}</strong><span>Servicepartner: ${escapeHtml(partnerName)}${provider ? ` · ${partnerCategoryLabel(provider)}` : ''}</span></div>${rows.map((item) => `<div class="position-row"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small></span><span class="item-frequency">${escapeHtml(planFrequencyLabel(control.items[item.id]))}</span></div>`).join('')}</div>`;
+        }).join('')
+        : '<div class="empty">Noch keine Kontrolle erstellt. Lege unter „Austausch Kontrollplan“ eine Kontrolle an, dann erscheinen hier ihre Positionen.</div>';
+      document.getElementById('control-positions-modal').classList.add('open');
+    }
+    function closeControlPositions() { document.getElementById('control-positions-modal').classList.remove('open'); }
     function closeInspectionPlan() { document.getElementById('inspection-plan-modal').classList.remove('open'); }
     function persistControls(nextControls, nextSelections) {
       const previousControls = inspectionControls;
@@ -3097,6 +3126,34 @@
         render();
         return;
       }
+      const deleteProtocol = event.target.closest('[data-delete-protocol]');
+      if (deleteProtocol) {
+        const propertyId = inspectionProperty;
+        const entry = inspectionLogEntries(propertyId)[Number(deleteProtocol.dataset.deleteProtocol)];
+        if (!entry || !window.confirm(`Prüfprotokoll vom ${formatInspectionDate(entry.date)} wirklich löschen?`)) return;
+        const rawLog = inspectionLog[propertyId];
+        let nextEntries = [];
+        if (Array.isArray(rawLog)) {
+          let validIndex = -1;
+          nextEntries = rawLog.filter((item) => {
+            if (!(item && /^\d{4}-\d{2}-\d{2}$/.test(item.date))) return true;
+            validIndex += 1;
+            return validIndex !== Number(deleteProtocol.dataset.deleteProtocol);
+          });
+        }
+        const nextLog = { ...inspectionLog, [propertyId]: nextEntries };
+        try {
+          localStorage.setItem('stugliv-inspection-log', JSON.stringify(nextLog));
+        } catch (error) {
+          console.error('Prüfprotokoll konnte nicht gelöscht werden:', error);
+          showToast('Prüfprotokoll konnte nicht gelöscht werden. Browser-Speicher prüfen.');
+          return;
+        }
+        inspectionLog = nextLog;
+        render();
+        showToast('Prüfprotokoll wurde gelöscht.');
+        return;
+      }
       const archivedInspectionButton = event.target.closest('[data-inspection-archive]');
       if (archivedInspectionButton) {
         const archiveIndex = Number(archivedInspectionButton.dataset.inspectionArchive);
@@ -3252,6 +3309,7 @@
         bookingView = 'list';
         render();
       }
+      if (action === 'show-control-positions') openControlPositions();
       if (action === 'toggle-manual-check') { inspectionManual = !inspectionManual; render(); }
       if (action === 'finish-inspection') finishInspection();
       if (action === 'send-inspection-plan') openSendPlan(event.target.closest('[data-action]').dataset.control);
@@ -3744,6 +3802,9 @@
     document.getElementById('view-plan-open').addEventListener('click', openPlanPdf);
     document.getElementById('view-plan-file').addEventListener('change', (event) => pickPlanUpload(event.target.files[0]));
     document.getElementById('view-plan-archive').addEventListener('click', archivePlanUpload);
+    document.getElementById('close-control-positions').addEventListener('click', closeControlPositions);
+    document.getElementById('control-positions-close').addEventListener('click', closeControlPositions);
+    document.getElementById('control-positions-modal').addEventListener('click', (event) => { if (event.target.id === 'control-positions-modal') closeControlPositions(); });
     document.getElementById('close-inspection-plan').addEventListener('click', closeInspectionPlan);
     document.getElementById('inspection-plan-cancel').addEventListener('click', closeInspectionPlan);
     document.getElementById('inspection-plan-save').addEventListener('click', saveInspectionPlan);
@@ -3776,6 +3837,7 @@
         closeInspectionConfirmation();
         closeSendPlan();
         closeInspectionPlan();
+        closeControlPositions();
         autoModal.classList.remove('open');
       }
     });
