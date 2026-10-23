@@ -436,6 +436,14 @@
     .plan-rows { display: grid; gap: 8px; margin: 12px 0; }
     .plan-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; }
     .plan-row.off { opacity: .55; }
+    .plan-row.covered { background: #eceeea; border-color: #dcdfd9; }
+    .plan-row.covered label > span { color: #7a827c; }
+    .plan-covered { display: block; margin-top: 3px; color: #8a6a2d; font-size: 10.5px; font-weight: 700; }
+    .plan-custom-tag { margin-left: 6px; padding: 1px 6px; border-radius: 8px; color: var(--green); background: #e6f1ea; font-size: 9px; font-weight: 700; }
+    .plan-remove { margin-left: 8px; padding: 0 6px; border: 0; border-radius: 4px; color: var(--red); background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .plan-custom { margin: 8px 0 4px; }
+    .plan-custom-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 4px; }
+    @media (max-width: 720px) { .plan-custom-grid { grid-template-columns: 1fr; } }
     .plan-row label { display: flex; gap: 9px; align-items: flex-start; font-size: 12px; font-weight: 650; cursor: pointer; }
     .plan-row input[type=checkbox] { margin-top: 2px; }
     .plan-row select:disabled { background: #f0f1ee; }
@@ -556,6 +564,8 @@
     .control-card-main { min-width: 0; display: grid; gap: 3px; }
     .control-card-main strong { font-size: 13px; }
     .control-card-main small { color: var(--muted); font-size: 11px; }
+    .control-due { color: #1f6b41 !important; font-weight: 700; }
+    .control-due.overdue { color: var(--red) !important; }
     .control-card-partner { font-size: 12px; color: var(--ink); }
     .control-card-partner em { font-style: normal; color: var(--muted); }
     .control-card-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
@@ -840,7 +850,12 @@
         <p class="send-plan-note" id="inspection-plan-provider-note" hidden>Diesem Ferienhaus ist noch kein Servicepartner zugeordnet. Ordne zuerst unter „Servicepartner“ einen Betrieb zu.</p>
       </div>
       <span class="form-label">Zu prüfende Positionen und Kontrolltaktung</span>
+      <p class="send-plan-note ok" id="plan-due-note"></p>
       <div class="plan-rows" id="inspection-plan-rows"></div>
+      <div class="plan-custom">
+        <span class="form-label">Eigene Position ergänzen</span>
+        <div class="plan-custom-grid"><input class="form-control" id="plan-custom-title" maxlength="80" placeholder="z. B. Regenwassertonne leeren"><input class="form-control" id="plan-custom-detail" maxlength="200" placeholder="Beschreibung (optional)"><button type="button" class="secondary-btn" id="plan-custom-add">Hinzufügen</button></div>
+      </div>
       <div class="form-actions"><button type="button" class="secondary-btn" id="inspection-plan-cancel">Abbrechen</button><button type="button" class="primary-btn" id="inspection-plan-save">Kontrolle speichern</button></div>
     </section>
   </div>
@@ -1150,6 +1165,14 @@
       { id: 'mail', title: 'Post und Grundstück', detail: 'Briefkasten leeren, Mülltermine beachten und Außenbereich auf offensichtliche Schäden oder unbefugten Zutritt prüfen.' },
       { id: 'report', title: 'Dokumentation und Rückmeldung', detail: 'Datum, Zählerstände nach Vereinbarung, Auffälligkeiten und Fotos dokumentieren; dringende Schäden sofort melden.' }
     ];
+    let customPositions = [];
+    try {
+      const storedPositions = JSON.parse(localStorage.getItem('stugliv-custom-positions') || '[]');
+      if (Array.isArray(storedPositions)) {
+        customPositions = storedPositions.filter((entry) => entry && typeof entry.id === 'string' && typeof entry.title === 'string');
+        customPositions.forEach((entry) => absenceChecklist.push({ id: entry.id, title: entry.title, detail: entry.detail || 'Eigene Prüfposition', custom: true }));
+      }
+    } catch (error) { customPositions = []; }
     const winterChecklist = [
       { id: 'heating', title: 'Heizung und Frostschutz einstellen', detail: 'Funktion und vereinbarte Mindesttemperatur prüfen. Einstellungen nur nach Eigentümer-Anweisung vornehmen.' },
       { id: 'water', title: 'Wasserleitungen und Außenhähne frostsicher machen', detail: 'Gartenschläuche abnehmen und Außenhähne nach Hausroutine sichern. Wasserzufuhr oder Leitungen nur gemäß objektspezifischer Anleitung entleeren bzw. absperren.' },
@@ -2304,7 +2327,9 @@
               const provider = providers.find((entry) => entry.id === control.providerId);
               const itemCount = Object.keys(control.items || {}).length;
               const frequencies = [...new Set(Object.values(control.items || {}))].map(planFrequencyLabel).join(', ');
-              return `<article class="control-card"><div class="control-card-main"><strong>${escapeHtml(control.name)}</strong><span class="control-card-partner"><em>Servicepartner:</em> ${provider ? `${escapeHtml(provider.name)} · ${partnerCategoryLabel(provider)}` : 'nicht mehr verfügbar'}</span><small>${itemCount} ${itemCount === 1 ? 'Prüfposition' : 'Prüfpositionen'} · ${escapeHtml(frequencies)} · erstellt am ${escapeHtml(dateFormat.format(new Date(control.createdAt)))}</small></div><div class="control-card-actions"><button type="button" data-action="send-inspection-plan" data-control="${escapeHtml(control.id)}">An Servicepartner schicken</button><button type="button" data-action="view-inspection-plan" data-control="${escapeHtml(control.id)}">Kontrollplan abrufen</button><button type="button" data-action="edit-control" data-control="${escapeHtml(control.id)}">Bearbeiten</button><button type="button" class="danger" data-action="delete-control" data-control="${escapeHtml(control.id)}">Löschen</button></div></article>`;
+              const due = controlDueInfo(property.id, control.items, control.createdAt).due;
+              const overdue = due && due < localDateKey(new Date());
+              return `<article class="control-card"><div class="control-card-main"><strong>${escapeHtml(control.name)}</strong><span class="control-card-partner"><em>Servicepartner:</em> ${provider ? `${escapeHtml(provider.name)} · ${partnerCategoryLabel(provider)}` : 'nicht mehr verfügbar'}</span><small>${itemCount} ${itemCount === 1 ? 'Prüfposition' : 'Prüfpositionen'} · ${escapeHtml(frequencies)} · erstellt am ${escapeHtml(dateFormat.format(new Date(control.createdAt)))}</small>${due ? `<small class="control-due ${overdue ? 'overdue' : ''}">${overdue ? 'Überfällig seit' : 'Spätestens durchzuführen bis'}: ${escapeHtml(formatInspectionDate(due))}</small>` : ''}</div><div class="control-card-actions"><button type="button" data-action="send-inspection-plan" data-control="${escapeHtml(control.id)}">An Servicepartner schicken</button><button type="button" data-action="view-inspection-plan" data-control="${escapeHtml(control.id)}">Kontrollplan abrufen</button><button type="button" data-action="edit-control" data-control="${escapeHtml(control.id)}">Bearbeiten</button><button type="button" class="danger" data-action="delete-control" data-control="${escapeHtml(control.id)}">Löschen</button></div></article>`;
             }).join('');
             return `<div class="exchange-actions"><button class="primary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">${icon('plus')} Kontrolle erstellen</button></div><p class="control-list-title">Erstellte Kontrollen (${controls.length})</p>${controls.length ? `<div class="control-list">${controlCards}</div>` : '<div class="empty">Noch keine Kontrolle erstellt. Lege eine Kontrolle an und weise ihr einen Servicepartner zu.</div>'}`;
           })()}</div>
@@ -2411,6 +2436,107 @@
       return providers.filter((provider) => provider.category !== 'renovation' && (favorites.includes(provider.id) || provider.id === currentId));
     }
     let planEditControlId = null;
+    function addDaysToKey(dateKey, days) {
+      const date = new Date(`${dateKey}T12:00:00`);
+      date.setDate(date.getDate() + days);
+      return localDateKey(date);
+    }
+    function controlDueInfo(propertyId, items, createdAt) {
+      const created = localDateKey(new Date(createdAt));
+      const entries = inspectionLogEntries(propertyId);
+      let due = '';
+      let frequency = '';
+      Object.entries(items || {}).forEach(([itemId, itemFrequency]) => {
+        const lastChecks = entries.filter((entry) => entry.checkedItems.includes(itemId)).map((entry) => entry.date);
+        const base = [created, ...lastChecks].sort().pop();
+        const itemDue = addDaysToKey(base, houseIntervalDays[itemFrequency] || 30);
+        if (!due || itemDue < due) { due = itemDue; frequency = itemFrequency; }
+      });
+      return { due, frequency };
+    }
+    function updatePlanDue() {
+      const note = document.getElementById('plan-due-note');
+      if (!note) return;
+      const items = {};
+      document.querySelectorAll('#inspection-plan-rows [data-plan-item]').forEach((box) => {
+        if (box.checked) items[box.dataset.planItem] = document.querySelector(`[data-plan-frequency="${box.dataset.planItem}"]`).value;
+      });
+      if (!Object.keys(items).length) { note.textContent = 'Wähle mindestens eine Position, dann siehst du hier, bis wann die Kontrolle spätestens durchgeführt werden muss.'; return; }
+      const existing = planEditControlId ? controlsFor(planEditProperty).find((entry) => entry.id === planEditControlId) : null;
+      const { due, frequency } = controlDueInfo(planEditProperty, items, existing?.createdAt || new Date().toISOString());
+      note.innerHTML = `Kontrolle spätestens durchzuführen bis: <strong>${escapeHtml(formatInspectionDate(due))}</strong> (kürzeste Taktung: ${escapeHtml(planFrequencyLabel(frequency))})`;
+    }
+    function renderPlanRows(propertyId, control, state) {
+      const controls = controlsFor(propertyId);
+      const defaultFrequency = inspectionCadence[propertyId] === 'weekly' ? 'w1' : 'm1';
+      const others = controls.filter((entry) => entry.id !== control?.id);
+      document.getElementById('inspection-plan-rows').innerHTML = absenceChecklist.map((item) => {
+        const saved = state?.[item.id];
+        const enabled = saved ? saved.enabled : control ? Boolean(control.items[item.id]) : controls.length === 0;
+        const frequency = saved?.frequency || (control && control.items[item.id]) || defaultFrequency;
+        const covering = others.filter((entry) => entry.items?.[item.id]);
+        const coveredBy = covering.map((entry) => `${providers.find((provider) => provider.id === entry.providerId)?.name || 'Servicepartner'} (${entry.name})`).join(', ');
+        return `<div class="plan-row ${enabled ? '' : 'off'} ${covering.length ? 'covered' : ''}"><label><input type="checkbox" data-plan-item="${item.id}" ${enabled ? 'checked' : ''}><span>${escapeHtml(item.title)}${item.custom ? '<span class="plan-custom-tag">Eigene</span>' : ''}${covering.length ? `<small class="plan-covered">Wird bereits kontrolliert von ${escapeHtml(coveredBy)}</small>` : ''}</span></label><select class="form-control" data-plan-frequency="${item.id}" aria-label="Kontrolltaktung für ${escapeHtml(item.title)}" ${enabled ? '' : 'disabled'}>${planFrequencies.map(([value, label]) => `<option value="${value}" ${value === frequency ? 'selected' : ''}>${label}</option>`).join('')}</select>${item.custom ? `<button class="plan-remove" type="button" data-plan-remove="${item.id}" aria-label="Eigene Position „${escapeHtml(item.title)}“ löschen">Position löschen</button>` : ''}</div>`;
+      }).join('');
+      updatePlanDue();
+    }
+    function readPlanRowState() {
+      const state = {};
+      document.querySelectorAll('#inspection-plan-rows [data-plan-item]').forEach((box) => {
+        state[box.dataset.planItem] = { enabled: box.checked, frequency: document.querySelector(`[data-plan-frequency="${box.dataset.planItem}"]`)?.value };
+      });
+      return state;
+    }
+    function persistCustomPositions() {
+      try {
+        localStorage.setItem('stugliv-custom-positions', JSON.stringify(customPositions));
+        return true;
+      } catch (error) {
+        console.error('Eigene Position konnte nicht gespeichert werden:', error);
+        showToast('Eigene Position konnte nicht gespeichert werden. Browser-Speicher prüfen.');
+        return false;
+      }
+    }
+    function addCustomPosition() {
+      const titleInput = document.getElementById('plan-custom-title');
+      const detailInput = document.getElementById('plan-custom-detail');
+      const title = titleInput.value.trim();
+      if (!title) { showToast('Bitte einen Namen für die Position eingeben.'); titleInput.focus(); return; }
+      if (absenceChecklist.some((item) => item.title.toLocaleLowerCase('de') === title.toLocaleLowerCase('de'))) { showToast('Diese Position gibt es bereits.'); return; }
+      const entry = { id: `custom-${Date.now()}`, title, detail: detailInput.value.trim() || 'Eigene Prüfposition' };
+      customPositions = [...customPositions, entry];
+      if (!persistCustomPositions()) { customPositions = customPositions.slice(0, -1); return; }
+      const state = readPlanRowState();
+      absenceChecklist.push({ ...entry, custom: true });
+      state[entry.id] = { enabled: true, frequency: inspectionCadence[planEditProperty] === 'weekly' ? 'w1' : 'm1' };
+      renderPlanRows(planEditProperty, planEditControlId ? controlsFor(planEditProperty).find((item) => item.id === planEditControlId) : null, state);
+      titleInput.value = '';
+      detailInput.value = '';
+      showToast('Eigene Position wurde ergänzt.');
+    }
+    function removeCustomPosition(itemId) {
+      const item = absenceChecklist.find((entry) => entry.id === itemId && entry.custom);
+      if (!item || !window.confirm(`Eigene Position „${item.title}“ löschen? Sie wird auch aus allen Kontrollen entfernt.`)) return;
+      const state = readPlanRowState();
+      delete state[itemId];
+      const nextControls = Object.fromEntries(Object.entries(inspectionControls).map(([propertyId, list]) => [propertyId, list.map((control) => {
+        const { [itemId]: removed, ...items } = control.items || {};
+        return { ...control, items };
+      })]));
+      const nextSelections = { ...inspectionSelections };
+      Object.entries(nextControls).forEach(([propertyId, list]) => {
+        const covered = new Set(list.flatMap((control) => Object.keys(control.items)));
+        if (covered.size) nextSelections[propertyId] = absenceChecklist.map((entry) => entry.id).filter((id) => id !== itemId && covered.has(id));
+        else delete nextSelections[propertyId];
+      });
+      const previousCustom = customPositions;
+      customPositions = customPositions.filter((entry) => entry.id !== itemId);
+      if (!persistCustomPositions() || !persistControls(nextControls, nextSelections)) { customPositions = previousCustom; return; }
+      absenceChecklist.splice(absenceChecklist.findIndex((entry) => entry.id === itemId), 1);
+      renderPlanRows(planEditProperty, planEditControlId ? controlsFor(planEditProperty).find((entry) => entry.id === planEditControlId) : null, state);
+      render();
+      showToast('Eigene Position wurde gelöscht.');
+    }
     function openInspectionPlan(propertyId, controlId) {
       const property = properties.find((item) => item.id === propertyId) || properties.find((item) => item.id === inspectionProperty) || properties[0];
       planEditProperty = property.id;
@@ -2430,11 +2556,7 @@
       document.getElementById('inspection-plan-name').value = control ? control.name : `Kontrolle ${controls.length + 1}`;
       document.getElementById('inspection-plan-title').textContent = control ? 'Kontrolle bearbeiten' : 'Kontrolle erstellen';
       document.getElementById('inspection-plan-subtitle').textContent = property.name;
-      document.getElementById('inspection-plan-rows').innerHTML = absenceChecklist.map((item) => {
-        const enabled = control ? Boolean(control.items[item.id]) : controls.length === 0;
-        const frequency = (control && control.items[item.id]) || defaultFrequency;
-        return `<div class="plan-row ${enabled ? '' : 'off'}"><label><input type="checkbox" data-plan-item="${item.id}" ${enabled ? 'checked' : ''}><span>${escapeHtml(item.title)}</span></label><select class="form-control" data-plan-frequency="${item.id}" aria-label="Kontrolltaktung für ${escapeHtml(item.title)}" ${enabled ? '' : 'disabled'}>${planFrequencies.map(([value, label]) => `<option value="${value}" ${value === frequency ? 'selected' : ''}>${label}</option>`).join('')}</select></div>`;
-      }).join('');
+      renderPlanRows(property.id, control, null);
       document.getElementById('inspection-plan-modal').classList.add('open');
     }
     function openControlPositions() {
@@ -2447,7 +2569,7 @@
           const provider = providers.find((entry) => entry.id === control.providerId);
           const partnerName = provider ? provider.name : 'Servicepartner nicht mehr verfügbar';
           const rows = controlItems(control);
-          return `<div class="position-group"><div class="position-group-head"><strong>${escapeHtml(control.name)}</strong><span>Servicepartner: ${escapeHtml(partnerName)}${provider ? ` · ${partnerCategoryLabel(provider)}` : ''}</span></div>${rows.map((item) => `<div class="position-row"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small></span><span class="item-frequency">${escapeHtml(planFrequencyLabel(control.items[item.id]))}</span></div>`).join('')}</div>`;
+          return `<div class="position-group"><div class="position-group-head"><strong>${escapeHtml(control.name)}</strong><span>Servicepartner: ${escapeHtml(partnerName)}${provider ? ` · ${partnerCategoryLabel(provider)}` : ''} · spätestens bis ${escapeHtml(formatInspectionDate(controlDueInfo(property.id, control.items, control.createdAt).due))}</span></div>${rows.map((item) => `<div class="position-row"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small></span><span class="item-frequency">${escapeHtml(planFrequencyLabel(control.items[item.id]))}</span></div>`).join('')}</div>`;
         }).join('')
         : '<div class="empty">Noch keine Kontrolle erstellt. Lege unter „Austausch Kontrollplan“ eine Kontrolle an, dann erscheinen hier ihre Positionen.</div>';
       document.getElementById('control-positions-modal').classList.add('open');
@@ -3809,11 +3931,19 @@
     document.getElementById('inspection-plan-cancel').addEventListener('click', closeInspectionPlan);
     document.getElementById('inspection-plan-save').addEventListener('click', saveInspectionPlan);
     document.getElementById('inspection-plan-modal').addEventListener('click', (event) => { if (event.target.id === 'inspection-plan-modal') closeInspectionPlan(); });
+    document.getElementById('plan-custom-add').addEventListener('click', addCustomPosition);
+    document.getElementById('plan-custom-title').addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); addCustomPosition(); } });
+    document.getElementById('inspection-plan-rows').addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-plan-remove]');
+      if (remove) removeCustomPosition(remove.dataset.planRemove);
+    });
     document.getElementById('inspection-plan-rows').addEventListener('change', (event) => {
+      if (event.target.matches('[data-plan-frequency]')) { updatePlanDue(); return; }
       if (!event.target.matches('[data-plan-item]')) return;
       const row = event.target.closest('.plan-row');
       row.classList.toggle('off', !event.target.checked);
       row.querySelector('select').disabled = !event.target.checked;
+      updatePlanDue();
     });
     document.getElementById('close-send-plan').addEventListener('click', closeSendPlan);
     document.getElementById('send-plan-cancel').addEventListener('click', closeSendPlan);
