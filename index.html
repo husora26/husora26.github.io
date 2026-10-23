@@ -272,6 +272,12 @@
     .document-actions { display: flex; gap: 8px; align-items: center; }
     .document-actions a, .document-actions button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--green); background: white; font-size: 10px; font-weight: 650; text-decoration: none; cursor: pointer; }
     .document-actions .danger-btn { color: var(--red); }
+    .assigned-house-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 20px; margin-bottom: 16px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(120deg, #f4f1e5, #eef2e9); }
+    .assigned-house-name { display: grid; gap: 2px; min-width: 0; }
+    .assigned-house-name span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+    .assigned-house-name strong { font-size: 20px; letter-spacing: -.3px; }
+    .assigned-house-name small { color: var(--muted); font-size: 11px; }
+    .assigned-house-switch { display: grid; gap: 4px; min-width: min(260px, 100%); }
     .assigned-provider-list { display: grid; gap: 14px; }
     .assigned-provider-card { padding: 18px; }
     .assigned-provider-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -1875,7 +1881,7 @@
                 return `<button class="house-service-row" data-action="open-inspection" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small>${escapeHtml(property.region || property.address)}</small></span><span class="house-service-badges">${inspectionStatusBadge(property.id)}${winterStatusBadge(property.id)}</span></button>`;
               }).join('') || '<div class="empty">Noch keine Ferienhäuser vorhanden.</div>'}</div>
             </section>
-            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-action="manage-assigned-providers" data-scope="all" data-property="${escapeHtml(properties[0]?.id || '')}">Servicepartner →</button></div>
+            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(properties[0]?.id || '')}">Servicepartner →</button></div>
               <div class="house-service-list">${properties.map((property) => {
                 const assigned = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
                 return `<button class="house-service-row" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small class="house-service-partners">${assigned.length ? assigned.map((provider) => escapeHtml(provider.name)).join(' · ') : 'Noch keine Servicepartner ausgewählt'}</small></span></button>`;
@@ -2156,20 +2162,20 @@
     function partnerListHtml(list) {
       return list.length ? `<ul class="partner-list">${list.map((provider) => `<li><span>${escapeHtml(provider.name)}</span><em>${partnerCategoryLabel(provider)}</em></li>`).join('')}</ul>` : 'Keine Servicepartner zugeordnet';
     }
-    let assignedScope = 'single';
     function assignedProvidersPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
       const multiHouse = properties.length > 1;
-      const targets = assignedScope === 'all' && multiHouse ? properties.map((item) => propertyWithDefaults(item)) : [property];
-      const assignedPairs = targets.flatMap((target) => providers.filter((provider) => (servicePartnerAssignments[target.id] || []).includes(provider.id)).map((provider) => ({ property: target, provider })));
+      const assignedPairs = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id)).map((provider) => ({ property, provider }));
       const fileSize = (bytes) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
       const providerCards = assignedPairs.map(({ property, provider }) => {
         const providerDocuments = documents.filter((document) => document.propertyId === property.id && document.providerId === provider.id)
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" data-provider-property="${escapeHtml(property.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}${multiHouse ? `<span class="house-chip" title="Dieses Ferienhaus nutzt den Servicepartner">${icon('home')}${escapeHtml(property.name)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${provider.distances?.[property.id] != null ? `<span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span>` : ''}</div></div><div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
+        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" data-provider-property="${escapeHtml(property.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${provider.distances?.[property.id] != null ? `<span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span>` : ''}</div></div><div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
       }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">${assignedScope === 'all' && multiHouse ? 'Alle Ferienhäuser' : escapeHtml(property.name)} · Dokumente je Partner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
-        ${assignedPairs.length ? `<div class="assigned-provider-list">${providerCards}</div>` : `<section class="card empty">${targets.length > 1 ? 'Den Ferienhäusern' : 'Diesem Ferienhaus'} sind noch keine Servicepartner zugeordnet.</section>`}`;
+      return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">Dokumente je Servicepartner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
+        <section class="assigned-house-bar"><div class="assigned-house-name"><span>Ferienhaus</span><strong>${escapeHtml(property.name)}</strong>${property.address ? `<small>${escapeHtml(property.address)}</small>` : ''}</div>
+          ${multiHouse ? `<label class="assigned-house-switch"><span class="form-label">Ferienhaus wechseln</span><select id="assigned-property" class="filter-select" aria-label="Ferienhaus wechseln">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)}${item.region ? ` · ${escapeHtml(item.region)}` : ''}</option>`).join('')}</select></label>` : ''}</section>
+        ${assignedPairs.length ? `<div class="assigned-provider-list">${providerCards}</div>` : '<section class="card empty">Diesem Ferienhaus sind noch keine Servicepartner zugeordnet.</section>'}`;
     }
     function propertyDetailPage() {
       const property = propertyWithDefaults(properties.find((item) => item.id === selectedPropertyId) || properties[0]);
@@ -3638,7 +3644,6 @@
       if (action === 'manage-assigned-providers') {
         const trigger = event.target.closest('[data-action]');
         selectedPropertyId = trigger.dataset.property || properties[0]?.id;
-        assignedScope = trigger.dataset.scope === 'all' ? 'all' : 'single';
         currentPage = 'assignedProviders';
         render();
       }
@@ -4095,6 +4100,12 @@
       render();
     }
     function closeProModal() { document.getElementById('pro-modal').classList.remove('open'); }
+    document.addEventListener('change', (event) => {
+      if (event.target.id !== 'assigned-property') return;
+      selectedPropertyId = event.target.value;
+      render();
+      document.getElementById('assigned-property')?.focus();
+    });
     document.addEventListener('change', (event) => {
       if (event.target.id !== 'plan-test-toggle') return;
       planOverride = event.target.checked ? 'pro' : 'free';
