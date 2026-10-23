@@ -450,6 +450,18 @@
     .pdf-viewer-modal { width: min(760px, 100%); }
     .pdf-viewer-frame { width: 100%; height: 60vh; border: 1px solid var(--line); border-radius: 8px; background: #f4f4f2; }
     .pdf-viewer-modal .form-actions a { text-decoration: none; display: inline-flex; align-items: center; }
+    .control-list { display: grid; gap: 10px; padding: 4px 18px 16px; }
+    .control-list-title { margin: 0 18px 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .control-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; }
+    .control-card-main { min-width: 0; display: grid; gap: 3px; }
+    .control-card-main strong { font-size: 13px; }
+    .control-card-main small { color: var(--muted); font-size: 11px; }
+    .control-card-partner { font-size: 12px; color: var(--ink); }
+    .control-card-partner em { font-style: normal; color: var(--muted); }
+    .control-card-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .control-card-actions button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--green); background: white; font-size: 10px; font-weight: 650; cursor: pointer; }
+    .control-card-actions .danger { color: var(--red); }
+    @media (max-width: 720px) { .control-card { flex-direction: column; align-items: stretch; } .control-card-actions { justify-content: flex-start; } }
     .exchange-partners { display: grid; gap: 8px; padding: 14px 18px 4px; }
     .partner-pick { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; cursor: pointer; }
     .partner-pick.is-selected { border-color: var(--green); background: #eef4ef; }
@@ -714,6 +726,11 @@
   <div class="modal-backdrop" id="inspection-plan-modal" role="dialog" aria-modal="true" aria-labelledby="inspection-plan-title">
     <section class="modal send-plan-modal">
       <div class="modal-head"><div><h2 id="inspection-plan-title">Kontrolle erstellen</h2><p id="inspection-plan-subtitle"></p></div><button class="close-btn" type="button" id="close-inspection-plan" aria-label="Schließen">✕</button></div>
+      <div class="send-plan-grid">
+        <label><span class="form-label">Name der Kontrolle</span><input class="form-control" id="inspection-plan-name" maxlength="80" placeholder="z. B. Monatliche Sichtkontrolle"></label>
+        <label><span class="form-label">Servicepartner für diese Kontrolle</span><select class="form-control" id="inspection-plan-provider"></select></label>
+        <p class="send-plan-note" id="inspection-plan-provider-note" hidden>Diesem Ferienhaus ist noch kein Servicepartner zugeordnet. Ordne zuerst unter „Servicepartner“ einen Betrieb zu.</p>
+      </div>
       <span class="form-label">Zu prüfende Positionen und Kontrolltaktung</span>
       <div class="plan-rows" id="inspection-plan-rows"></div>
       <div class="form-actions"><button type="button" class="secondary-btn" id="inspection-plan-cancel">Abbrechen</button><button type="button" class="primary-btn" id="inspection-plan-save">Kontrolle speichern</button></div>
@@ -753,7 +770,7 @@
   </div>
   <div class="modal-backdrop" id="auto-task-modal" role="dialog" aria-modal="true" aria-labelledby="auto-task-title">
     <div class="modal">
-      <div class="modal-head"><div><h2 id="auto-task-title">Automatische Aufgaben</h2><p>Wähle aus, welche Aufgaben für jedes Ferienhaus automatisch erstellt werden.</p></div><button class="close-btn" type="button" id="close-auto-task-modal" aria-label="Schließen">✕</button></div>
+      <div class="modal-head"><div><h2 id="auto-task-title">Automatische Aufgaben</h2><p id="auto-task-subtitle">Wähle aus, welche Aufgaben für jedes Ferienhaus automatisch erstellt werden.</p></div><button class="close-btn" type="button" id="close-auto-task-modal" aria-label="Schließen">✕</button></div>
       <div class="auto-template-list" id="auto-template-list"></div>
       <form id="auto-task-form">
         <span class="form-label">Eigene automatische Aufgabe erstellen</span>
@@ -1066,13 +1083,34 @@
     let inspectionCadence = {};
     let winterChecks = {};
     let inspectionPlans = {};
+    let inspectionControls = {};
     let planUploads = {};
     let pendingPlanUpload = null;
     try { planUploads = JSON.parse(localStorage.getItem('stugliv-plan-uploads') || '{}') || {}; } catch (error) { planUploads = {}; }
     try { inspectionPlans = JSON.parse(localStorage.getItem('stugliv-inspection-plans') || '{}') || {}; } catch (error) { inspectionPlans = {}; }
     const planFrequencies = [['w1', 'Jede Woche'], ['w2', 'Alle 2 Wochen'], ['m1', 'Monatlich'], ['q1', 'Vierteljährlich'], ['h1', 'Halbjährlich'], ['y1', 'Jährlich']];
     const planFrequencyLabel = (key) => (planFrequencies.find(([value]) => value === key) || planFrequencies[2])[1];
-    const planFor = (propertyId) => (inspectionPlans[propertyId] && typeof inspectionPlans[propertyId] === 'object' ? inspectionPlans[propertyId] : { providerId: '', items: {} });
+    try {
+      const storedControls = localStorage.getItem('stugliv-inspection-controls');
+      if (storedControls) {
+        inspectionControls = JSON.parse(storedControls) || {};
+      } else {
+        Object.entries(inspectionPlans).forEach(([propertyId, plan]) => {
+          if (plan && plan.items && Object.keys(plan.items).length) {
+            inspectionControls[propertyId] = [{ id: `control-migrated-${propertyId}`, name: 'Kontrolle 1', providerId: plan.providerId || '', items: plan.items, createdAt: new Date().toISOString() }];
+          }
+        });
+      }
+    } catch (error) { inspectionControls = {}; }
+    const controlsFor = (propertyId) => (Array.isArray(inspectionControls[propertyId]) ? inspectionControls[propertyId] : []);
+    const planFor = (propertyId) => {
+      const order = planFrequencies.map(([value]) => value);
+      const items = {};
+      controlsFor(propertyId).forEach((control) => Object.entries(control.items || {}).forEach(([itemId, frequency]) => {
+        if (!items[itemId] || order.indexOf(frequency) < order.indexOf(items[itemId])) items[itemId] = frequency;
+      }));
+      return { providerId: '', items };
+    };
     try {
       inspectionChecks = JSON.parse(localStorage.getItem('stugliv-inspection-checks') || '{}');
       inspectionLog = JSON.parse(localStorage.getItem('stugliv-inspection-log') || '{}');
@@ -1343,6 +1381,7 @@
       const nextInspectionLog = withoutProperty(inspectionLog);
       const nextInspectionSelections = withoutProperty(inspectionSelections);
       const nextInspectionCadence = withoutProperty(inspectionCadence);
+      const nextInspectionControls = withoutProperty(inspectionControls);
       const nextServicePartnerAssignments = withoutProperty(servicePartnerAssignments);
       const updates = {
         'stugliv-properties': nextProperties,
@@ -1354,6 +1393,7 @@
         'stugliv-inspection-log': nextInspectionLog,
         'stugliv-inspection-selections': nextInspectionSelections,
         'stugliv-inspection-cadence': nextInspectionCadence,
+        'stugliv-inspection-controls': nextInspectionControls,
         'stugliv-provider-assignments': nextServicePartnerAssignments
       };
       const previousValues = Object.fromEntries(Object.keys(updates).map((key) => [key, localStorage.getItem(key)]));
@@ -1382,6 +1422,7 @@
       inspectionLog = nextInspectionLog;
       inspectionSelections = nextInspectionSelections;
       inspectionCadence = nextInspectionCadence;
+      inspectionControls = nextInspectionControls;
       if (planUploads[propertyId]) {
         planUploads = Object.fromEntries(Object.entries(planUploads).filter(([id]) => id !== propertyId));
         try { localStorage.setItem('stugliv-plan-uploads', JSON.stringify(planUploads)); } catch (error) { console.error(error); }
@@ -1575,12 +1616,12 @@
                   : `<div class="appointment">${appointment}</div>`;
               }).join('') : `<div class="empty">Für ${singleHouse() ? 'dein Ferienhaus' : 'deine Ferienhäuser'} sind keine Buchungen eingetragen.</div>`}
             </section>` : ''}
-            <section class="card"><div class="card-head"><div><h2 class="card-title">Hauskontrolle</h2><p class="card-caption">Prüfstatus je Ferienhaus</p></div><button class="text-btn" data-page="inspections">Hauskontrolle →</button></div>
+            <section class="card"><div class="card-head"><div><h2 class="card-title">Hauskontrolle</h2><p class="card-caption">${singleHouse() ? 'Prüfstatus deines Ferienhauses' : 'Prüfstatus je Ferienhaus'}</p></div><button class="text-btn" data-page="inspections">Hauskontrolle →</button></div>
               <div class="house-service-list">${properties.map((property) => {
                 return `<button class="house-service-row" data-action="open-inspection" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small>${escapeHtml(property.region || property.address)}</small></span><span class="house-service-badges">${inspectionStatusBadge(property.id)}${winterStatusBadge(property.id)}</span></button>`;
               }).join('') || '<div class="empty">Noch keine Ferienhäuser vorhanden.</div>'}</div>
             </section>
-            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">Ausgewählte Partner je Ferienhaus</p></div><button class="text-btn" data-page="providers">Servicepartner →</button></div>
+            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-page="providers">Servicepartner →</button></div>
               <div class="house-service-list">${properties.map((property) => {
                 const assigned = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
                 return `<button class="house-service-row" data-page="providers"><span class="house-service-name">${escapeHtml(property.name)}<small class="house-service-partners">${assigned.length ? assigned.map((provider) => escapeHtml(provider.name)).join(' · ') : 'Noch keine Servicepartner ausgewählt'}</small></span></button>`;
@@ -1688,7 +1729,7 @@
         const todayKey = localDateKey(new Date());
         const detailedDate = (date) => new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${date}T12:00:00`));
         const nightCount = (startDate, endDate) => Math.round((new Date(`${endDate}T12:00:00`) - new Date(`${startDate}T12:00:00`)) / 86400000);
-        return `<div class="welcome"><div><p class="eyebrow">Buchungsplanung · Schweden</p><h1>Buchungen</h1><p class="subtitle">Alle gebuchten Aufenthalte mit An- und Abreise, Ferienhaus und Gastdetails.</p></div><button class="primary-btn" data-action="new-booking">${icon('plus')} Neue Buchung</button></div>
+        return `<div class="welcome"><div><p class="eyebrow">Buchungsplanung · Schweden</p><h1>Buchungen</h1><p class="subtitle">${singleHouse() ? 'Alle gebuchten Aufenthalte mit An- und Abreise und Gastdetails.' : 'Alle gebuchten Aufenthalte mit An- und Abreise, Ferienhaus und Gastdetails.'}</p></div><button class="primary-btn" data-action="new-booking">${icon('plus')} Neue Buchung</button></div>
           <section class="card booking-overview"><div class="card-head"><div><h2 class="card-title">Gebuchte Termine</h2><p class="card-caption">${bookings.length} ${bookings.length === 1 ? 'Buchung' : 'Buchungen'} gespeichert</p></div></div>
             ${sortedBookings.length ? `<div class="booking-overview-list">${sortedBookings.map((booking) => {
               const propertyName = properties.find((property) => property.id === booking.propertyId)?.name || 'Ferienhaus entfernt';
@@ -1747,7 +1788,7 @@
               <div class="booking-range-summary">${escapeHtml(dateSummary)}</div>
               <input type="hidden" name="startDate" value="${escapeHtml(bookingStartDate)}"><input type="hidden" name="endDate" value="${escapeHtml(bookingEndDate)}">
               <div class="booking-form-grid">
-                <label class="full"><span class="form-label">Ferienhaus</span><select class="form-control" name="propertyId" required ${properties.length ? '' : 'disabled'}>${properties.map((property) => `<option value="${escapeHtml(property.id)}" ${property.id === propertyId ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select></label>
+                ${singleHouse() ? `<input type="hidden" name="propertyId" value="${escapeHtml(propertyId || properties[0]?.id || '')}">` : `<label class="full"><span class="form-label">Ferienhaus</span><select class="form-control" name="propertyId" required ${properties.length ? '' : 'disabled'}>${properties.map((property) => `<option value="${escapeHtml(property.id)}" ${property.id === propertyId ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select></label>`}
                 <div class="full booking-inline-calendar booking-calendar"><div class="card-head"><div><h2 class="card-title">Belegungskalender</h2><p class="card-caption">Anreise und Abreise durch Auswahl von zwei Tagen festlegen</p></div><div class="calendar-toolbar"><button type="button" class="calendar-nav" data-booking-month="-1" aria-label="Vorheriger Monat">‹</button><strong>${escapeHtml(monthTitle)}</strong><button type="button" class="calendar-nav" data-booking-month="1" aria-label="Nächster Monat">›</button></div></div>
                   <div class="calendar-grid">${dayLabels.map((label) => `<div class="calendar-weekday">${label}</div>`).join('')}${cells.join('')}</div>
                   <div class="calendar-legend"><span><i class="calendar-dot booking"></i>Gebuchte Übernachtung</span><span><i class="calendar-dot task"></i>Abreise</span></div>
@@ -1803,9 +1844,9 @@
       }).join('');
       const openCount = tasks.filter((task) => taskStatus(task) !== 'Erledigt').length;
       return `<div class="welcome"><div><p class="eyebrow">Buchungen & Instandhaltung</p><h1>Serviceaufgaben</h1><p class="subtitle">Koordiniere Reinigung, Schlüsselübergaben und saisonale Stugapflege.</p></div><button class="primary-btn" data-action="new-task">${icon('plus')} Aufgabe erstellen</button></div>
-        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden je Ferienhaus automatisch angelegt.</p></div><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button></section>
+        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} automatisch angelegt.</p></div><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Alle Serviceaufgaben</h2><p class="card-caption">${openCount} offen · ${tasks.length - openCount} erledigt</p></div></div>
-        <div class="section-toolbar" style="padding:0 18px"><div class="toolbar-right"><select id="task-filter" class="filter-select" aria-label="Nach Status filtern"><option value="all">Alle Status</option>${taskStatuses.map((value) => `<option ${taskFilter === value ? 'selected' : ''}>${value}</option>`).join('')}</select><select id="task-property-filter" class="filter-select" aria-label="Nach Gebäude filtern"><option value="all">Alle Gebäude</option>${properties.map((property) => `<option value="${escapeHtml(property.name)}" ${taskPropertyFilter === property.name ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select><select id="task-priority-filter" class="filter-select" aria-label="Nach Priorität filtern"><option value="all">Alle Prioritäten</option><option value="urgent" ${taskPriorityFilter === 'urgent' ? 'selected' : ''}>Dringend</option><option value="soon" ${taskPriorityFilter === 'soon' ? 'selected' : ''}>Wichtig</option><option value="normal" ${taskPriorityFilter === 'normal' ? 'selected' : ''}>Normal</option></select></div></div>
+        <div class="section-toolbar" style="padding:0 18px"><div class="toolbar-right"><select id="task-filter" class="filter-select" aria-label="Nach Status filtern"><option value="all">Alle Status</option>${taskStatuses.map((value) => `<option ${taskFilter === value ? 'selected' : ''}>${value}</option>`).join('')}</select>${singleHouse() ? '' : `<select id="task-property-filter" class="filter-select" aria-label="Nach Gebäude filtern"><option value="all">Alle Gebäude</option>${properties.map((property) => `<option value="${escapeHtml(property.name)}" ${taskPropertyFilter === property.name ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select>`}<select id="task-priority-filter" class="filter-select" aria-label="Nach Priorität filtern"><option value="all">Alle Prioritäten</option><option value="urgent" ${taskPriorityFilter === 'urgent' ? 'selected' : ''}>Dringend</option><option value="soon" ${taskPriorityFilter === 'soon' ? 'selected' : ''}>Wichtig</option><option value="normal" ${taskPriorityFilter === 'normal' ? 'selected' : ''}>Normal</option></select></div></div>
         <div class="task-table-wrap"><table class="task-table"><thead><tr><th>Aufgabe</th><th>Haus / Bereich</th><th>Fälligkeit</th><th>Priorität</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="empty">Keine Aufgaben gefunden. Erstelle eine Aufgabe oder ändere die Filter.</div></td></tr>'}</tbody></table></div></section>`;
     }
     function propertiesPage() {
@@ -1881,7 +1922,7 @@
       return `<div class="welcome"><div><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div><button class="primary-btn" data-action="go-back">← Zurück</button></div>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Betriebe im Umkreis von ${providerRadius} km</h2><p class="card-caption">${matches.length} passende Betriebe · nächstgelegene zuerst</p></div><button class="secondary-btn" data-action="toggle-favorites">${onlyFavorites ? 'Alle anzeigen' : `☆ Favoriten (${favorites.length})`}</button></div>
           <div class="provider-filters">
-            <label><span class="form-label">Ferienhaus</span><select id="provider-property" class="filter-select" aria-label="Ferienhaus wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label>
+            ${singleHouse() ? '' : `<label><span class="form-label">Ferienhaus</span><select id="provider-property" class="filter-select" aria-label="Ferienhaus wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label>`}
             <label><span class="form-label">Umkreis</span><select id="provider-radius" class="filter-select" aria-label="Suchradius">${[10, 20, 50, 100].map((radius) => `<option value="${radius}" ${radius === providerRadius ? 'selected' : ''}>${radius} km</option>`).join('')}</select></label>
             <label><span class="form-label">Art des Dienstleisters</span><select id="provider-category" class="filter-select" aria-label="Dienstleisterart"><option value="all" ${providerCategory === 'all' ? 'selected' : ''}>Alle Kategorien</option><option value="house" ${providerCategory === 'house' ? 'selected' : ''}>Hausservice & Hauskontrolle</option><option value="renovation" ${providerCategory === 'renovation' ? 'selected' : ''}>Sanierung & Bau</option></select></label>
             <label class="search"><span class="form-label">Suche</span>${icon('search')}<input id="provider-search" type="search" placeholder="Betrieb, Ort oder Gewerk …" value="${escapeHtml(providerSearch)}"></label>
@@ -1909,8 +1950,8 @@
         const share = total ? value / total * 100 : 0;
         return `<li data-cost-chart-item="${category.id}"><span class="cost-chart-swatch" style="background:${chartColors[index % chartColors.length]}"></span><span class="cost-chart-label">${escapeHtml(category.label)}</span><span class="cost-chart-values"><strong data-cost-chart-amount>${money(value)}</strong><small data-cost-chart-share>${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%</small></span></li>`;
       }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Årlig planering · SEK</p><h1>Ferienhaus-Kosten</h1><p class="subtitle">Planwerte pro Ferienhaus bearbeiten und laufende Kosten im Blick behalten.</p></div></div>
-        <div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="cost-property" class="filter-select" aria-label="Ferienhaus für Jahreskosten wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>
+      return `<div class="welcome"><div><p class="eyebrow">Årlig planering · SEK</p><h1>Ferienhaus-Kosten</h1><p class="subtitle">${singleHouse() ? 'Planwerte für dein Ferienhaus bearbeiten' : 'Planwerte pro Ferienhaus bearbeiten'} und laufende Kosten im Blick behalten.</p></div></div>
+        ${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="cost-property" class="filter-select" aria-label="Ferienhaus für Jahreskosten wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <div class="cost-summary"><article class="cost-total"><small>Geschätzte Jahreskosten · ${escapeHtml(property.name)}</small><strong id="annual-total">${money(total)}</strong><span>Ändere die Beträge unten, um dein eigenes Budget abzubilden.</span></article><article class="card cost-average"><span>Monatlicher Budgetdurchschnitt</span><strong id="monthly-total">${money(Math.round(total / 12))}</strong></article></div>
         <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Anteil der einzelnen Posten an den Jahreskosten · ${escapeHtml(property.name)}</p></div></div><div class="cost-chart-layout"><div class="cost-chart-visual"><svg class="cost-chart" viewBox="0 0 200 200" aria-hidden="true"><circle class="cost-chart-track" cx="100" cy="100" r="76"></circle>${chartSlices}<text class="cost-chart-center-total" x="100" y="98" text-anchor="middle">${escapeHtml(new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(total))}</text><text class="cost-chart-center-caption" x="100" y="114" text-anchor="middle">SEK pro Jahr</text></svg></div><ul class="cost-chart-legend">${chartLegend}</ul></div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">Beträge in Schwedischen Kronen (SEK) pro Jahr</p></div><span class="status pending">Planwerte bearbeiten</span></div>
@@ -1924,8 +1965,8 @@
       const propertyDocuments = documents.filter((document) => document.propertyId === property.id && !document.providerId)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const fileSize = (bytes) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-      return `<div class="welcome"><div><p class="eyebrow">Unterlagen je Ferienhaus</p><h1>Dokumente</h1><p class="subtitle">Versicherungen, Bescheide, Anleitungen und weitere wichtige Dateien lokal im Browser verwalten.</p></div></div>
-        <div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="documents-property" class="filter-select" aria-label="Ferienhaus für Dokumente wählen">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>
+      return `<div class="welcome"><div><p class="eyebrow">${singleHouse() ? 'Unterlagen für dein Ferienhaus' : 'Unterlagen je Ferienhaus'}</p><h1>Dokumente</h1><p class="subtitle">Versicherungen, Bescheide, Anleitungen und weitere wichtige Dateien lokal im Browser verwalten.</p></div></div>
+        ${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="documents-property" class="filter-select" aria-label="Ferienhaus für Dokumente wählen">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <section class="card"><div class="card-head"><div><h2 class="card-title">Dokumente für ${escapeHtml(property.name)}</h2><p class="card-caption">${propertyDocuments.length} ${propertyDocuments.length === 1 ? 'Datei' : 'Dateien'} gespeichert</p></div><label class="primary-btn">${icon('plus')} Datei hinzufügen<input id="document-upload" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div>
           ${propertyDocuments.length ? `<div class="document-list">${propertyDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<div class="empty">Für dieses Ferienhaus sind noch keine Dokumente gespeichert.</div>'}
           <p class="source-note">PDF-, JPG-, PNG- und WebP-Dateien bis 1 MB. Die Dateien werden lokal in diesem Browser gespeichert und nicht synchronisiert oder hochgeladen.</p>
@@ -1946,8 +1987,8 @@
       const winterKey = `${new Date().getFullYear()}:${property.id}`;
       const checkedWinterItems = winterChecks[winterKey] || {};
       const winterComplete = winterChecklist.filter((item) => checkedWinterItems[item.id]).length;
-      const pageHeader = `<div class="welcome"><div><p class="eyebrow">${inspectionView === 'winter' ? 'Saisonvorbereitung · Schweden' : 'Bei längerer Abwesenheit'}</p><h1>${inspectionView === 'winter' ? 'Wintercheckliste' : 'Hauskontrolle'}</h1><p class="subtitle">${inspectionView === 'winter' ? `Bereite ${escapeHtml(property.name)} auf Frost, Schnee und lange Winternächte vor.` : 'Prüfpunkte, Kontrolltaktung und durchgeführte Besuche je Ferienhaus verwalten.'}</p></div></div>`;
-      const propertyAndTabs = `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="inspection-property" class="filter-select" aria-label="Ferienhaus für Hauskontrolle wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>
+      const pageHeader = `<div class="welcome"><div><p class="eyebrow">${inspectionView === 'winter' ? 'Saisonvorbereitung · Schweden' : 'Bei längerer Abwesenheit'}</p><h1>${inspectionView === 'winter' ? 'Wintercheckliste' : 'Hauskontrolle'}</h1><p class="subtitle">${inspectionView === 'winter' ? `Bereite ${escapeHtml(property.name)} auf Frost, Schnee und lange Winternächte vor.` : `Prüfpunkte, Kontrolltaktung und durchgeführte Besuche ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} verwalten.`}</p></div></div>`;
+      const propertyAndTabs = `${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="inspection-property" class="filter-select" aria-label="Ferienhaus für Hauskontrolle wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <div class="inspection-tabs" role="tablist" aria-label="Hauskontrolllisten"><button class="inspection-tab ${inspectionView === 'absence' ? 'active' : ''}" type="button" role="tab" aria-selected="${inspectionView === 'absence'}" data-inspection-view="absence">Abwesenheitskontrolle</button><button class="inspection-tab ${inspectionView === 'winter' ? 'active' : ''}" type="button" role="tab" aria-selected="${inspectionView === 'winter'}" data-inspection-view="winter">Wintercheckliste</button></div>`;
       if (inspectionView === 'winter') {
         return `${pageHeader}${propertyAndTabs}
@@ -1958,15 +1999,17 @@
           </section>`;
       }
       return `${pageHeader}${propertyAndTabs}
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Austausch Kontrollplan mit Servicepartner</h2><p class="card-caption">Servicepartner auswählen, Kontrollplan erstellen, versenden und abrufen</p></div></div>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Austausch Kontrollplan mit Servicepartner</h2><p class="card-caption">Kontrollen erstellen, dem Servicepartner zuweisen, versenden und abrufen</p></div></div>
           <div class="house-service-list">${(() => {
-            const plan = planFor(property.id);
-            const partners = providers.filter((entry) => (servicePartnerAssignments[property.id] || []).includes(entry.id));
-            const noItems = selectedItems.length ? '' : ' disabled title="Bitte zuerst Prüfpunkte auswählen"';
-            const list = partners.length
-              ? partners.map((entry) => `<label class="partner-pick ${plan.providerId === entry.id ? 'is-selected' : ''}"><input type="radio" name="plan-partner" data-plan-partner="${escapeHtml(entry.id)}" ${plan.providerId === entry.id ? 'checked' : ''}><span><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml([entry.city, entry.email].filter(Boolean).join(' · ') || 'Servicepartner')}</small></span></label>`).join('')
-              : '<div class="empty">Noch keine Servicepartner ausgewählt. Ordne unter „Servicepartner“ einen Betrieb diesem Ferienhaus zu.</div>';
-            return `<div class="exchange-partners">${list}</div><div class="exchange-actions"><button class="secondary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">Kontrolle erstellen</button><button class="secondary-btn" type="button" data-action="send-inspection-plan"${noItems}>Kontrollplan an SP schicken</button><button class="secondary-btn" type="button" data-action="view-inspection-plan"${noItems}>Kontrollplan abrufen</button></div>`;
+            const controls = controlsFor(property.id);
+            const dateFormat = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' });
+            const controlCards = controls.map((control) => {
+              const provider = providers.find((entry) => entry.id === control.providerId);
+              const itemCount = Object.keys(control.items || {}).length;
+              const frequencies = [...new Set(Object.values(control.items || {}))].map(planFrequencyLabel).join(', ');
+              return `<article class="control-card"><div class="control-card-main"><strong>${escapeHtml(control.name)}</strong><span class="control-card-partner"><em>Servicepartner:</em> ${provider ? `${escapeHtml(provider.name)} · ${partnerCategoryLabel(provider)}` : 'nicht mehr verfügbar'}</span><small>${itemCount} ${itemCount === 1 ? 'Prüfposition' : 'Prüfpositionen'} · ${escapeHtml(frequencies)} · erstellt am ${escapeHtml(dateFormat.format(new Date(control.createdAt)))}</small></div><div class="control-card-actions"><button type="button" data-action="send-inspection-plan" data-control="${escapeHtml(control.id)}">An Servicepartner schicken</button><button type="button" data-action="view-inspection-plan" data-control="${escapeHtml(control.id)}">Kontrollplan abrufen</button><button type="button" data-action="edit-control" data-control="${escapeHtml(control.id)}">Bearbeiten</button><button type="button" class="danger" data-action="delete-control" data-control="${escapeHtml(control.id)}">Löschen</button></div></article>`;
+            }).join('');
+            return `<div class="exchange-actions"><button class="primary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">${icon('plus')} Kontrolle erstellen</button></div><p class="control-list-title">Erstellte Kontrollen (${controls.length})</p>${controls.length ? `<div class="control-list">${controlCards}</div>` : '<div class="empty">Noch keine Kontrolle erstellt. Lege eine Kontrolle an und weise ihr einen Servicepartner zu.</div>'}`;
           })()}</div>
         </section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste bei Abwesenheit</h2><p class="card-caption">${complete} von ${selectedItems.length} ausgewählten Punkten erledigt</p></div>${selectedItems.length ? `<div class="winter-progress"><progress max="${selectedItems.length}" value="${complete}" aria-label="${complete} von ${selectedItems.length} Abwesenheitspunkten erledigt"></progress><strong>${absenceProgress} %</strong></div>` : ''}<span class="status ${selectedItems.length && complete === selectedItems.length ? '' : 'pending'}">${selectedItems.length && complete === selectedItems.length ? 'Bereit zum Protokollieren' : selectedItems.length ? 'Kontrolle offen' : 'Keine Prüfpunkte ausgewählt'}</span></div>
@@ -2067,23 +2110,58 @@
     function planProviderCandidates(currentId) {
       return providers.filter((provider) => provider.category !== 'renovation' && (favorites.includes(provider.id) || provider.id === currentId));
     }
-    function openInspectionPlan(propertyId) {
+    let planEditControlId = null;
+    function openInspectionPlan(propertyId, controlId) {
       const property = properties.find((item) => item.id === propertyId) || properties.find((item) => item.id === inspectionProperty) || properties[0];
       planEditProperty = property.id;
       inspectionProperty = property.id;
-      const plan = planFor(property.id);
-      const hasPlan = Object.keys(plan.items || {}).length > 0;
-      const selectedIds = Array.isArray(inspectionSelections[property.id]) ? inspectionSelections[property.id] : absenceChecklist.map((item) => item.id);
+      const controls = controlsFor(property.id);
+      const control = controlId ? controls.find((item) => item.id === controlId) : null;
+      planEditControlId = control ? control.id : null;
       const defaultFrequency = inspectionCadence[property.id] === 'weekly' ? 'w1' : 'm1';
-      document.getElementById('inspection-plan-subtitle').textContent = `${property.name} · ${providers.find((entry) => entry.id === plan.providerId)?.name || 'Kein Servicepartner ausgewählt'}`;
+      const assignedIds = servicePartnerAssignments[property.id] || [];
+      const candidates = providers.filter((provider) => assignedIds.includes(provider.id) || provider.id === control?.providerId);
+      const providerSelect = document.getElementById('inspection-plan-provider');
+      providerSelect.innerHTML = candidates.length
+        ? candidates.map((provider) => `<option value="${escapeHtml(provider.id)}" ${provider.id === control?.providerId ? 'selected' : ''}>${escapeHtml(provider.name)} · ${partnerCategoryLabel(provider)}</option>`).join('')
+        : '<option value="">Kein Servicepartner zugeordnet</option>';
+      providerSelect.disabled = !candidates.length;
+      document.getElementById('inspection-plan-provider-note').hidden = candidates.length > 0;
+      document.getElementById('inspection-plan-name').value = control ? control.name : `Kontrolle ${controls.length + 1}`;
+      document.getElementById('inspection-plan-title').textContent = control ? 'Kontrolle bearbeiten' : 'Kontrolle erstellen';
+      document.getElementById('inspection-plan-subtitle').textContent = property.name;
       document.getElementById('inspection-plan-rows').innerHTML = absenceChecklist.map((item) => {
-        const enabled = hasPlan ? Boolean(plan.items[item.id]) : selectedIds.includes(item.id);
-        const frequency = (hasPlan && plan.items[item.id]) || defaultFrequency;
+        const enabled = control ? Boolean(control.items[item.id]) : controls.length === 0;
+        const frequency = (control && control.items[item.id]) || defaultFrequency;
         return `<div class="plan-row ${enabled ? '' : 'off'}"><label><input type="checkbox" data-plan-item="${item.id}" ${enabled ? 'checked' : ''}><span>${escapeHtml(item.title)}</span></label><select class="form-control" data-plan-frequency="${item.id}" aria-label="Kontrolltaktung für ${escapeHtml(item.title)}" ${enabled ? '' : 'disabled'}>${planFrequencies.map(([value, label]) => `<option value="${value}" ${value === frequency ? 'selected' : ''}>${label}</option>`).join('')}</select></div>`;
       }).join('');
       document.getElementById('inspection-plan-modal').classList.add('open');
     }
     function closeInspectionPlan() { document.getElementById('inspection-plan-modal').classList.remove('open'); }
+    function persistControls(nextControls, nextSelections) {
+      const previousControls = inspectionControls;
+      const previousSelections = inspectionSelections;
+      inspectionControls = nextControls;
+      inspectionSelections = nextSelections;
+      try {
+        localStorage.setItem('stugliv-inspection-controls', JSON.stringify(inspectionControls));
+        localStorage.setItem('stugliv-inspection-selections', JSON.stringify(inspectionSelections));
+        return true;
+      } catch (error) {
+        console.error('Kontrolle konnte nicht gespeichert werden:', error);
+        inspectionControls = previousControls;
+        inspectionSelections = previousSelections;
+        showToast('Kontrolle konnte nicht gespeichert werden. Browser-Speicher prüfen.');
+        return false;
+      }
+    }
+    function selectionsForControls(propertyId, controls) {
+      const covered = new Set(controls.flatMap((control) => Object.keys(control.items || {})));
+      const next = { ...inspectionSelections };
+      if (covered.size) next[propertyId] = absenceChecklist.map((item) => item.id).filter((id) => covered.has(id));
+      else delete next[propertyId];
+      return next;
+    }
     function saveInspectionPlan() {
       const propertyId = planEditProperty;
       if (!propertyId) return;
@@ -2091,26 +2169,30 @@
       document.querySelectorAll('#inspection-plan-rows [data-plan-item]').forEach((box) => {
         if (box.checked) items[box.dataset.planItem] = document.querySelector(`[data-plan-frequency="${box.dataset.planItem}"]`).value;
       });
+      const providerId = document.getElementById('inspection-plan-provider').value;
+      if (!providerId) { showToast('Bitte einen Servicepartner für diese Kontrolle auswählen.'); return; }
       if (!Object.keys(items).length) { showToast('Bitte mindestens eine Position auswählen.'); return; }
-      const previousPlans = inspectionPlans;
-      const previousSelections = inspectionSelections;
-      inspectionPlans = { ...inspectionPlans, [propertyId]: { providerId: planFor(propertyId).providerId || '', items } };
-      inspectionSelections = { ...inspectionSelections, [propertyId]: absenceChecklist.map((item) => item.id).filter((id) => items[id]) };
-      try {
-        localStorage.setItem('stugliv-inspection-plans', JSON.stringify(inspectionPlans));
-        localStorage.setItem('stugliv-inspection-selections', JSON.stringify(inspectionSelections));
-      } catch (error) {
-        console.error('Kontrolle konnte nicht gespeichert werden:', error);
-        inspectionPlans = previousPlans;
-        inspectionSelections = previousSelections;
-        showToast('Kontrolle konnte nicht gespeichert werden. Browser-Speicher prüfen.');
-        return;
-      }
+      const controls = controlsFor(propertyId);
+      const existing = planEditControlId ? controls.find((item) => item.id === planEditControlId) : null;
+      const name = document.getElementById('inspection-plan-name').value.trim() || `Kontrolle ${controls.length + (existing ? 0 : 1)}`;
+      const control = { id: existing?.id || `control-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name, providerId, items, createdAt: existing?.createdAt || new Date().toISOString() };
+      const nextControls = existing ? controls.map((item) => (item.id === existing.id ? control : item)) : [...controls, control];
+      if (!persistControls({ ...inspectionControls, [propertyId]: nextControls }, selectionsForControls(propertyId, nextControls))) return;
       closeInspectionPlan();
       render();
-      showToast('Kontrolle wurde gespeichert.');
+      showToast(existing ? 'Kontrolle wurde aktualisiert.' : 'Kontrolle wurde gespeichert.');
     }
-    const sendPlanState = { property: null, items: [], subject: '', body: '' };
+    function deleteControl(controlId) {
+      const propertyId = inspectionProperty;
+      const controls = controlsFor(propertyId);
+      const control = controls.find((item) => item.id === controlId);
+      if (!control || !window.confirm(`Möchtest du die Kontrolle „${control.name}“ wirklich löschen?`)) return;
+      const nextControls = controls.filter((item) => item.id !== controlId);
+      if (!persistControls({ ...inspectionControls, [propertyId]: nextControls }, selectionsForControls(propertyId, nextControls))) return;
+      render();
+      showToast('Kontrolle wurde gelöscht.');
+    }
+    const sendPlanState = { property: null, control: null, items: [], subject: '', body: '' };
     const planFileName = (property) => `Kontrollplan-${String(property.name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'Ferienhaus'}.pdf`;
     const HELV = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
     function pdfTextWidth(text, size, bold) {
@@ -2138,7 +2220,7 @@
       }
       return out.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
     }
-    function buildPlanPdf(property, items, cadence) {
+    function buildPlanPdf(property, items, cadence, control) {
       const W = 595, H = 842, M = 48;
       const pages = [];
       let page;
@@ -2152,7 +2234,7 @@
       newPage();
       text('HUSORA · HAUSKONTROLLE', M, 9, true, '0.29 0.39 0.32'); y -= 26;
       text('Kontrollplan / Prüfprotokoll', M, 22, true); y -= 20;
-      text(`Abwesenheitskontrolle · ${cadence === 'weekly' ? 'wöchentlich' : 'monatlich'} · erstellt am ${new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date())}`, M, 10, false, '0.35 0.39 0.35'); y -= 28;
+      text(control ? `Kontrolle „${control.name}“ · Servicepartner: ${providers.find((entry) => entry.id === control.providerId)?.name || '–'} · erstellt am` : `Abwesenheitskontrolle · ${cadence === 'weekly' ? 'wöchentlich' : 'monatlich'} · erstellt am ${new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date())}`, M, 10, false, '0.35 0.39 0.35'); y -= 28;
       text('Angaben zum Gebäude', M, 13, true); y -= 8;
       line(M, y, W - M, y); y -= 16;
       const details = inspectionHouseDetails(property);
@@ -2176,7 +2258,7 @@
       text('Bitte jede Position nach der Kontrolle im Kästchen ankreuzen.', M, 8.5, false, '0.4 0.45 0.4'); y -= 18;
       items.forEach((item, index) => {
         const titleLines = pdfWrap(item.title, 11, W - 2 * M - 34, true);
-        const detailLines = pdfWrap(item.detail || '', 9, W - 2 * M - 34, false);
+        const detailLines = pdfWrap(`${control?.items?.[item.id] ? `Taktung: ${planFrequencyLabel(control.items[item.id])} · ` : ''}${item.detail || ''}`, 9, W - 2 * M - 34, false);
         const height = titleLines.length * 14 + detailLines.length * 12 + 18;
         ensure(height);
         const top = y;
@@ -2298,10 +2380,16 @@
       const sender = profileData.name.trim();
       return `Sehr geehrte Damen und Herren${providerName ? ` bei ${providerName}` : ''},\n\nfür mein Ferienhaus „${property.name}“ (${property.address || property.region || 'Schweden'}) bitte ich Sie um die Durchführung der Hauskontrolle gemäß dem beigefügten Kontrollplan.\n\nGeprüft werden sollen folgende Positionen:\n${items.map((item) => `• ${item.title}`).join('\n')}\n\nIn der angehängten PDF sind die Angaben zum Gebäude und alle Prüfpositionen aufgeführt. Bitte kreuzen Sie jede kontrollierte Position im Kästchen an, ergänzen Sie Datum und Bemerkungen und senden Sie mir die ausgefüllte PDF zurück.\n\nBei Auffälligkeiten, Wasserschäden oder Einbruch informieren Sie mich bitte sofort.\n\nVielen Dank und freundliche Grüße\n${sender}${profileData.email ? `\n${profileData.email}` : ''}`;
     }
-    function viewInspectionPlan() {
+    let viewPlanControlId = null;
+    function controlById(propertyId, controlId) { return controlsFor(propertyId).find((item) => item.id === controlId) || null; }
+    function controlItems(control) { return control ? absenceChecklist.filter((item) => control.items[item.id]) : []; }
+    function viewInspectionPlan(controlId) {
       const property = properties.find((item) => item.id === inspectionProperty) || properties[0];
+      const control = controlById(property.id, controlId);
+      if (!control) return;
+      viewPlanControlId = control.id;
       pendingPlanUpload = null;
-      document.getElementById('view-plan-subtitle').textContent = property.name;
+      document.getElementById('view-plan-subtitle').textContent = `${property.name} · ${control.name}`;
       document.getElementById('view-plan-file').value = '';
       document.getElementById('view-plan-hint').textContent = 'Noch keine Datei ausgewählt.';
       document.getElementById('view-plan-archive').disabled = true;
@@ -2309,11 +2397,10 @@
     }
     function openPlanPdf() {
       const property = properties.find((item) => item.id === inspectionProperty) || properties[0];
-      const selectedIds = Array.isArray(inspectionSelections[property.id]) ? inspectionSelections[property.id] : absenceChecklist.map((item) => item.id);
-      const items = absenceChecklist.filter((item) => selectedIds.includes(item.id));
-      if (!items.length) { showToast('Bitte zuerst Prüfpunkte auswählen.'); return; }
-      const cadence = inspectionCadence[property.id] === 'weekly' ? 'weekly' : 'monthly';
-      const bytes = buildPlanPdf(property, items, cadence);
+      const control = controlById(property.id, viewPlanControlId);
+      const items = controlItems(control);
+      if (!items.length) { showToast('Bitte zuerst eine Kontrolle erstellen.'); return; }
+      const bytes = buildPlanPdf(property, items, 'monthly', control);
       showPdf(bytes, planFileName(property), 'Kontrollplan');
     }
     function pickPlanUpload(file) {
@@ -2355,31 +2442,34 @@
       const bin = atob(entry.data.split(',')[1] || '');
       return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
     }
-    function openSendPlan() {
+    function openSendPlan(controlId) {
       const property = properties.find((item) => item.id === inspectionProperty) || properties[0];
-      const selectedIds = Array.isArray(inspectionSelections[property.id]) ? inspectionSelections[property.id] : absenceChecklist.map((item) => item.id);
-      const items = absenceChecklist.filter((item) => selectedIds.includes(item.id));
-      if (!items.length) { showToast('Bitte zuerst Prüfpunkte auswählen.'); return; }
+      const control = controlById(property.id, controlId);
+      const items = controlItems(control);
+      if (!items.length) { showToast('Bitte zuerst eine Kontrolle erstellen.'); return; }
+      sendPlanState.control = control;
       sendPlanState.property = property;
       sendPlanState.items = items;
       const { assigned, nearby } = planRecipients(property);
       const option = (provider) => `<option value="${escapeHtml(provider.email)}" data-name="${escapeHtml(provider.name)}">${escapeHtml(provider.name)} · ${escapeHtml(provider.email)}</option>`;
       document.getElementById('send-plan-provider').innerHTML = `${assigned.length ? `<optgroup label="Zugeordnete Servicepartner">${assigned.map(option).join('')}</optgroup>` : ''}${nearby.length ? `<optgroup label="Hausservice in der Nähe">${nearby.map(option).join('')}</optgroup>` : ''}<option value="__custom">Andere E-Mail-Adresse …</option>`;
-      const plannedProvider = providers.find((provider) => provider.id === planFor(property.id).providerId && provider.email);
+      const plannedProvider = providers.find((provider) => provider.id === control.providerId && provider.email);
       if (plannedProvider) {
         const select = document.getElementById('send-plan-provider');
         select.querySelectorAll(`option[value="${plannedProvider.email}"]`).forEach((node) => node.remove());
         select.insertAdjacentHTML('afterbegin', `<option value="${escapeHtml(plannedProvider.email)}" data-name="${escapeHtml(plannedProvider.name)}" selected>Ausgewählter Hausservice: ${escapeHtml(plannedProvider.name)} · ${escapeHtml(plannedProvider.email)}</option>`);
         select.value = plannedProvider.email;
       }
+      const plannedWithoutMail = !plannedProvider && providers.find((provider) => provider.id === control.providerId);
+      if (plannedWithoutMail) document.getElementById('send-plan-provider').value = '__custom';
       document.getElementById('send-plan-custom').value = '';
-      document.getElementById('send-plan-custom-wrap').hidden = !!(assigned.length || nearby.length);
-      document.getElementById('send-plan-subtitle').textContent = `${property.name} · ${items.length} Prüfpositionen`;
+      document.getElementById('send-plan-custom-wrap').hidden = !!(assigned.length || nearby.length) && !plannedWithoutMail;
+      document.getElementById('send-plan-subtitle').textContent = `${property.name} · ${control.name} · ${items.length} Prüfpositionen${plannedWithoutMail ? ` · ${plannedWithoutMail.name} hat keine E-Mail hinterlegt` : ''}`;
       const account = document.getElementById('send-plan-account');
       account.innerHTML = profileData.mailAccount
         ? `Absender: <strong>${escapeHtml(profileData.mailAccount)}</strong> (${escapeHtml({ default: 'Standard-Mailprogramm', gmail: 'Gmail', outlook: 'Outlook / Microsoft 365', icloud: 'iCloud Mail', other: 'Anderer Anbieter' }[profileData.mailProvider || 'default'])})`
         : 'Es ist noch kein Mailkonto verbunden. Du kannst im Benutzerprofil unter „E-Mail-Konto verbinden“ deine Absender-Adresse hinterlegen. Der Versand ist trotzdem möglich.';
-      document.getElementById('send-plan-subject').value = `Kontrollplan Hauskontrolle – ${property.name}`;
+      document.getElementById('send-plan-subject').value = `Kontrollplan „${control.name}“ – ${property.name}`;
       updatePlanLetter();
       document.getElementById('send-plan-modal').classList.add('open');
     }
@@ -2397,14 +2487,13 @@
     function planMailContext() {
       const recipient = selectedPlanRecipient();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient.email)) { showToast('Bitte eine gültige Empfänger-E-Mail-Adresse angeben.'); return null; }
-      const { property, items } = sendPlanState;
-      const cadence = inspectionCadence[property.id] === 'weekly' ? 'weekly' : 'monthly';
+      const { property, items, control } = sendPlanState;
       return {
         to: recipient.email,
         subject: document.getElementById('send-plan-subject').value.trim() || `Kontrollplan Hauskontrolle – ${property.name}`,
         body: document.getElementById('send-plan-body').value,
         fileName: planFileName(property),
-        pdfBytes: buildPlanPdf(property, items, cadence)
+        pdfBytes: buildPlanPdf(property, items, 'monthly', control)
       };
     }
     function webmailUrl(provider, to, subject, body) {
@@ -2845,7 +2934,7 @@
       }
       const action = event.target.closest('[data-action]')?.dataset.action;
       if (action === 'new-task') openTaskModal();
-      if (action === 'auto-task-config') { renderAutoTemplates(); document.getElementById('auto-task-modal').classList.add('open'); }
+      if (action === 'auto-task-config') { document.getElementById('auto-task-subtitle').textContent = singleHouse() ? 'Wähle aus, welche Aufgaben für dein Ferienhaus automatisch erstellt werden.' : 'Wähle aus, welche Aufgaben für jedes Ferienhaus automatisch erstellt werden.'; renderAutoTemplates(); document.getElementById('auto-task-modal').classList.add('open'); }
       if (action === 'new-booking') {
         resetBookingEditor();
         bookingView = 'form';
@@ -2858,9 +2947,11 @@
         render();
       }
       if (action === 'finish-inspection') finishInspection();
-      if (action === 'send-inspection-plan') openSendPlan();
-      if (action === 'view-inspection-plan') viewInspectionPlan();
+      if (action === 'send-inspection-plan') openSendPlan(event.target.closest('[data-action]').dataset.control);
+      if (action === 'view-inspection-plan') viewInspectionPlan(event.target.closest('[data-action]').dataset.control);
       if (action === 'create-inspection') openInspectionPlan(event.target.closest('[data-action]').dataset.property);
+      if (action === 'edit-control') openInspectionPlan(inspectionProperty, event.target.closest('[data-action]').dataset.control);
+      if (action === 'delete-control') deleteControl(event.target.closest('[data-action]').dataset.control);
       if (action === 'open-inspection') {
         inspectionProperty = event.target.closest('[data-action]').dataset.property;
         currentPage = 'inspections';
@@ -3339,15 +3430,6 @@
     });
     document.getElementById('close-inspection-confirmation').addEventListener('click', closeInspectionConfirmation);
     document.getElementById('cancel-inspection-confirmation').addEventListener('click', closeInspectionConfirmation);
-    document.addEventListener('change', (event) => {
-      const radio = event.target.closest?.('[data-plan-partner]');
-      if (!radio) return;
-      const propertyId = inspectionProperty;
-      inspectionPlans = { ...inspectionPlans, [propertyId]: { items: {}, ...planFor(propertyId), providerId: radio.dataset.planPartner } };
-      try { localStorage.setItem('stugliv-inspection-plans', JSON.stringify(inspectionPlans)); } catch (error) { console.error(error); }
-      render();
-      showToast('Servicepartner ausgewählt.');
-    });
     document.getElementById('close-pdf-viewer').addEventListener('click', closePdfViewer);
     document.getElementById('pdf-viewer-modal').addEventListener('click', (event) => { if (event.target.id === 'pdf-viewer-modal') closePdfViewer(); });
     document.getElementById('close-view-plan').addEventListener('click', () => document.getElementById('view-plan-modal').classList.remove('open'));
@@ -3371,8 +3453,8 @@
     document.getElementById('send-plan-eml').addEventListener('click', sendPlanAsEml);
     document.getElementById('send-plan-web').addEventListener('click', sendPlanViaWebmail);
     document.getElementById('send-plan-pdf').addEventListener('click', () => {
-      const { property, items } = sendPlanState;
-      showPdf(buildPlanPdf(property, items, inspectionCadence[property.id] === 'weekly' ? 'weekly' : 'monthly'), planFileName(property), 'Kontrollplan');
+      const { property, items, control } = sendPlanState;
+      showPdf(buildPlanPdf(property, items, 'monthly', control), planFileName(property), 'Kontrollplan');
     });
     document.getElementById('send-plan-modal').addEventListener('click', (event) => { if (event.target.id === 'send-plan-modal') closeSendPlan(); });
     document.getElementById('export-inspection-pdf').addEventListener('click', exportInspectionPdf);
