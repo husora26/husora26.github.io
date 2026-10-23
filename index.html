@@ -883,9 +883,17 @@
     .booking-row-info small { margin-top: 4px; color: var(--muted); font-size: 11px; }
     .booking-row.past { opacity: .55; filter: grayscale(1); }
     .booking-row.past .booking-row-info small.checkout-status { color: #777; font-weight: 650; }
-    .booking-row-actions { display: flex; gap: 6px; }
+    .booking-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .booking-overview-card > .booking-row-actions, .booking-overview-card > .care-box { grid-column: 1 / -1; }
     .booking-row-actions button { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: white; font-size: 10px; }
     .booking-row-actions button:hover { border-color: #b8c8ba; color: var(--green); }
+    .booking-row-actions .booking-edit-btn, .booking-row-actions .booking-delete-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 11px; border-radius: 7px; font-size: 10.5px; font-weight: 700; cursor: pointer; transition: background .15s, box-shadow .15s; }
+    .booking-row-actions .booking-edit-btn svg, .booking-row-actions .booking-delete-btn svg { width: 12px; height: 12px; }
+    .booking-row-actions .booking-edit-btn { border-color: var(--green); color: #fff; background: var(--green); }
+    .booking-row-actions .booking-edit-btn:hover { border-color: var(--green-dark); color: #fff; background: var(--green-dark); }
+    .booking-row-actions .booking-delete-btn { border-color: #e2b8b2; color: var(--red); background: var(--red-soft); }
+    .booking-row-actions .booking-delete-btn:hover { border-color: var(--red); color: #fff; background: var(--red); }
+    .booking-row-actions .booking-edit-btn:focus-visible, .booking-row-actions .booking-delete-btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
     .booking-overview { margin-top: 16px; }
     .booking-overview-list { display: grid; gap: 12px; padding: 16px; }
     .booking-overview-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 16px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: white; }
@@ -893,7 +901,7 @@
     .booking-overview-title { min-width: 0; }
     .booking-overview-title strong { display: block; font-size: 13px; }
     .booking-overview-title small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
-    .booking-status { align-self: start; padding: 5px 8px; border-radius: 6px; color: var(--green); background: var(--green-soft); font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .booking-status { align-self: start; padding: 6px 12px; border-radius: 999px; color: #fff; background: var(--green); font-size: 10.5px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; justify-self: end; }
     .booking-status.past { color: #68716a; background: #eef0ed; }
     .booking-overview-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; grid-column: 1 / -1; }
     .booking-overview-date { padding: 10px 12px; border-radius: 8px; background: #f5f6f2; }
@@ -1190,6 +1198,8 @@
         moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
         clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
         note: '<path d="M5 4h14a1 1 0 0 1 1 1v10l-5 5H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M15 20v-4a1 1 0 0 1 1-1h4M8 9h8M8 13h4"/>',
+        edit: '<path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+        trash: '<path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
         ticket: '<path d="M4 8a2 2 0 0 0 0 4v0a2 2 0 0 1 0 4v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1a2 2 0 0 1 0-4v0a2 2 0 0 0 0-4V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1z"/><path d="M14 6v12" stroke-dasharray="2 2.4"/>'
       };
       return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || ''}</svg>`;
@@ -2497,7 +2507,7 @@
                   const fact = (name, label, value) => `<div class="booking-fact"><span class="booking-fact-icon">${icon(name)}</span><div><small>${label}</small><strong>${escapeHtml(value)}</strong></div></div>`;
                   return `<div class="booking-facts">${fact('users', 'Gäste', booking.guestsUnknown ? 'nicht angegeben' : `${guests} ${guests === 1 ? 'Person' : 'Personen'}`)}${fact('moon', 'Aufenthalt', `${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`)}${fact('clock', 'Ankunft', booking.arrivalTime ? `${booking.arrivalTime} Uhr` : '—')}${codeMatch ? fact('ticket', 'Buchungscode', codeMatch[1]) : ''}</div>${noteText ? `<div class="booking-note"><span class="booking-fact-icon">${icon('note')}</span><div><small>${booking.guestsUnknown ? 'Weitere Angaben aus dem Kalender' : booking.source ? 'Nachricht des Gasts' : 'Hinweise zur Buchung'}</small><p>${escapeHtml(noteText).replace(/\n/g, '<br>')}</p></div></div>` : ''}`;
                 })()}
-                ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>`}
+                ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten" class="booking-edit-btn">${icon('edit')}Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen" class="booking-delete-btn">${icon('trash')}Löschen</button></div>`}
                 ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
               </article>`;
             }).join('')}</div>` : '<div class="empty">Noch keine Buchungen vorhanden. Über „Neue Buchung“ kannst du einen Aufenthalt erfassen.</div>'}
