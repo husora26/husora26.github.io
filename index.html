@@ -273,6 +273,12 @@
     .currency-switch input:focus-visible + .currency-track { outline: 3px solid var(--amber); outline-offset: 2px; }
     .currency-switch .on { color: var(--green-dark); }
     .fx-note { color: var(--muted); font-size: 11px; }
+    .cost-toggle { gap: 6px; padding: 7px 12px; border: 0; font: inherit; font-size: 10.5px; font-weight: 700; cursor: pointer; }
+    .cost-toggle:hover { filter: brightness(.96); }
+    .cost-toggle:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+    .cost-toggle svg { width: 13px; height: 13px; transition: transform .2s; }
+    .cost-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .cost-list[hidden] { display: none; }
     .cost-source { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; color: #805526; background: var(--amber-soft); font-size: 9px; font-weight: 700; vertical-align: middle; }
     .cost-source-note { margin: 0; padding: 10px 20px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .portal-card { margin-bottom: 0; }
@@ -786,6 +792,11 @@
     .property-spec { padding: 5px 7px; border-radius: 6px; color: #59665d; background: #f3f5f1; font-size: 9px; }
     .property-notes { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); color: #5d665f; font-size: 10px; line-height: 1.55; }
     .property-notes strong { color: var(--ink); }
+    .reno-list { display: grid; gap: 0; margin: 0; padding: 8px 19px 10px; list-style: none; }
+    .reno-list li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid #eef0ec; font-size: 12.5px; line-height: 1.5; }
+    .reno-list li:last-child { border-bottom: 0; }
+    .reno-year { justify-self: start; padding: 2px 8px; border-radius: 999px; color: var(--green-dark); background: #e1efe5; font-size: 11px; font-weight: 700; text-align: center; }
+    .reno-source { margin: 0; padding: 0 19px 14px; color: var(--muted); font-size: 10.5px; }
     .property-detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .property-detail-grid .property-card { padding: 13px; }
     .property-detail-grid .property-card strong { display: block; font-size: 11px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
@@ -1690,6 +1701,7 @@
           <div class="portal-actions" style="display:flex;flex-wrap:wrap;gap:8px"><button type="submit" class="primary-btn" ${icalBusy ? 'disabled' : ''}>${icalBusy ? 'Abgleich läuft …' : 'Speichern und abgleichen'}</button></div></form>
         <p class="portal-hint">Airbnb liefert im Kalender-Link nur Zeitraum und Buchungscode, keinen Gastnamen und keine Personenzahl. Diese Angaben bleiben leer. Blockierte Tage („nicht verfügbar“) werden nicht als Buchung übernommen.</p>${message}</section>`;
     }
+    let costListOpen = false;
     let costSources = {};
     try { const savedSources = JSON.parse(localStorage.getItem('stugliv-cost-sources') || '{}'); if (savedSources && typeof savedSources === 'object') costSources = savedSources; } catch (error) { costSources = {}; }
     let costCurrency = 'SEK';
@@ -2695,7 +2707,12 @@
           const safeSource = /^https:\/\//.test(property.sourceUrl || '') ? property.sourceUrl : '';
           return `<section class="card"><div class="card-head"><div><h2 class="card-title">Weitere Angaben aus dem Inserat</h2><p class="card-caption">${escapeHtml(property.sourceName || 'Importiert')}</p></div>${safeSource ? `<a class="text-btn" href="${escapeHtml(safeSource)}" target="_blank" rel="noopener noreferrer">Inserat öffnen ↗</a>` : ''}</div>${property.description ? `<p class="facts-description">${escapeHtml(property.description)}</p>` : ''}${(property.floorplans || []).length ? `<div class="facts-plans"><h3>Grundrisse</h3>${property.floorplans.map((source) => `<img class="facts-plan" src="${escapeHtml(source)}" alt="Grundriss ${escapeHtml(property.name)}" loading="lazy">`).join('')}</div>` : ''}${groups.map((group) => `<div class="facts-group"><h3>${escapeHtml(group.title)}</h3><dl class="facts-grid">${group.items.map((fact) => `<div><dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}</dd></div>`).join('')}</dl></div>`).join('')}</section>`;
         })()}
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.lastRenovations ? escapeHtml(property.lastRenovations).replace(/\\n/g, '<br>') : 'Noch keine Sanierungen eingetragen.'}</div></section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div>${(() => {
+          const entries = String(property.lastRenovations || '').split(/\n|;\s*(?=\d{4}\s*:)/).map((line) => line.trim()).filter(Boolean).map((line) => { const match = line.match(/^((?:19|20)\d{2})\s*[:\-–]\s*(.+)$/); return match ? { year: match[1], text: match[2] } : { year: '', text: line }; });
+          if (!entries.length) return '<div class="property-notes" style="margin:0;padding:17px 19px">Noch keine Sanierungen eingetragen.</div>';
+          entries.sort((a, b) => (b.year || '0').localeCompare(a.year || '0'));
+          return `<ul class="reno-list">${entries.map((entry) => `<li><span class="reno-year">${entry.year ? escapeHtml(entry.year) : '•'}</span><span class="reno-text">${escapeHtml(entry.text)}</span></li>`).join('')}</ul>${property.renovationSource ? `<p class="reno-source">Aus dem Inserat übernommen (${escapeHtml(property.renovationSource)}). Bitte prüfen.</p>` : ''}`;
+        })()}</section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
         <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Partner und deren Dokumente verwalten.</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px;font-size:14px">${partnerListHtml(assignedProviders)}</div></section>
         ${(() => {
@@ -2966,9 +2983,9 @@
         ${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="cost-property" class="filter-select" aria-label="Ferienhaus für Jahreskosten wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <div class="cost-summary"><article class="cost-total"><small>Geschätzte Jahreskosten · ${escapeHtml(property.name)}</small><strong id="annual-total">${money(total)}</strong><span>Ändere die Beträge unten, um dein eigenes Budget abzubilden.</span></article><article class="card cost-average"><span>Monatlicher Budgetdurchschnitt</span><strong id="monthly-total">${money(Math.round(total / 12))}</strong></article></div>
         <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Posten nach Anteil an den Jahreskosten sortiert · ${escapeHtml(property.name)}</p></div></div><ul class="cost-bars" id="cost-bars" aria-label="Kostenverteilung als Balkendiagramm">${costBarsHtml(costs)}</ul></section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><span class="status pending">Planwerte bearbeiten</span></div>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><button type="button" class="status pending cost-toggle" id="cost-toggle" data-action="toggle-cost-list" aria-expanded="${costListOpen}" aria-controls="cost-list"><span>Planwerte bearbeiten</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
           ${Object.keys(costSources[property.id] || {}).length ? `<p class="cost-source-note">Positionen mit „Kosten aus Inserat“ stammen aus dem Inserat (${escapeHtml([...new Set(Object.values(costSources[property.id]))].join(', '))}, Jahreswerte in SEK). Alle anderen Positionen sind Planwerte. Sobald du einen Betrag änderst, entfällt die Markierung.</p>` : ''}
-          <div class="cost-list">${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}${costSources[property.id]?.[category.id] ? `<span class="cost-source" title="Quelle: ${escapeHtml(costSources[property.id][category.id])}">Kosten aus Inserat</span>` : ''}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
+          <div class="cost-list" id="cost-list" ${costListOpen ? '' : 'hidden'}>${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}${costSources[property.id]?.[category.id] ? `<span class="cost-source" title="Quelle: ${escapeHtml(costSources[property.id][category.id])}">Kosten aus Inserat</span>` : ''}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
           <div class="cost-disclaimer">Orientierungsbudget, keine Kostenprognose: Versicherungs-, Energie-, Wasser-/Abwasser-, Abfall-, Kamin- und Wartungskosten unterscheiden sich je nach Haus, Nutzung und Gemeinde. Die Werte sind editierbare Beispiel-Planwerte. Die Immobilienabgabe 2026 ist mit dem gesetzlichen Höchstbetrag von 10 425 kr angesetzt; sie beträgt grundsätzlich 0,75 % des Steuerwerts bis zum Höchstbetrag. Ersetze Planwerte durch Bescheide und Angebote.</div>
           <p class="source-note">Quellen: <a href="https://www.skatteverket.se/privat/fastigheterochbostad/fastighetsskattfastighetsavgift.4.69ef368911e1304a625800013531.html" target="_blank" rel="noopener noreferrer">Skatteverket · Immobilienabgabe</a> · <a href="https://www.svensktvatten.se/om-oss/verksamhet-och-strategi/fakta-om-vatten/va-taxa/" target="_blank" rel="noopener noreferrer">Svenskt Vatten · lokale VA-Tarife</a> · <a href="https://www.konsumenternas.se/forsakringar/boendeforsakringar/fritidshusforsakringar/" target="_blank" rel="noopener noreferrer">Konsumenternas · Ferienhausversicherung</a>.</p>
         </section>`;
@@ -4266,6 +4283,14 @@
         currentPage = 'inspections';
         render();
       }
+      if (action === 'toggle-cost-list') {
+        costListOpen = !costListOpen;
+        document.getElementById('cost-toggle')?.setAttribute('aria-expanded', String(costListOpen));
+        const list = document.getElementById('cost-list');
+        if (list) list.hidden = !costListOpen;
+        if (costListOpen) list?.querySelector('.cost-input')?.focus({ preventScroll: true });
+        return;
+      }
       if (action === 'portal-sync') { syncPortalBookings(); return; }
       if (action === 'portal-connect') { openPortalConnect(); return; }
       if (action === 'portal-disconnect') { disconnectPortal(); return; }
@@ -4934,7 +4959,7 @@
       rest.splice(at, 0, ...pinned);
       return rest;
     }
-    const RENO_PATTERN = /(renover|ombyggn|ombygg|tillbygg|moderniser|uppgrader|upprust|byte av|\bbytt|utbytt|byttes|bytts|nytt tak|nya fönster|ny panel|nymål|nylagd|nyinstaller|installerad|installerades|dräner|omlagt|omlagd|omlagda|ny(a)? (kök|badrum|golv|tak|fönster|panel|värmepump|eldstad|spis|kamin|el|ledning|ledningar|vatten|avlopp|brunn|bastu|altan|trall|fasad|dörr|dörrar|golvvärme|ventilation)|nyrenoverad|totalrenoverad|helrenoverad|tilläggsisolerad|isolerad|stambyte|dränering)/i;
+    const RENO_PATTERN = /(renover|ombyggn|ombygg|tillbygg|moderniser|uppgrader|upprust|byte av|\bbytt|utbytt|byttes|bytts|nytt tak|nya fönster|ny panel|nymål|nylagd|nyinstaller|installerad|installerades|dräner|omlagt|omlagd|omlagda|ny(a)? (kök|badrum|golv|tak|fönster|panel|värmepump|eldstad|spis|kamin|el|ledning|ledningar|vatten|avlopp|brunn|bastu|altan|trall|fasad|dörr|dörrar|golvvärme|ventilation)|nyrenoverad|totalrenoverad|helrenoverad|tilläggsisolerad|isolerad|stambyte|dränering|förnya|förbättring|omgjord|uppdaterad|ommålad|nymålad|målades|ersatt|ersattes|bättrat|inglasad|\bnytt\b[^.]*\b(19|20)\d\d\b|\bnya\b[^.]*\b(19|20)\d\d\b)/i;
     const RENO_NEGATIVE = /(renoveringsbehov|renoveringsobjekt|upprustningsbehov|underhållsbehov|slitet|sliten|slitage|bör (bytas|renoveras|åtgärdas)|behöver (bytas|renoveras|åtgärdas)|dåligt skick|fuktskada|rötskada|mögel|läckage)/i;
     const RENO_POSITIVE = /(välskött|väl underhåll|gott skick|mycket gott skick|fint skick|bra skick|nyskick|nyrenoverad|totalrenoverad|helrenoverad|nyproduktion)/i;
     function extractRenovations(texts, yearBuilt) {
@@ -5323,7 +5348,11 @@
         closeImportModal();
         openPropertyModal();
         const form = document.getElementById('property-form');
-        const renovationFacts = full ? result.facts.filter((fact) => fact.reno) : [];
+        const renovationFacts = result.facts.filter((fact) => fact.reno);
+        if (!full && renovationFacts.length) {
+          setImportStatus('Sanierungen werden ins Deutsche übersetzt …');
+          await Promise.all(renovationFacts.map(async (fact) => { try { fact.value = await translateToGerman(fact.value); } catch (error) { result.translationFailures = (result.translationFailures || 0) + 1; } }));
+        }
         const conditionFact = full ? result.facts.find((fact) => fact.condition) : null;
         const renovationLines = renovationFacts.map((fact) => `${fact.year && !fact.value.includes(fact.year) ? `${fact.year}: ` : ''}${fact.value}`);
         result.facts.forEach((fact) => { delete fact.year; delete fact.reno; delete fact.condition; });
@@ -5332,11 +5361,13 @@
         pendingPropertyPhotos = photos;
         pendingPropertyPhoto = photos[0] || '';
         renderPhotoGallery();
-        pendingImport = full ? { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs, floorplans } : (Object.keys(result.costs || {}).length ? { costs: result.costs, costSource: result.sourceName } : null);
+        pendingImport = full ? { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs, floorplans, renovationSource: renovationLines.length ? result.sourceName : '' } : (Object.keys(result.costs || {}).length || renovationLines.length ? { costs: result.costs || {}, costSource: result.sourceName, renovationSource: renovationLines.length ? result.sourceName : '' } : null);
         document.getElementById('property-modal-title').textContent = 'Importiertes Ferienhaus prüfen';
         const notes = [];
         if (full && result.translationFailures) notes.push(result.translationFailures >= result.translationTotal ? 'Die Übersetzung war nicht erreichbar, die Texte stehen im Original.' : 'Einige Texte konnten nicht übersetzt werden.');
-        if (full && (renovationLines.length || conditionFact)) notes.push(renovationLines.length ? `Zustand und ${renovationLines.length} erwähnte Sanierung${renovationLines.length === 1 ? '' : 'en'} wurden aus dem Text abgeleitet.` : 'Der Zustand wurde aus dem Text abgeleitet.');
+        if (renovationLines.length) notes.push(`${renovationLines.length} erwähnte Sanierung${renovationLines.length === 1 ? '' : 'en'} ${renovationLines.length === 1 ? 'wurde' : 'wurden'} in die Sanierungshistorie eingetragen.`);
+        if (full && conditionFact) notes.push('Der Zustand wurde aus dem Text abgeleitet.');
+        if (!full && result.translationFailures) notes.push('Die Übersetzung der Sanierungen war nicht erreichbar.');
         if (full && photos.length < result.photoUrls.length) notes.push('Nicht alle Fotos konnten geladen werden.');
         if (full && floorplans.length < result.floorplanUrls.length) notes.push('Nicht alle Grundrisse konnten geladen werden.');
         if (!full && !photos.length && result.photoUrls.length) notes.push('Das Foto konnte nicht geladen werden.');
@@ -5389,6 +5420,7 @@
         condition: String(formData.get('condition')),
         lastRenovations: String(formData.get('lastRenovations')).trim(),
         plannedRenovations: String(formData.get('plannedRenovations')).trim(),
+        ...(!previous && pendingImport?.renovationSource ? { renovationSource: pendingImport.renovationSource } : {}),
         ...(!previous && pendingImport?.facts ? { facts: pendingImport.facts, description: pendingImport.description, sourceUrl: pendingImport.sourceUrl, sourceName: pendingImport.sourceName, floorplans: pendingImport.floorplans || [] } : {})
       });
       const index = properties.findIndex((item) => item.id === property.id);
