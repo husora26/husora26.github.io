@@ -469,6 +469,63 @@
     .pdf-viewer-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
     .pdf-viewer-frame { width: 100%; height: 60vh; border: 1px solid var(--line); border-radius: 8px; background: #f4f4f2; }
     .pdf-viewer-modal .form-actions a { text-decoration: none; display: inline-flex; align-items: center; }
+    .house-card .card-head { flex-wrap: wrap; gap: 10px; }
+    .house-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+    .house-controls button { padding: 7px 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--green); background: white; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .house-scene { position: relative; height: 400px; overflow: hidden; perspective: 1150px; perspective-origin: 50% 38%; background: linear-gradient(180deg, #d9e7ef 0%, #eef0e6 62%, #e6ecd9 100%); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
+    .house-scene:active { cursor: grabbing; }
+    .house-scene:focus-visible { box-shadow: inset 0 0 0 3px rgba(40, 92, 69, .35); }
+    .house-stage-wrap { position: absolute; left: 50%; top: 56%; width: 0; height: 0; transform-style: preserve-3d; }
+    .house-stage { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; will-change: transform; }
+    .house-face { position: absolute; left: 0; top: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-sizing: border-box; }
+    .house-face[data-part] { cursor: pointer; }
+    .house-face[data-part]:hover { filter: brightness(1.14); }
+    .house-face[data-part].selected { filter: brightness(1.22) saturate(1.15); box-shadow: inset 0 0 0 4px #ffd36b; }
+    .house-ground { background: radial-gradient(closest-side, #b7d0a6 0%, #a9c797 58%, rgba(169, 199, 151, 0) 100%); backface-visibility: visible; pointer-events: none; }
+    .house-shadow { background: rgba(20, 30, 20, .28); filter: blur(7px); backface-visibility: visible; pointer-events: none; }
+    .house-wall { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .13) 0 1px, transparent 1px 9px), #a23d2e; box-shadow: inset 5px 0 #f1ebdf, inset -5px 0 #f1ebdf, inset 0 -6px #6a574a; }
+    .house-wall.side { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .15) 0 1px, transparent 1px 9px), #8d3326; }
+    .house-wall.back { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .15) 0 1px, transparent 1px 9px), #94362a; }
+    .house-gable { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .15) 0 1px, transparent 1px 9px), #8d3326; clip-path: polygon(50% 0, 0 100%, 100% 100%); pointer-events: none; }
+    .house-roof { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .22) 0 2px, transparent 2px 12px), linear-gradient(180deg, #53585d, #383c40); border-bottom: 4px solid #24272a; }
+    .house-roof.back { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .22) 0 2px, transparent 2px 12px), linear-gradient(180deg, #484d52, #2f3337); }
+    .house-gutter { background: linear-gradient(180deg, #dfe3e5, #aab2b6); border-radius: 3px; }
+    .house-pipe { background: linear-gradient(90deg, #aab2b6, #e2e6e8, #aab2b6); }
+    .house-deck { background: repeating-linear-gradient(90deg, rgba(60, 35, 15, .22) 0 1px, transparent 1px 15px), #c9a273; backface-visibility: visible; }
+    .house-deck-edge { background: #a98350; }
+    .house-brick { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .2) 0 1px, transparent 1px 7px), #8a4a3c; pointer-events: none; }
+    .house-window { position: absolute; width: 42px; height: 38px; border: 4px solid #f4efe4; background: linear-gradient(135deg, #9ec4dc 0%, #dcecf5 48%, #8db5cf 100%); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); cursor: pointer; }
+    .house-window::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: #f4efe4; }
+    .house-window::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px; margin-top: -1.5px; background: #f4efe4; }
+    .house-window:hover { filter: brightness(1.12); }
+    .house-window.selected { box-shadow: 0 0 0 3px #ffd36b; }
+    .house-door { position: absolute; left: calc(50% - 19px); bottom: 6px; width: 38px; height: 66px; border: 4px solid #f4efe4; border-bottom: 0; background: linear-gradient(90deg, #355b49, #2a4a3b); cursor: pointer; }
+    .house-door::after { content: ''; position: absolute; right: 5px; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: #e3c46a; }
+    .house-door:hover { filter: brightness(1.18); }
+    .house-door.selected { box-shadow: 0 0 0 3px #ffd36b; }
+    .house-pin { position: absolute; z-index: 2; display: grid; place-items: center; width: 20px; height: 20px; margin: -10px 0 0 -10px; border: 2px solid white; border-radius: 50%; color: white; font-size: 10px; font-style: normal; font-weight: 800; box-shadow: 0 1px 4px rgba(0, 0, 0, .45); cursor: pointer; }
+    .house-pin.st-ok, .house-dot.st-ok { background: #2f8a57; }
+    .house-pin.st-due, .house-dot.st-due { background: #d58a1f; }
+    .house-pin.st-never, .house-dot.st-never { background: #7b847e; }
+    .house-pin.selected { box-shadow: 0 0 0 3px #ffd36b; }
+    .house-info { position: absolute; left: 12px; bottom: 12px; z-index: 5; width: min(290px, calc(100% - 24px)); max-height: 64%; overflow-y: auto; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: rgba(255, 255, 255, .97); box-shadow: 0 8px 26px rgba(30, 50, 40, .25); cursor: default; touch-action: pan-y; user-select: text; -webkit-user-select: text; }
+    .house-info h3 { margin: 0 24px 6px 0; font-size: 15px; }
+    .house-info-close { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 50%; color: var(--muted); background: #f1f2ee; font-size: 13px; cursor: pointer; }
+    .house-status { display: inline-block; margin-bottom: 8px; padding: 3px 9px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .house-status.st-ok { color: #1f6b41; background: #e2f2e8; }
+    .house-status.st-due { color: #8a5410; background: #fbecd2; }
+    .house-status.st-never { color: #4f5852; background: #eceeea; }
+    .house-info-row { padding: 8px 0; border-top: 1px solid var(--line); }
+    .house-info-row strong { display: block; font-size: 12px; }
+    .house-info-row small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .house-info .text-btn { margin-top: 6px; padding: 0; }
+    .house-legend { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 18px 4px; }
+    .house-chip-btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: white; font-size: 11px; font-weight: 650; cursor: pointer; }
+    .house-chip-btn.selected { border-color: var(--green); background: #eaf3ee; }
+    .house-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .house-key { display: flex; flex-wrap: wrap; gap: 14px; padding: 8px 18px 16px; color: var(--muted); font-size: 10.5px; }
+    .house-key span { display: inline-flex; align-items: center; gap: 5px; }
+    @media (max-width: 520px) { .house-scene { height: 360px; } }
     .control-list { display: grid; gap: 10px; padding: 4px 18px 16px; }
     .control-list-title { margin: 0 18px 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
     .control-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; }
@@ -735,6 +792,7 @@
           <button data-page="bookings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3m2 0h3m-8 3h3"/></svg><span>Buchung</span></button>
           <button data-page="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 10h7m-7 4h7m-7 4h4"/></svg><span>Serviceaufgaben</span><i class="nav-count" id="nav-count">0</i></button>
           <button data-page="inspections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>Hauskontrolle</span></button>
+          <button data-page="house3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg><span>Hausmodell</span></button>
           <button data-page="providers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14.5 6.5a5 5 0 0 0-6.7 6.7L3 18l3 3 4.8-4.8a5 5 0 0 0 6.7-6.7l-3.1 3.1-3-3z"/><path d="m15.5 4.5 4 4"/></svg><span>Servicepartner finden</span></button>
           <button data-page="documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8m-8 4h8"/></svg><span>Dokumente</span></button>
           <button data-page="costs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h14a2 2 0 0 1 2 2v11H5a2 2 0 0 1-2-2V6a3 3 0 0 1 3-3h12"/><path d="M3 7h17v5h-5a2 2 0 0 0 0 4h5"/><path d="M15.5 14.5h.01"/></svg><span>Jahreskosten</span></button>
@@ -1953,6 +2011,112 @@
           <p class="source-note">Dies sind Anbieter aus öffentlich verlinkten Websites und der Partnerdatenbank 2026, keine bestätigten Vertragspartner. Telefonnummern und E-Mail-Adressen stammen aus der bereitgestellten Datenbank. Entfernungen sind grobe Luftlinien-Schätzungen anhand der angegebenen Orte bzw. Einsatzgebiete; Straßenentfernung, Einsatzradius, Verfügbarkeit, Leistungen und Kontaktdaten bitte vor Beauftragung direkt bestätigen.</p>
         </section>`;
     }
+    const housePartDefs = [
+      { id: 'roof', label: 'Dach', items: ['outside', 'weather'] },
+      { id: 'gutter', label: 'Dachrinne & Entwässerung', items: ['weather', 'outside'] },
+      { id: 'facade', label: 'Fassade', items: ['outside'] },
+      { id: 'windows', label: 'Fenster', items: ['security', 'outside'] },
+      { id: 'door', label: 'Haustür', items: ['security'] },
+      { id: 'terrace', label: 'Terrasse', items: ['outside'] }
+    ];
+    const houseIntervalDays = { w1: 7, w2: 14, m1: 30, q1: 91, h1: 182, y1: 365 };
+    const houseStatusLabels = { ok: 'Aktuell', due: 'Kontrolle fällig', never: 'Noch nicht kontrolliert' };
+    let houseRotation = { x: -24, y: -32 };
+    let houseModelProperty = properties[0].id;
+    let selectedHousePart = null;
+    function housePartInfo(propertyId, part) {
+      const entries = inspectionLogEntries(propertyId);
+      const plan = planFor(propertyId).items;
+      const today = new Date(`${localDateKey(new Date())}T12:00:00`);
+      const rows = part.items.map((itemId) => {
+        const item = absenceChecklist.find((entry) => entry.id === itemId);
+        const last = entries.filter((entry) => entry.checkedItems.includes(itemId)).map((entry) => entry.date).sort().pop() || '';
+        const frequency = plan[itemId] || '';
+        let status = 'never';
+        let days = null;
+        if (last) {
+          days = Math.max(0, Math.round((today - new Date(`${last}T12:00:00`)) / 86400000));
+          status = frequency && days > houseIntervalDays[frequency] ? 'due' : 'ok';
+        }
+        return { item, last, frequency, status, days };
+      });
+      const status = rows.some((row) => row.status === 'due') ? 'due' : rows.some((row) => row.status === 'never') ? 'never' : 'ok';
+      return { rows, status };
+    }
+    function houseInfoHtml(propertyId, part) {
+      const info = housePartInfo(propertyId, part);
+      const ago = (days) => (days === 0 ? 'heute' : days === 1 ? 'gestern' : `vor ${days} Tagen`);
+      return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span>${info.rows.map((row) => `<div class="house-info-row"><strong>${escapeHtml(row.item.title)}</strong><small>Letzte Kontrolle: ${row.last ? `${escapeHtml(formatInspectionDate(row.last))} (${ago(row.days)})` : 'noch nicht protokolliert'}</small><small>Kontrolltaktung: ${row.frequency ? escapeHtml(planFrequencyLabel(row.frequency)) : 'nicht festgelegt'}</small></div>`).join('')}<button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button></div>`;
+    }
+    function houseModelHtml(statuses) {
+      const W = 220, D = 150, H = 100, R = 60, OH = 14;
+      const slopeLen = Math.hypot(D / 2, R);
+      const sinB = R / slopeLen, cosB = (D / 2) / slopeLen;
+      const tilt = (Math.atan2(D / 2, R) * 180 / Math.PI).toFixed(2);
+      const roofW = W + 2 * OH, roofL = slopeLen + OH;
+      const roofY = -(H / 2 + R / 2) + sinB * OH / 2, roofZ = D / 4 + cosB * OH / 2;
+      const eaveY = -H / 2 + sinB * OH, eaveZ = D / 2 + cosB * OH;
+      const number = Object.fromEntries(housePartDefs.map((part, index) => [part.id, index + 1]));
+      const pin = (id, style) => `<i class="house-pin st-${statuses[id]}" data-part="${id}" style="${style}">${number[id]}</i>`;
+      const face = (cls, w, h, transform, inner = '', part = '') => `<div class="house-face ${cls}"${part ? ` data-part="${part}"` : ''} style="width:${w}px;height:${h}px;margin:${-h / 2}px 0 0 ${-w / 2}px;transform:${transform}">${inner}</div>`;
+      const win = (left) => `<span class="house-window" data-part="windows" style="left:${left}px;top:22px"></span>`;
+      const winPinned = (left) => `<span class="house-window" data-part="windows" style="left:${left}px;top:22px">${pin('windows', 'left:50%;top:50%')}</span>`;
+      const front = face('house-wall', W, H, `translate3d(0,0,${D / 2}px)`, `${winPinned(24)}${win(W - 24 - 42 - 8)}<span class="house-door" data-part="door">${pin('door', 'left:50%;top:40%')}</span>${pin('facade', 'left:22px;top:84px')}`, 'facade');
+      const back = face('house-wall back', W, H, `rotateY(180deg) translate3d(0,0,${D / 2}px)`, `${win(24)}${winPinned(W / 2 - 25)}${win(W - 24 - 50)}${pin('facade', 'left:22px;top:84px')}`, 'facade');
+      const sideInner = `${win(D / 2 - 25)}`;
+      const right = face('house-wall side', D, H, `rotateY(90deg) translate3d(0,0,${W / 2}px)`, sideInner, 'facade');
+      const left = face('house-wall side', D, H, `rotateY(-90deg) translate3d(0,0,${W / 2}px)`, sideInner, 'facade');
+      const gableY = -(H / 2 + R / 2);
+      const gables = face('house-gable', D, R, `rotateY(90deg) translate3d(0,${gableY}px,${W / 2}px)`) + face('house-gable', D, R, `rotateY(-90deg) translate3d(0,${gableY}px,${W / 2}px)`);
+      const roofFront = face('house-roof', roofW, roofL, `translate3d(0,${roofY}px,${roofZ}px) rotateX(${tilt}deg)`, pin('roof', 'left:50%;top:48%'), 'roof');
+      const roofBack = face('house-roof back', roofW, roofL, `rotateY(180deg) translate3d(0,${roofY}px,${roofZ}px) rotateX(${tilt}deg)`, pin('roof', 'left:50%;top:48%'), 'roof');
+      const gutterY = eaveY + 4, gutterZ = eaveZ + 1;
+      const gutterFront = face('house-gutter', roofW, 8, `translate3d(0,${gutterY}px,${gutterZ}px)`, pin('gutter', 'left:16%;top:50%'), 'gutter');
+      const gutterBack = face('house-gutter', roofW, 8, `rotateY(180deg) translate3d(0,${gutterY}px,${gutterZ}px)`, pin('gutter', 'left:16%;top:50%'), 'gutter');
+      const pipeH = H / 2 - gutterY, pipeY = (gutterY + H / 2) / 2;
+      const pipes = [-1, 1].map((side) => face('house-pipe', 6, pipeH, `translate3d(${side * (W / 2 - 8)}px,${pipeY}px,${D / 2 + 3}px)`, '', 'gutter')).join('');
+      const deckY = H / 2 - 7;
+      const deck = face('house-deck', 170, 60, `translate3d(0,${deckY}px,${D / 2 + 30}px) rotateX(90deg)`, pin('terrace', 'left:50%;top:50%'), 'terrace')
+        + face('house-deck-edge', 170, 7, `translate3d(0,${deckY + 3.5}px,${D / 2 + 60}px)`, '', 'terrace')
+        + face('house-deck-edge', 60, 7, `rotateY(-90deg) translate3d(${D / 2 + 30}px,${deckY + 3.5}px,85px)`, '', 'terrace')
+        + face('house-deck-edge', 60, 7, `rotateY(90deg) translate3d(${-(D / 2 + 30)}px,${deckY + 3.5}px,85px)`, '', 'terrace');
+      const chimney = face('house-brick', 22, 46, 'translate3d(55px,-119px,11px)') + face('house-brick', 22, 46, 'rotateY(180deg) translate3d(-55px,-119px,11px)')
+        + face('house-brick', 22, 46, 'rotateY(90deg) translate3d(0,-119px,66px)') + face('house-brick', 22, 46, 'rotateY(-90deg) translate3d(0,-119px,-44px)')
+        + face('house-brick', 22, 22, 'translate3d(55px,-142px,0) rotateX(90deg)');
+      const ground = face('house-ground', 480, 440, `translate3d(0,${H / 2}px,0) rotateX(90deg)`);
+      const shadow = face('house-shadow', W + 44, D + 44, `translate3d(0,${H / 2 - 0.6}px,0) rotateX(90deg)`);
+      return `${ground}${shadow}${front}${back}${right}${left}${gables}${roofFront}${roofBack}${gutterFront}${gutterBack}${pipes}${deck}${chimney}`;
+    }
+    function house3dPage() {
+      const property = properties.find((item) => item.id === houseModelProperty) || properties[0];
+      const statuses = Object.fromEntries(housePartDefs.map((part) => [part.id, housePartInfo(property.id, part).status]));
+      const selected = housePartDefs.find((part) => part.id === selectedHousePart);
+      const selector = singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="house-property" class="filter-select" aria-label="Ferienhaus für das Hausmodell wählen">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`;
+      return `<div class="welcome"><div><p class="eyebrow">Gebäudehülle · ${escapeHtml(property.region || 'Schweden')}</p><h1>Hausmodell</h1><p class="subtitle">Dreh ${singleHouse() ? 'dein Ferienhaus' : 'das Haus'} mit Finger oder Maus und wähle ein Bauteil, um die letzte Kontrolle zu sehen.</p></div></div>
+        ${selector}
+        <section class="card house-card"><div class="card-head"><div><h2 class="card-title">${escapeHtml(property.name)}</h2><p class="card-caption">Bauteile der Gebäudehülle · ziehen zum Drehen</p></div><div class="house-controls"><button type="button" data-house-action="rotate-left" aria-label="Nach links drehen">⟲ Links</button><button type="button" data-house-action="rotate-right" aria-label="Nach rechts drehen">Rechts ⟳</button><button type="button" data-house-action="reset">Zurücksetzen</button></div></div>
+          <div class="house-scene" id="house-scene" tabindex="0" aria-label="3D-Modell des Ferienhauses. Mit den Pfeiltasten drehen."><div class="house-stage-wrap" id="house-stage-wrap"><div class="house-stage" id="house-stage" style="transform:rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)">${houseModelHtml(statuses)}</div></div><div id="house-info-slot">${selected ? houseInfoHtml(property.id, selected) : ''}</div></div>
+          <div class="house-legend">${housePartDefs.map((part, index) => `<button class="house-chip-btn ${part.id === selectedHousePart ? 'selected' : ''}" type="button" data-part="${part.id}"><i class="house-dot st-${statuses[part.id]}"></i>${index + 1}. ${escapeHtml(part.label)}</button>`).join('')}</div>
+          <div class="house-key"><span><i class="house-dot st-ok"></i>Aktuell</span><span><i class="house-dot st-due"></i>Kontrolle fällig</span><span><i class="house-dot st-never"></i>Noch nicht kontrolliert</span></div>
+        </section>`;
+    }
+    function fitHouseScene() {
+      const scene = document.getElementById('house-scene');
+      const wrap = document.getElementById('house-stage-wrap');
+      if (!scene || !wrap) return;
+      wrap.style.transform = `scale(${Math.max(0.55, Math.min(1.15, scene.clientWidth / 430))})`;
+    }
+    function applyHouseRotation() {
+      const stage = document.getElementById('house-stage');
+      if (stage) stage.style.transform = `rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)`;
+    }
+    function selectHousePart(partId) {
+      selectedHousePart = partId;
+      const part = housePartDefs.find((entry) => entry.id === partId);
+      document.querySelectorAll('#house-scene [data-part], .house-legend [data-part]').forEach((node) => node.classList.toggle('selected', node.dataset.part === partId));
+      const slot = document.getElementById('house-info-slot');
+      if (slot) slot.innerHTML = part ? houseInfoHtml(houseModelProperty, part) : '';
+    }
     function costsPage() {
       const property = properties.find((item) => item.id === costProperty) || properties[0];
       const costs = annualCosts[property.id] || initialCosts[property.id];
@@ -2740,8 +2904,8 @@
     function render() {
       document.body.classList.toggle('no-bookings', !bookingsEnabled());
       if (!bookingsEnabled() && currentPage === 'bookings') currentPage = 'dashboard';
-      const pages = { dashboard, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, assignedProviders: assignedProvidersPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
-      const labels = { dashboard: 'Übersicht', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', assignedProviders: 'Zugeordnete Servicepartner', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
+      const pages = { dashboard, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, house3d: house3dPage, assignedProviders: assignedProvidersPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
+      const labels = { dashboard: 'Übersicht', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', house3d: 'Hausmodell', assignedProviders: 'Zugeordnete Servicepartner', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
       if (currentPage !== lastRenderedPage) {
         if (returningToPreviousPage) {
           returningToPreviousPage = false;
@@ -2756,6 +2920,7 @@
       document.querySelectorAll('.nav [data-page]').forEach((button) => button.classList.toggle('active', button.dataset.page === currentPage || (currentPage === 'propertyDetail' && button.dataset.page === 'properties')));
       updateProfileSummary();
       pageContent.innerHTML = pages[currentPage]();
+      if (currentPage === 'house3d') fitHouseScene();
     }
     let swipeStart = null;
     pageContent.addEventListener('touchstart', (event) => {
@@ -2764,7 +2929,7 @@
         return;
       }
       const target = event.target;
-      if (target.closest('button, a, input, select, textarea, [contenteditable="true"], .calendar-grid, .provider-results, .task-list, .booking-inline-calendar')) {
+      if (target.closest('button, a, input, select, textarea, [contenteditable="true"], .calendar-grid, .provider-results, .task-list, .booking-inline-calendar, .house-scene')) {
         swipeStart = null;
         return;
       }
@@ -3516,6 +3681,61 @@
         closeInspectionPlan();
         autoModal.classList.remove('open');
       }
+    });
+    let houseDrag = null;
+    let houseDragMoved = false;
+    document.addEventListener('pointerdown', (event) => {
+      if (!event.target.closest('#house-scene') || event.target.closest('.house-info, button')) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      houseDragMoved = false;
+      houseDrag = { x: event.clientX, y: event.clientY, rx: houseRotation.x, ry: houseRotation.y, moved: false };
+    });
+    window.addEventListener('pointermove', (event) => {
+      if (!houseDrag) return;
+      const dx = event.clientX - houseDrag.x;
+      const dy = event.clientY - houseDrag.y;
+      if (!houseDrag.moved && Math.hypot(dx, dy) < 6) return;
+      houseDrag.moved = true;
+      houseRotation = { y: houseDrag.ry + dx * 0.55, x: Math.max(-75, Math.min(-4, houseDrag.rx - dy * 0.35)) };
+      applyHouseRotation();
+    });
+    const endHouseDrag = () => {
+      if (!houseDrag) return;
+      houseDragMoved = houseDrag.moved;
+      houseDrag = null;
+      setTimeout(() => { houseDragMoved = false; }, 0);
+    };
+    window.addEventListener('pointerup', endHouseDrag);
+    window.addEventListener('pointercancel', endHouseDrag);
+    window.addEventListener('resize', fitHouseScene);
+    document.addEventListener('click', (event) => {
+      const houseAction = event.target.closest('[data-house-action]');
+      if (houseAction) {
+        const type = houseAction.dataset.houseAction;
+        if (type === 'close') selectHousePart(null);
+        if (type === 'rotate-left') houseRotation = { ...houseRotation, y: houseRotation.y - 30 };
+        if (type === 'rotate-right') houseRotation = { ...houseRotation, y: houseRotation.y + 30 };
+        if (type === 'reset') houseRotation = { x: -24, y: -32 };
+        applyHouseRotation();
+        return;
+      }
+      if (houseDragMoved || !event.target.closest('#house-scene, .house-legend')) return;
+      const part = event.target.closest('[data-part]');
+      if (part) selectHousePart(part.dataset.part);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.target.id !== 'house-scene') return;
+      const step = { ArrowLeft: [0, -15], ArrowRight: [0, 15], ArrowUp: [4, 0], ArrowDown: [-4, 0] }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      houseRotation = { x: Math.max(-75, Math.min(-4, houseRotation.x + step[0])), y: houseRotation.y + step[1] };
+      applyHouseRotation();
+    });
+    document.addEventListener('change', (event) => {
+      if (event.target.id !== 'house-property') return;
+      houseModelProperty = event.target.value;
+      selectedHousePart = null;
+      render();
     });
     document.getElementById('settings-button').addEventListener('click', () => { currentPage = 'profile'; render(); });
     document.addEventListener('keydown', (event) => {
