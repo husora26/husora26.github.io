@@ -515,6 +515,12 @@
     .house-status.st-ok { color: #1f6b41; background: #e2f2e8; }
     .house-status.st-due { color: #8a5410; background: #fbecd2; }
     .house-status.st-never { color: #4f5852; background: #eceeea; }
+    .house-status + .house-status { margin-left: 5px; }
+    .house-status.st-none { color: #4f5852; background: #eceeea; }
+    .house-status.reno-planned { color: #7a4d0a; background: #fbe6c2; }
+    .house-status.reno-done { color: #1f6b41; background: #e2f2e8; }
+    .house-status.reno-none { color: #4f5852; background: #eceeea; }
+    .house-pin.st-none, .house-dot.st-none { background: #7b847e; }
     .house-info-row { padding: 8px 0; border-top: 1px solid var(--line); }
     .house-info-row strong { display: block; font-size: 12px; }
     .house-info-row small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.45; }
@@ -2012,15 +2018,23 @@
         </section>`;
     }
     const housePartDefs = [
-      { id: 'roof', label: 'Dach', items: ['outside', 'weather'] },
-      { id: 'gutter', label: 'Dachrinne & Entwässerung', items: ['weather', 'outside'] },
-      { id: 'facade', label: 'Fassade', items: ['outside'] },
-      { id: 'windows', label: 'Fenster', items: ['security', 'outside'] },
-      { id: 'door', label: 'Haustür', items: ['security'] },
-      { id: 'terrace', label: 'Terrasse', items: ['outside'] }
+      { id: 'roof', label: 'Dach', items: ['weather'], match: /dach(?!rinn|fenster)/i },
+      { id: 'gutter', label: 'Dachrinne & Entwässerung', items: ['weather'], match: /dachrinn|regenrinn|regenrohr|fallrohr|entwässer|drainage/i },
+      { id: 'facade', label: 'Fassade', items: [], match: /fassade|außenwand|aussenwand|anstrich|verkleidung|dämmung/i },
+      { id: 'windows', label: 'Fenster', items: ['security'], match: /fenster/i },
+      { id: 'door', label: 'Haustür', items: ['security'], match: /haustür|haustuer|eingangstür|\btür(en)?\b/i },
+      { id: 'terrace', label: 'Terrasse', items: [], match: /terrasse|veranda|holzdeck|balkon/i }
     ];
+    function houseRenovationInfo(property, part) {
+      const segments = (text) => String(text || '').split(/[\n;]+/).map((entry) => entry.trim()).filter(Boolean).filter((entry) => part.match.test(entry));
+      const done = segments(property.lastRenovations).map((text) => ({ text, year: (text.match(/\b(19|20)\d{2}\b/) || [''])[0] }));
+      const planned = segments(property.plannedRenovations);
+      const status = planned.length ? 'planned' : done.length ? 'done' : 'none';
+      return { done, planned, status };
+    }
+    const houseRenovationLabels = { planned: 'Sanierung geplant', done: 'Saniert', none: 'Keine Angaben' };
     const houseIntervalDays = { w1: 7, w2: 14, m1: 30, q1: 91, h1: 182, y1: 365 };
-    const houseStatusLabels = { ok: 'Aktuell', due: 'Kontrolle fällig', never: 'Noch nicht kontrolliert' };
+    const houseStatusLabels = { ok: 'Aktuell', due: 'Kontrolle fällig', never: 'Noch nicht kontrolliert', none: 'Kein Prüfpunkt zugeordnet' };
     let houseRotation = { x: -24, y: -32 };
     let houseModelProperty = properties[0].id;
     let selectedHousePart = null;
@@ -2040,13 +2054,22 @@
         }
         return { item, last, frequency, status, days };
       });
-      const status = rows.some((row) => row.status === 'due') ? 'due' : rows.some((row) => row.status === 'never') ? 'never' : 'ok';
+      const status = !rows.length ? 'none' : rows.some((row) => row.status === 'due') ? 'due' : rows.some((row) => row.status === 'never') ? 'never' : 'ok';
       return { rows, status };
     }
     function houseInfoHtml(propertyId, part) {
       const info = housePartInfo(propertyId, part);
+      const property = propertyWithDefaults(properties.find((item) => item.id === propertyId) || properties[0]);
+      const renovation = houseRenovationInfo(property, part);
       const ago = (days) => (days === 0 ? 'heute' : days === 1 ? 'gestern' : `vor ${days} Tagen`);
-      return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span>${info.rows.map((row) => `<div class="house-info-row"><strong>${escapeHtml(row.item.title)}</strong><small>Letzte Kontrolle: ${row.last ? `${escapeHtml(formatInspectionDate(row.last))} (${ago(row.days)})` : 'noch nicht protokolliert'}</small><small>Kontrolltaktung: ${row.frequency ? escapeHtml(planFrequencyLabel(row.frequency)) : 'nicht festgelegt'}</small></div>`).join('')}<button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button></div>`;
+      const renovationRows = [
+        ...renovation.done.map((entry) => `<small>Saniert: ${escapeHtml(entry.text)}</small>`),
+        ...renovation.planned.map((text) => `<small>Geplant: ${escapeHtml(text)}</small>`)
+      ].join('') || '<small>Zu diesem Bauteil sind in der Objektverwaltung keine Sanierungen eingetragen.</small>';
+      const inspectionRows = info.rows.length
+        ? info.rows.map((row) => `<div class="house-info-row"><strong>${escapeHtml(row.item.title)}</strong><small>Letzte Kontrolle: ${row.last ? `${escapeHtml(formatInspectionDate(row.last))} (${ago(row.days)})` : 'noch nicht protokolliert'}</small><small>Kontrolltaktung: ${row.frequency ? escapeHtml(planFrequencyLabel(row.frequency)) : 'nicht festgelegt'}</small></div>`).join('')
+        : '<div class="house-info-row"><strong>Kontrolle</strong><small>Für dieses Bauteil gibt es keinen eigenen Prüfpunkt in der Checkliste.</small></div>';
+      return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span><span class="house-status reno-${renovation.status}">${houseRenovationLabels[renovation.status]}</span>${inspectionRows}<div class="house-info-row"><strong>Sanierungsstatus</strong>${renovationRows}</div><button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button> <button class="text-btn" type="button" data-action="view-property" data-property="${escapeHtml(property.id)}">Zur Objektverwaltung →</button></div>`;
     }
     function houseModelHtml(statuses) {
       const W = 220, D = 150, H = 100, R = 60, OH = 14;
