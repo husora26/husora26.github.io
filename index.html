@@ -2066,6 +2066,7 @@
     let houseModelProperty = properties[0].id;
     let selectedHousePart = null;
     let houseOpen = false;
+    let houseZoom = 1;
     function housePartInfo(propertyId, part) {
       const entries = inspectionLogEntries(propertyId);
       const plan = planFor(propertyId).items;
@@ -2174,8 +2175,8 @@
       const selector = singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="house-property" class="filter-select" aria-label="Ferienhaus für das Hausmodell wählen">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`;
       return `<div class="welcome"><div><p class="eyebrow">Gebäudehülle · ${escapeHtml(property.region || 'Schweden')}</p><h1>Hausmodell</h1><p class="subtitle">Dreh ${singleHouse() ? 'dein Ferienhaus' : 'das Haus'} mit Finger oder Maus, öffne das Dach für den Blick ins Innere und wähle ein Bauteil, um Kontrolle und Zustand zu sehen.</p></div></div>
         ${selector}
-        <section class="card house-card"><div class="card-head"><div><h2 class="card-title">${escapeHtml(property.name)}</h2><p class="card-caption">Gebäudehülle und Innenausstattung · ziehen zum Drehen</p></div><div class="house-controls"><button type="button" id="house-open-btn" data-house-action="toggle-open" aria-pressed="${houseOpen}">${houseOpen ? 'Dach schließen' : 'Dach öffnen'}</button><button type="button" data-house-action="rotate-left" aria-label="Nach links drehen">⟲ Links</button><button type="button" data-house-action="rotate-right" aria-label="Nach rechts drehen">Rechts ⟳</button><button type="button" data-house-action="reset">Zurücksetzen</button></div></div>
-          <div class="house-scene ${houseOpen ? 'open' : ''}" id="house-scene" tabindex="0" aria-label="3D-Modell des Ferienhauses. Mit den Pfeiltasten drehen."><div class="house-stage-wrap" id="house-stage-wrap"><div class="house-stage" id="house-stage" style="transform:rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)">${houseModelHtml(statuses, property)}</div></div><div id="house-info-slot">${selected ? houseInfoHtml(property.id, selected) : ''}</div></div>
+        <section class="card house-card"><div class="card-head"><div><h2 class="card-title">${escapeHtml(property.name)}</h2><p class="card-caption">Gebäudehülle und Innenausstattung · ziehen zum Drehen · Mausrad oder zwei Finger zum Zoomen</p></div><div class="house-controls"><button type="button" id="house-open-btn" data-house-action="toggle-open" aria-pressed="${houseOpen}">${houseOpen ? 'Dach schließen' : 'Dach öffnen'}</button><button type="button" data-house-action="zoom-in" aria-label="Näher heranzoomen">Zoom +</button><button type="button" data-house-action="zoom-out" aria-label="Weiter herauszoomen">Zoom −</button><button type="button" data-house-action="rotate-left" aria-label="Nach links drehen">⟲ Links</button><button type="button" data-house-action="rotate-right" aria-label="Nach rechts drehen">Rechts ⟳</button><button type="button" data-house-action="reset">Zurücksetzen</button></div></div>
+          <div class="house-scene ${houseOpen ? 'open' : ''}" id="house-scene" tabindex="0" aria-label="3D-Modell des Ferienhauses. Mit den Pfeiltasten drehen, mit Plus und Minus zoomen."><div class="house-stage-wrap" id="house-stage-wrap"><div class="house-stage" id="house-stage" style="transform:rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)">${houseModelHtml(statuses, property)}</div></div><div id="house-info-slot">${selected ? houseInfoHtml(property.id, selected) : ''}</div></div>
           <div class="house-legend">${activeHouseParts(property).map((part, index) => `<button class="house-chip-btn ${part.id === selectedHousePart ? 'selected' : ''}" type="button" data-part="${part.id}"><i class="house-dot st-${statuses[part.id]}"></i>${index + 1}. ${escapeHtml(part.label)}</button>`).join('')}</div>
           <div class="house-key"><span><i class="house-dot st-ok"></i>Aktuell</span><span><i class="house-dot st-due"></i>Kontrolle fällig</span><span><i class="house-dot st-never"></i>Noch nicht kontrolliert</span></div>
         </section>`;
@@ -2184,7 +2185,11 @@
       const scene = document.getElementById('house-scene');
       const wrap = document.getElementById('house-stage-wrap');
       if (!scene || !wrap) return;
-      wrap.style.transform = `scale(${Math.max(0.55, Math.min(1.15, scene.clientWidth / 430))})`;
+      wrap.style.transform = `scale(${Math.max(0.55, Math.min(1.15, scene.clientWidth / 430)) * houseZoom})`;
+    }
+    function setHouseZoom(value) {
+      houseZoom = Math.max(0.7, Math.min(2.6, value));
+      fitHouseScene();
     }
     function applyHouseRotation() {
       const stage = document.getElementById('house-stage');
@@ -3776,13 +3781,29 @@
     });
     let houseDrag = null;
     let houseDragMoved = false;
+    let housePinch = null;
+    const housePointers = new Map();
     document.addEventListener('pointerdown', (event) => {
       if (!event.target.closest('#house-scene') || event.target.closest('.house-info, button')) return;
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+      housePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (housePointers.size === 2) {
+        const [a, b] = [...housePointers.values()];
+        housePinch = { distance: Math.hypot(a.x - b.x, a.y - b.y) || 1, zoom: houseZoom };
+        houseDrag = null;
+        houseDragMoved = true;
+        return;
+      }
       houseDragMoved = false;
       houseDrag = { x: event.clientX, y: event.clientY, rx: houseRotation.x, ry: houseRotation.y, moved: false };
     });
     window.addEventListener('pointermove', (event) => {
+      if (housePointers.has(event.pointerId)) housePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (housePinch && housePointers.size >= 2) {
+        const [a, b] = [...housePointers.values()];
+        setHouseZoom(housePinch.zoom * (Math.hypot(a.x - b.x, a.y - b.y) / housePinch.distance));
+        return;
+      }
       if (!houseDrag) return;
       const dx = event.clientX - houseDrag.x;
       const dy = event.clientY - houseDrag.y;
@@ -3791,14 +3812,21 @@
       houseRotation = { y: houseDrag.ry + dx * 0.55, x: Math.max(-75, Math.min(-4, houseDrag.rx - dy * 0.35)) };
       applyHouseRotation();
     });
-    const endHouseDrag = () => {
-      if (!houseDrag) return;
-      houseDragMoved = houseDrag.moved;
+    const endHouseDrag = (event) => {
+      housePointers.delete(event.pointerId);
+      if (housePinch && housePointers.size < 2) housePinch = null;
+      if (!houseDrag && !houseDragMoved) return;
+      if (houseDrag) houseDragMoved = houseDrag.moved;
       houseDrag = null;
-      setTimeout(() => { houseDragMoved = false; }, 0);
+      if (!housePointers.size) setTimeout(() => { houseDragMoved = false; }, 0);
     };
     window.addEventListener('pointerup', endHouseDrag);
     window.addEventListener('pointercancel', endHouseDrag);
+    document.addEventListener('wheel', (event) => {
+      if (!event.target.closest('#house-scene') || event.target.closest('.house-info')) return;
+      event.preventDefault();
+      setHouseZoom(houseZoom * Math.exp(-event.deltaY * 0.0015));
+    }, { passive: false });
     window.addEventListener('resize', fitHouseScene);
     document.addEventListener('click', (event) => {
       const houseAction = event.target.closest('[data-house-action]');
@@ -3808,7 +3836,9 @@
         if (type === 'toggle-open') setHouseOpen(!houseOpen);
         if (type === 'rotate-left') houseRotation = { ...houseRotation, y: houseRotation.y - 30 };
         if (type === 'rotate-right') houseRotation = { ...houseRotation, y: houseRotation.y + 30 };
-        if (type === 'reset') houseRotation = { x: -24, y: -32 };
+        if (type === 'reset') { houseRotation = { x: -24, y: -32 }; setHouseZoom(1); }
+        if (type === 'zoom-in') setHouseZoom(houseZoom * 1.25);
+        if (type === 'zoom-out') setHouseZoom(houseZoom / 1.25);
         applyHouseRotation();
         return;
       }
@@ -3818,6 +3848,8 @@
     });
     document.addEventListener('keydown', (event) => {
       if (event.target.id !== 'house-scene') return;
+      if (event.key === '+' || event.key === '=') { event.preventDefault(); setHouseZoom(houseZoom * 1.2); return; }
+      if (event.key === '-' || event.key === '_') { event.preventDefault(); setHouseZoom(houseZoom / 1.2); return; }
       const step = { ArrowLeft: [0, -15], ArrowRight: [0, 15], ArrowUp: [4, 0], ArrowDown: [-4, 0] }[event.key];
       if (!step) return;
       event.preventDefault();
