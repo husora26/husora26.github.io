@@ -2067,8 +2067,6 @@
     }
     function profilePage() {
       return `<div class="welcome"><div><p class="eyebrow">Persönliche Einstellungen</p><h1>Benutzerprofil</h1><p class="subtitle">Verwalte die Angaben für dein Husora-Konto.</p></div></div>
-        ${proProfileCard()}
-        <div style="height:16px"></div>
         <section class="card profile-form"><div class="profile-heading"><div class="profile-large-avatar">${escapeHtml(initialsFor(profileData.name))}</div><div><strong>${escapeHtml(profileData.name)}</strong><small>@${escapeHtml(profileData.username)}</small></div></div>
           <form id="profile-form" style="padding-top:18px"><div class="profile-grid">
             <label><span class="form-label">Name</span><input class="form-control" name="name" required maxlength="80" value="${escapeHtml(profileData.name)}"></label>
@@ -2081,7 +2079,9 @@
             <div class="full form-actions" style="justify-content:flex-start"><button type="submit" class="secondary-btn" name="mailAction" value="connect">Mailkonto verbinden</button>${profileData.mailAccount ? '<button type="button" class="secondary-btn" data-mail-test>Test-E-Mail senden</button><button type="submit" class="secondary-btn" name="mailAction" value="disconnect" formnovalidate>Verbindung trennen</button>' : ''}</div>
             <div class="full profile-notice" style="margin-top:0">Es wird nur die Absender-Adresse lokal gespeichert, keine Zugangsdaten. Der Versand läuft über dein eigenes Mailprogramm oder Mailkonto.</div>
           </div><div class="profile-notice">Diese App speichert ihre Daten nur lokal in diesem Browser.</div><div class="form-actions"><button type="submit" class="primary-btn">Benutzerprofil speichern</button></div></form>
-        </section>`;
+        </section>
+        <div style="height:16px"></div>
+        ${proProfileCard()}`;
     }
     function tasksPage() {
       const rank = { urgent: 0, soon: 1, normal: 2 };
