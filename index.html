@@ -1873,10 +1873,10 @@
                 return `<button class="house-service-row" data-action="open-inspection" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small>${escapeHtml(property.region || property.address)}</small></span><span class="house-service-badges">${inspectionStatusBadge(property.id)}${winterStatusBadge(property.id)}</span></button>`;
               }).join('') || '<div class="empty">Noch keine Ferienhäuser vorhanden.</div>'}</div>
             </section>
-            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-page="providers">Servicepartner →</button></div>
+            <section class="card"><div class="card-head"><div><h2 class="card-title">Servicepartner</h2><p class="card-caption">${singleHouse() ? 'Ausgewählte Partner für dein Ferienhaus' : 'Ausgewählte Partner je Ferienhaus'}</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(properties[0]?.id || '')}">Servicepartner →</button></div>
               <div class="house-service-list">${properties.map((property) => {
                 const assigned = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
-                return `<button class="house-service-row" data-page="providers"><span class="house-service-name">${escapeHtml(property.name)}<small class="house-service-partners">${assigned.length ? assigned.map((provider) => escapeHtml(provider.name)).join(' · ') : 'Noch keine Servicepartner ausgewählt'}</small></span></button>`;
+                return `<button class="house-service-row" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}"><span class="house-service-name">${escapeHtml(property.name)}<small class="house-service-partners">${assigned.length ? assigned.map((provider) => escapeHtml(provider.name)).join(' · ') : 'Noch keine Servicepartner ausgewählt'}</small></span></button>`;
               }).join('') || '<div class="empty">Noch keine Ferienhäuser vorhanden.</div>'}</div>
             </section>
           </div>
