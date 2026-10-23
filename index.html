@@ -2322,8 +2322,8 @@
                 <div class="booking-overview-dates"><div class="booking-overview-date"><span>Anreise</span><strong>${escapeHtml(detailedDate(booking.startDate))}</strong></div><div class="booking-overview-date"><span>Abreise</span><strong>${escapeHtml(detailedDate(booking.endDate))}</strong></div></div>
                 <div class="booking-overview-meta"><span>${guests} ${guests === 1 ? 'Person' : 'Personen'}</span><span>${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}</span><span>Ankunft um ${escapeHtml(booking.arrivalTime || '—')}</span></div>
                 ${booking.notes ? `<div class="booking-overview-notes">${escapeHtml(booking.notes)}</div>` : ''}
-                ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
                 ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>`}
+                ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
               </article>`;
             }).join('')}</div>` : '<div class="empty">Noch keine Buchungen vorhanden. Über „Neue Buchung“ kannst du einen Aufenthalt erfassen.</div>'}
           </section>`;
