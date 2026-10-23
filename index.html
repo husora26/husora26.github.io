@@ -84,8 +84,8 @@
     .dot[hidden] { display: none; }
     .icon-btn { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: #59635b; background: white; }
     .icon-btn svg { width: 16px; height: 16px; }
-    .icon-btn.avatar-btn { width: 38px; height: 38px; border: 0; border-radius: 50%; color: var(--green-dark); background: #dce8d8; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
-    .icon-btn.avatar-btn:hover { background: #cfe0ca; }
+    .icon-btn.avatar-btn { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; color: #fff; background: rgba(20, 28, 22, .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+    .icon-btn.avatar-btn:hover { background: rgba(20, 28, 22, .72); }
     .dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #d18b43; }
     .page { padding-top: 31px; }
     .welcome { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
@@ -422,7 +422,21 @@
     .pro-badge.off { color: #4f5852; background: #eceeea; }
     @media (max-width: 520px) { .house-settings-grid { grid-template-columns: 1fr; } }
     .house-map-card { margin-top: 16px; }
-    .house-map { display: block; width: 100%; height: 240px; border: 0; border-radius: 0 0 11px 11px; background: #e8eee4; }
+    .house-map { position: relative; z-index: 0; isolation: isolate; display: block; width: 100%; height: 320px; border: 0; background: #e8eee4; }
+    .house-map-status { position: absolute; inset: 0; z-index: 500; display: grid; place-items: center; margin: 0; color: var(--muted); font-size: 12px; text-align: center; padding: 16px; }
+    .house-map-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 19px 14px; font-size: 11.5px; color: var(--ink); border-top: 1px solid var(--line); }
+    .house-map-legend button { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+    .house-map-legend button:hover { text-decoration: underline; }
+    .house-map-legend small { color: var(--muted); }
+    .map-pin { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid #fff; border-radius: 50%; color: #fff; font: 700 11px/1 system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
+    .map-pin.house { width: 36px; height: 36px; background: #1f3d2b; }
+    .map-pin.house svg { width: 20px; height: 20px; }
+    .map-pin.service { background: #2e7d5b; }
+    .map-pin.inspection { background: #c27a1c; }
+    .map-pin.renovation { background: #8a5a3c; }
+    .map-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex: none; }
+    .map-dot.house { background: #1f3d2b; } .map-dot.service { background: #2e7d5b; } .map-dot.inspection { background: #c27a1c; } .map-dot.renovation { background: #8a5a3c; }
+    .map-popup strong { display: block; font-size: 13px; } .map-popup span { display: block; margin-top: 2px; color: #666; font-size: 11.5px; } .map-popup a { font-size: 11.5px; }
     .photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
     .photo-strip img { width: 110px; height: 76px; border-radius: 8px; object-fit: cover; }
     .property-grid.single { grid-template-columns: 1fr; }
@@ -2286,7 +2300,7 @@
         ${(() => {
           const address = String(property.address || '').trim();
           const query = [address, ...[property.region, 'Schweden'].filter((part) => part && !address.toLocaleLowerCase('de').includes(part.toLocaleLowerCase('de')))].filter(Boolean).join(', ') || property.name;
-          return `<section class="card house-map-card"><div class="card-head"><div><h2 class="card-title">Standort</h2><p class="card-caption">${escapeHtml(property.address || property.name)}</p></div><a class="text-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">In Google Maps öffnen ↗</a></div><iframe class="house-map" title="Google Maps: Standort von ${escapeHtml(property.name)}" src="https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=11&output=embed&hl=de" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></section>`;
+          return `<section class="card house-map-card"><div class="card-head"><div><h2 class="card-title">Standort & Servicepartner</h2><p class="card-caption">${escapeHtml(property.address || property.name)}</p></div><a class="text-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">In Google Maps öffnen ↗</a></div><div class="house-map" id="house-map" data-property="${escapeHtml(property.id)}"><p class="house-map-status">Karte wird geladen …</p></div><div class="house-map-legend" id="house-map-legend" hidden></div></section>`;
         })()}
         <section class="remove-property-section" aria-label="Ferienhaus entfernen"><div><strong>Ferienhaus dauerhaft entfernen</strong><p>Das Haus und die zugehörigen Aufgaben, Kosten sowie Hauskontrolldaten werden gelöscht.</p></div><button class="danger-btn" data-action="remove-property" data-property="${escapeHtml(property.id)}">Haus entfernen</button></section>`;
     }
@@ -3427,6 +3441,129 @@
         ? `<span class="inspection-status-badge current">${icon('check')}Abwesenheitskontrolle aktuell</span>`
         : '<span class="inspection-status-badge">Abwesenheitskontrolle fällig</span>';
     }
+    const LEAFLET_BASE = 'https://unpkg.com/leaflet@1.9.4/dist';
+    let leafletPromise = null;
+    let propertyMap = null;
+    let propertyMapToken = 0;
+    function loadLeaflet() {
+      if (window.L) return Promise.resolve(window.L);
+      if (!leafletPromise) {
+        leafletPromise = new Promise((resolve, reject) => {
+          const css = document.createElement('link');
+          css.rel = 'stylesheet'; css.href = `${LEAFLET_BASE}/leaflet.css`; css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='; css.crossOrigin = '';
+          document.head.appendChild(css);
+          const script = document.createElement('script');
+          script.src = `${LEAFLET_BASE}/leaflet.js`; script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='; script.crossOrigin = '';
+          script.onload = () => resolve(window.L);
+          script.onerror = () => { leafletPromise = null; reject(new Error('Kartenbibliothek nicht erreichbar')); };
+          document.head.appendChild(script);
+        });
+      }
+      return leafletPromise;
+    }
+    const geoCache = (() => { try { return JSON.parse(localStorage.getItem('stugliv-geocache') || '{}'); } catch (error) { return {}; } })();
+    let geoQueue = Promise.resolve();
+    function geocode(query) {
+      if (Object.prototype.hasOwnProperty.call(geoCache, query)) return Promise.resolve(geoCache[query]);
+      const task = geoQueue.then(async () => {
+        if (Object.prototype.hasOwnProperty.call(geoCache, query)) return geoCache[query];
+        let result = null;
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=se&accept-language=de&q=${encodeURIComponent(query)}`);
+          if (!response.ok) throw new Error(`Geocoding ${response.status}`);
+          const hit = (await response.json())[0];
+          result = hit ? [Number(hit.lat), Number(hit.lon)] : null;
+        } catch (error) { console.warn('Geocoding fehlgeschlagen:', error); return undefined; }
+        geoCache[query] = result;
+        try { localStorage.setItem('stugliv-geocache', JSON.stringify(geoCache)); } catch (error) { /* Cache ist optional */ }
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        return result;
+      });
+      geoQueue = task.catch(() => {});
+      return task;
+    }
+    const REGION_WORDS = /^(värmland|dalarna|bohuslän|västra götaland|ganz värmland|regional)$/i;
+    function providerPlace(provider) {
+      const raw = String(provider.town || '').split('/').map((part) => part.replace(/^einsatz(gebiet|bereich)\s*/i, '').trim()).filter(Boolean);
+      const place = raw.find((part) => !REGION_WORDS.test(part) && !/regional|westlich|ganz/i.test(part)) || raw[0] || '';
+      return { place, approximate: !place || REGION_WORDS.test(place) || /einsatz/i.test(String(provider.town || '')) };
+    }
+    async function initPropertyMap() {
+      const container = document.getElementById('house-map');
+      if (!container) return;
+      const token = (propertyMapToken += 1);
+      if (propertyMap) { propertyMap.remove(); propertyMap = null; }
+      const property = propertyWithDefaults(properties.find((item) => item.id === container.dataset.property) || properties[0]);
+      const assigned = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
+      const status = (text) => { if (token === propertyMapToken && container.isConnected) container.innerHTML = text ? `<p class="house-map-status">${escapeHtml(text)}</p>` : ''; };
+      const fallback = () => {
+        if (token !== propertyMapToken || !container.isConnected) return;
+        const query = [property.address, property.region, 'Schweden'].filter(Boolean).join(', ') || property.name;
+        container.innerHTML = `<iframe title="Google Maps: Standort von ${escapeHtml(property.name)}" style="width:100%;height:100%;border:0" src="https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=11&output=embed&hl=de" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
+      };
+      let L;
+      try { L = await loadLeaflet(); } catch (error) { fallback(); return; }
+      if (token !== propertyMapToken || !container.isConnected) return;
+      const houseQueries = [[property.address, property.region, 'Schweden'], [property.address.split(',').slice(-3).join(','), 'Schweden'], [property.region, 'Schweden']].map((parts) => parts.filter(Boolean).join(', ')).filter((query, index, all) => query && all.indexOf(query) === index);
+      let houseCoords = null;
+      let houseApproximate = false;
+      for (let index = 0; index < houseQueries.length && !houseCoords; index += 1) {
+        const found = await geocode(houseQueries[index]);
+        if (token !== propertyMapToken || !container.isConnected) return;
+        if (found === undefined) break;
+        if (found) { houseCoords = found; houseApproximate = index > 0; }
+      }
+      const partnerPlaces = await Promise.all(assigned.map(async (provider) => {
+        const { place, approximate } = providerPlace(provider);
+        const coords = place ? await geocode(`${place}, Schweden`) : null;
+        return { provider, place, approximate, coords: coords || null };
+      }));
+      if (token !== propertyMapToken || !container.isConnected) return;
+      const points = [];
+      const used = new Map();
+      if (houseCoords) points.push({ kind: 'house', coords: houseCoords, title: property.name, text: property.address, approximate: houseApproximate });
+      partnerPlaces.forEach((entry) => {
+        if (!entry.coords) return;
+        const key = entry.coords.join(',');
+        const count = used.get(key) || 0;
+        used.set(key, count + 1);
+        const angle = count * 2.4;
+        const offset = count ? 0.004 * Math.sqrt(count) : 0;
+        points.push({ kind: entry.provider.category === 'inspection' ? 'inspection' : entry.provider.category === 'renovation' ? 'renovation' : 'service', coords: [entry.coords[0] + offset * Math.sin(angle), entry.coords[1] + offset * 1.8 * Math.cos(angle)], title: entry.provider.name, text: `${partnerCategoryLabel(entry.provider)} · ${entry.provider.town || entry.place}`, approximate: entry.approximate, initials: entry.provider.initials || entry.provider.name.slice(0, 2).toUpperCase() });
+      });
+      if (!points.length) { fallback(); return; }
+      container.innerHTML = '';
+      propertyMap = L.map(container, { scrollWheelZoom: false });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>' }).addTo(propertyMap);
+      const houseSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>';
+      const markers = points.map((point) => {
+        const marker = L.marker(point.coords, { title: point.title, zIndexOffset: point.kind === 'house' ? 1000 : 0, icon: L.divIcon({ className: '', html: `<div class="map-pin ${point.kind}">${point.kind === 'house' ? houseSvg : escapeHtml(point.initials)}</div>`, iconSize: point.kind === 'house' ? [36, 36] : [30, 30], iconAnchor: point.kind === 'house' ? [18, 18] : [15, 15], popupAnchor: [0, -16] }) }).addTo(propertyMap);
+        const popup = document.createElement('div');
+        popup.className = 'map-popup';
+        const heading = document.createElement('strong'); heading.textContent = point.title;
+        const line = document.createElement('span'); line.textContent = `${point.text || ''}${point.approximate ? ' (ungefähre Lage)' : ''}`;
+        const link = document.createElement('a'); link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Route in Google Maps ↗';
+        link.href = `https://www.google.com/maps/dir/?api=1&destination=${point.coords[0]},${point.coords[1]}`;
+        popup.append(heading, line, link);
+        marker.bindPopup(popup);
+        return marker;
+      });
+      if (points.length === 1) propertyMap.setView(points[0].coords, houseApproximate ? 9 : 13);
+      else propertyMap.fitBounds(L.latLngBounds(points.map((point) => point.coords)), { padding: [36, 36], maxZoom: 13 });
+      setTimeout(() => { if (propertyMap) propertyMap.invalidateSize(); }, 150);
+      const legend = document.getElementById('house-map-legend');
+      if (legend) {
+        const missing = partnerPlaces.filter((entry) => !entry.coords).map((entry) => entry.provider.name);
+        legend.innerHTML = points.map((point, index) => `<button type="button" data-map-point="${index}"><span class="map-dot ${point.kind}"></span><span>${escapeHtml(point.title)}</span><small>${point.kind === 'house' ? 'Ferienhaus' : escapeHtml(point.text.split(' · ')[0])}</small></button>`).join('') + (missing.length ? `<small>Nicht auf der Karte auffindbar: ${escapeHtml(missing.join(', '))}</small>` : '') + (!houseCoords ? '<small>Die Hausadresse konnte nicht gefunden werden.</small>' : '');
+        legend.hidden = false;
+        legend.onclick = (event) => {
+          const index = Number(event.target.closest('[data-map-point]')?.dataset.mapPoint);
+          if (!Number.isInteger(index) || !markers[index] || !propertyMap) return;
+          propertyMap.setView(points[index].coords, Math.max(propertyMap.getZoom(), 12));
+          markers[index].openPopup();
+        };
+      }
+    }
     function render() {
       document.body.classList.toggle('no-bookings', !bookingsEnabled());
       if (!bookingsEnabled() && currentPage === 'bookings') currentPage = 'dashboard';
@@ -3447,6 +3584,7 @@
       updateProfileSummary();
       pageContent.innerHTML = pages[currentPage]();
       if (currentPage === 'house3d') fitHouseScene();
+      if (currentPage === 'propertyDetail') initPropertyMap();
     }
     let swipeStart = null;
     pageContent.addEventListener('touchstart', (event) => {
