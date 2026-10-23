@@ -512,6 +512,10 @@
     .property-condition { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: #eef5ef; }
     .property-condition span { display: block; color: var(--muted); font-size: 9px; }
     .property-condition strong { display: block; margin-top: 4px; font-size: 12px; }
+    .card-reno-list { display: grid; gap: 6px; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid #d9e6d6; list-style: none; }
+    .card-reno-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; align-items: baseline; color: #3f4a41; font-size: 10.5px; line-height: 1.45; }
+    .card-reno-list .reno-year { padding: 1px 6px; font-size: 9.5px; }
+    .card-reno-more { display: block; margin-top: 6px; color: var(--muted); font-size: 9.5px; }
     .view-title { margin-bottom: 4px; font-size: 16px; font-weight: 720; }
     .table-wrap { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -2225,6 +2229,12 @@
       editingPropertyId = null;
       pendingImport = null;
     }
+    function renovationEntries(property) {
+      return String(property.lastRenovations || '').split(/\n|;\s*(?=\d{4}\s*:)/).map((line) => line.trim()).filter((line) => line && !/^(?:19|20)\d{2}\s*[:\-–]?\s*$/.test(line)).map((line) => {
+        const match = line.match(/^((?:19|20)\d{2})\s*[:\-–]\s*(.+)$/);
+        return match ? { year: match[1], text: match[2] } : { year: '', text: line };
+      }).sort((a, b) => (b.year || '0').localeCompare(a.year || '0'));
+    }
     function propertySummary(property) {
       const details = [
         property.yearBuilt && `Baujahr ${property.yearBuilt}`,
@@ -2648,7 +2658,11 @@
           const property = propertyWithDefaults(rawProperty);
           const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
           const partnerSummary = assignedProviders.length ? assignedProviders.map((provider) => provider.name).join(', ') : 'Keine Servicepartner zugeordnet';
-          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top ${property.photo ? 'has-photo' : ''}">${property.photo ? '' : `<div class="property-symbol">${icon('home')}</div>`}<span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><div class="property-assigned-partners"><strong>Servicepartner:</strong>${partnerListHtml(assignedProviders)}</div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Grundstücksfläche</span><strong>${property.plotSize ? `${escapeHtml(property.plotSize)} m²` : '—'}</strong></div><div><span>Wohnfläche</span><strong>${property.livingArea ? `${escapeHtml(property.livingArea)} m²` : '—'}</strong></div><div><span>Baujahr</span><strong>${escapeHtml(property.yearBuilt || '—')}</strong></div><div><span>Zimmer</span><strong>${escapeHtml(property.rooms || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}</strong></div></div><div class="property-condition"><span>Sanierungszustand</span><strong>${escapeHtml(property.condition || 'Noch nicht bewertet')}</strong></div></article>`;
+          return `<article class="card property-card" data-action="view-property" data-property="${escapeHtml(property.id)}" tabindex="0" role="link" aria-label="Objektübersicht für ${escapeHtml(property.name)} öffnen">${property.photo ? `<img class="property-card-photo" src="${escapeHtml(property.photo)}" alt="Hausfoto: ${escapeHtml(property.name)}">` : ''}<div class="property-top ${property.photo ? 'has-photo' : ''}">${property.photo ? '' : `<div class="property-symbol">${icon('home')}</div>`}<span class="status">Ferienhaus · Schweden</span></div>${inspectionStatusBadge(property.id)}<h3>${escapeHtml(property.name)}</h3><div class="property-address">${escapeHtml(property.address)}</div><div class="property-assigned-partners"><strong>Servicepartner:</strong>${partnerListHtml(assignedProviders)}</div><div class="property-details"><div><span>Region</span><strong>${escapeHtml(property.region || '—')}</strong></div><div><span>Grundstücksfläche</span><strong>${property.plotSize ? `${escapeHtml(property.plotSize)} m²` : '—'}</strong></div><div><span>Wohnfläche</span><strong>${property.livingArea ? `${escapeHtml(property.livingArea)} m²` : '—'}</strong></div><div><span>Baujahr</span><strong>${escapeHtml(property.yearBuilt || '—')}</strong></div><div><span>Zimmer</span><strong>${escapeHtml(property.rooms || '—')}</strong></div><div><span>Heizsystem</span><strong>${escapeHtml(property.heatingSystem || '—')}</strong></div></div><div class="property-condition"><span>Sanierungszustand</span><strong>${escapeHtml(property.condition || 'Noch nicht bewertet')}</strong>${(() => {
+            const entries = renovationEntries(property);
+            if (!entries.length) return '';
+            return `<ul class="card-reno-list" aria-label="Sanierungshistorie">${entries.slice(0, 3).map((entry) => `<li><span class="reno-year">${entry.year ? escapeHtml(entry.year) : '•'}</span><span>${escapeHtml(entry.text.length > 90 ? `${entry.text.slice(0, 87).trim()}…` : entry.text)}</span></li>`).join('')}</ul>${entries.length > 3 ? `<small class="card-reno-more">+ ${entries.length - 3} weitere in der Objektübersicht</small>` : ''}`;
+          })()}</div></article>`;
         }).join('')}</div>`;
     }
     function partnerCategoryLabel(provider) {
@@ -2708,9 +2722,8 @@
           return `<section class="card"><div class="card-head"><div><h2 class="card-title">Weitere Angaben aus dem Inserat</h2><p class="card-caption">${escapeHtml(property.sourceName || 'Importiert')}</p></div>${safeSource ? `<a class="text-btn" href="${escapeHtml(safeSource)}" target="_blank" rel="noopener noreferrer">Inserat öffnen ↗</a>` : ''}</div>${property.description ? `<p class="facts-description">${escapeHtml(property.description)}</p>` : ''}${(property.floorplans || []).length ? `<div class="facts-plans"><h3>Grundrisse</h3>${property.floorplans.map((source) => `<img class="facts-plan" src="${escapeHtml(source)}" alt="Grundriss ${escapeHtml(property.name)}" loading="lazy">`).join('')}</div>` : ''}${groups.map((group) => `<div class="facts-group"><h3>${escapeHtml(group.title)}</h3><dl class="facts-grid">${group.items.map((fact) => `<div><dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}</dd></div>`).join('')}</dl></div>`).join('')}</section>`;
         })()}
         <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div>${(() => {
-          const entries = String(property.lastRenovations || '').split(/\n|;\s*(?=\d{4}\s*:)/).map((line) => line.trim()).filter(Boolean).map((line) => { const match = line.match(/^((?:19|20)\d{2})\s*[:\-–]\s*(.+)$/); return match ? { year: match[1], text: match[2] } : { year: '', text: line }; });
+          const entries = renovationEntries(property);
           if (!entries.length) return '<div class="property-notes" style="margin:0;padding:17px 19px">Noch keine Sanierungen eingetragen.</div>';
-          entries.sort((a, b) => (b.year || '0').localeCompare(a.year || '0'));
           return `<ul class="reno-list">${entries.map((entry) => `<li><span class="reno-year">${entry.year ? escapeHtml(entry.year) : '•'}</span><span class="reno-text">${escapeHtml(entry.text)}</span></li>`).join('')}</ul>${property.renovationSource ? `<p class="reno-source">Aus dem Inserat übernommen (${escapeHtml(property.renovationSource)}). Bitte prüfen.</p>` : ''}`;
         })()}</section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
