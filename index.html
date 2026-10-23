@@ -2091,9 +2091,23 @@
       return rows;
     }
     function houseRenovationInfo(property, part) {
-      const segments = (text) => String(text || '').split(/[\n;]+/).map((entry) => entry.trim()).filter(Boolean).filter((entry) => part.match.test(entry));
-      const done = segments(property.lastRenovations).map((text) => ({ text, year: (text.match(/\b(19|20)\d{2}\b/) || [''])[0] }));
-      const planned = segments(property.plannedRenovations);
+      const anyPart = (word) => housePartDefs.some((entry) => entry.match.test(word));
+      const clausesFor = (text) => String(text || '').split(/[\n;]+/).map((entry) => entry.trim()).filter(Boolean).flatMap((entry) => {
+        const yearMatch = entry.match(/^\s*((?:19|20)\d{2})\s*[:\-–]?\s*/);
+        const year = yearMatch ? yearMatch[1] : '';
+        const body = yearMatch ? entry.slice(yearMatch[0].length) : entry;
+        const tokens = body.split(/\s*(?:,|&|\+|\bund\b|\bsowie\b)\s*/i).map((token) => token.trim()).filter(Boolean);
+        const lastWords = (tokens[tokens.length - 1] || '').split(/\s+/);
+        const sharedTail = tokens.length > 1 ? lastWords.filter((word) => !anyPart(word)).join(' ') : '';
+        return tokens.map((token, index) => {
+          if (!part.match.test(token)) return null;
+          const needsTail = sharedTail && index < tokens.length - 1 && token.split(/\s+/).every((word) => anyPart(word));
+          const clause = needsTail ? `${token} ${sharedTail}` : token;
+          return { text: clause, year: /\b(19|20)\d{2}\b/.test(clause) ? '' : year, yearInText: (clause.match(/\b(19|20)\d{2}\b/) || [''])[0] || year };
+        }).filter(Boolean);
+      });
+      const done = clausesFor(property.lastRenovations).map((entry) => ({ text: `${entry.year ? `${entry.year}: ` : ''}${entry.text}`, year: entry.yearInText }));
+      const planned = clausesFor(property.plannedRenovations).map((entry) => `${entry.year ? `${entry.year}: ` : ''}${entry.text}`);
       const status = planned.length ? 'planned' : done.length ? 'done' : 'none';
       return { done, planned, status };
     }
