@@ -263,22 +263,26 @@
     .cost-average span { color: var(--muted); font-size: 10px; }
     .cost-average strong { margin-top: 7px; font-size: 21px; }
     .cost-chart-card { margin-bottom: 17px; }
-    .cost-chart-layout { display: grid; grid-template-columns: minmax(190px, 250px) minmax(0, 1fr); align-items: center; gap: 20px; padding: 16px 20px 20px; }
-    .cost-chart-visual { display: grid; place-items: center; min-width: 0; }
-    .cost-chart { display: block; width: min(100%, 230px); overflow: visible; }
-    .cost-chart-track { fill: none; stroke: #edf0eb; stroke-width: 34; }
-    .cost-chart-slice { fill: none; stroke-width: 34; stroke-linecap: butt; transform: rotate(-90deg); transform-origin: 100px 100px; animation: cost-slice-reveal .85s cubic-bezier(.2,.75,.25,1) var(--slice-delay) both; }
-    .cost-chart-center-total { fill: var(--ink); font-size: 12px; font-weight: 750; }
-    .cost-chart-center-caption { fill: var(--muted); font-size: 8px; }
-    @keyframes cost-slice-reveal { from { stroke-dasharray: 0 100; opacity: .45; } to { stroke-dasharray: var(--slice-dash) var(--slice-gap); opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .cost-chart-slice { animation: none; } }
-    .cost-chart-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px; margin: 0; padding: 0; list-style: none; }
-    .cost-chart-legend li { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; align-items: center; gap: 7px; min-height: 35px; border-bottom: 1px solid #f0f1ee; }
-    .cost-chart-swatch { width: 8px; height: 8px; border-radius: 50%; }
-    .cost-chart-label { overflow: hidden; color: #48534b; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-    .cost-chart-values { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
-    .cost-chart-values strong { font-size: 9px; }
-    .cost-chart-values small { color: var(--muted); font-size: 8px; }
+    .currency-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 14px 0 0; }
+    .currency-switch { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; user-select: none; }
+    .currency-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .currency-track { position: relative; width: 34px; height: 18px; border-radius: 10px; background: #c9d2c6; transition: background .15s; }
+    .currency-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
+    .currency-switch input:checked + .currency-track { background: var(--green); }
+    .currency-switch input:checked + .currency-track::after { transform: translateX(16px); }
+    .currency-switch input:focus-visible + .currency-track { outline: 3px solid var(--amber); outline-offset: 2px; }
+    .currency-switch .on { color: var(--green-dark); }
+    .fx-note { color: var(--muted); font-size: 11px; }
+    .cost-bars { display: grid; gap: 9px; margin: 0; padding: 16px 20px 20px; list-style: none; }
+    .cost-bar-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+    .cost-bar-label { overflow: hidden; color: #48534b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .cost-bar-track { height: 18px; border-radius: 6px; background: #edf0eb; overflow: hidden; }
+    .cost-bar-fill { display: block; height: 100%; min-width: 0; border-radius: 6px; transition: width .45s cubic-bezier(.2,.75,.25,1); }
+    .cost-bar-values { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; min-width: 108px; white-space: nowrap; }
+    .cost-bar-values strong { font-size: 11px; }
+    .cost-bar-values small { min-width: 38px; color: var(--muted); font-size: 10px; text-align: right; }
+    @media (max-width: 560px) { .cost-bar-row { grid-template-columns: 1fr auto; row-gap: 4px; } .cost-bar-track { grid-column: 1 / -1; order: 3; } .cost-bar-label { white-space: normal; } }
+    @media (prefers-reduced-motion: reduce) { .cost-bar-fill { transition: none; } }
     .cost-list { padding: 0 18px; }
     .cost-item { display: flex; align-items: center; gap: 12px; min-height: 67px; border-bottom: 1px solid #f0f1ee; }
     .cost-item:last-child { border-bottom: 0; }
@@ -867,8 +871,6 @@
     @media (max-width: 760px) {
       main { padding-right: 20px; padding-left: 20px; }
       .columns { grid-template-columns: 1fr; }
-      .cost-chart-layout { grid-template-columns: minmax(150px, 190px) minmax(0, 1fr); gap: 14px; }
-      .cost-chart-legend { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       main { padding: 0 13px 35px; }
@@ -893,10 +895,6 @@
       .filter-select { flex: 1; }
       .provider-results { grid-template-columns: 1fr; padding: 12px; }
       .cost-summary { grid-template-columns: 1fr; }
-      .cost-chart-layout { grid-template-columns: 1fr; gap: 12px; }
-      .cost-chart { width: min(100%, 210px); }
-      .cost-chart-legend { grid-template-columns: 1fr; }
-      .cost-chart-label { white-space: normal; }
       .booking-overview-card { grid-template-columns: minmax(0, 1fr); }
       .booking-status, .booking-overview-dates, .booking-overview-meta, .booking-overview-notes { grid-column: 1; }
       .booking-overview-dates { gap: 7px; }
@@ -1344,6 +1342,38 @@
     } catch (error) {
       console.error('Jahreskosten konnten nicht geladen werden:', error);
       annualCosts = initialCosts;
+    }
+    let costCurrency = 'SEK';
+    try { if (localStorage.getItem('stugliv-cost-currency') === 'EUR') costCurrency = 'EUR'; } catch (error) { /* Einstellung optional */ }
+    let fxRate = { rate: 0.09, date: '', live: false };
+    try { const savedFx = JSON.parse(localStorage.getItem('stugliv-fx') || 'null'); if (savedFx && savedFx.rate > 0) fxRate = { ...savedFx, live: true }; } catch (error) { /* Kurs wird neu geladen */ }
+    let fxLoading = false;
+    const isEuro = () => costCurrency === 'EUR';
+    const sekToDisplay = (sek) => (isEuro() ? sek * fxRate.rate : sek);
+    const displayToSek = (value) => (isEuro() ? value / fxRate.rate : value);
+    const formatCost = (sek) => (isEuro() ? `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(sek * fxRate.rate)} €` : `${new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(sek)} kr`);
+    const fxNote = () => (fxLoading ? 'Wechselkurs wird geladen …' : `1 SEK = ${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 4 }).format(fxRate.rate)} €${fxRate.live ? (fxRate.date ? ` · Kurs vom ${new Date(`${fxRate.date}T12:00:00`).toLocaleDateString('de-DE')}` : '') : ' · Richtwert, aktueller Kurs nicht verfügbar'}`);
+    async function refreshFxRate(force = false) {
+      const fresh = fxRate.live && fxRate.fetchedAt && Date.now() - fxRate.fetchedAt < 12 * 3600 * 1000;
+      if (fxLoading || (fresh && !force)) return;
+      fxLoading = true;
+      let next = null;
+      try {
+        const data = await (await fetch('https://api.frankfurter.dev/v1/latest?base=SEK&symbols=EUR')).json();
+        if (data?.rates?.EUR > 0) next = { rate: data.rates.EUR, date: data.date };
+      } catch (error) { console.warn('Wechselkurs (Frankfurter) nicht erreichbar:', error); }
+      if (!next) {
+        try {
+          const data = await (await fetch('https://open.er-api.com/v6/latest/SEK')).json();
+          if (data?.rates?.EUR > 0) next = { rate: data.rates.EUR, date: new Date(data.time_last_update_unix * 1000).toISOString().slice(0, 10) };
+        } catch (error) { console.warn('Wechselkurs (Ersatzdienst) nicht erreichbar:', error); }
+      }
+      fxLoading = false;
+      if (next) {
+        fxRate = { ...next, live: true, fetchedAt: Date.now() };
+        try { localStorage.setItem('stugliv-fx', JSON.stringify(fxRate)); } catch (error) { /* Cache optional */ }
+      }
+      if (isEuro() && (currentPage === 'costs' || currentPage === 'dashboard')) render();
     }
     let documents = [];
     try {
@@ -1936,7 +1966,7 @@
         const costs = annualCosts[property.id] || initialCosts[property.id] || {};
         return total + costCategories.reduce((sum, category) => sum + Math.max(0, Number(costs[category.id]) || 0), 0);
       }, 0);
-      const formattedCost = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(plannedAnnualCost);
+      const formattedCost = formatCost(plannedAnnualCost);
       const firstName = profileData.name.trim().split(/\s+/)[0] || 'Willkommen';
       return `<div class="welcome"><div><p class="eyebrow eyebrow-lg">Husora · Das Managementsystem für deine Stuga</p><p class="subtitle">${bookingsEnabled() ? 'Buchungen, Stugapflege' : 'Stugapflege'} und Serviceeinsätze für ${singleHouse() ? 'dein Ferienhaus' : 'deine Ferienhäuser'}.</p></div></div>
         <section class="stats" aria-label="Kennzahlen">
@@ -1945,7 +1975,7 @@
           ${bookingsEnabled() ? `<button class="stat" data-page="bookings"><img class="stat-art" src="assets/booking-planer.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Buchungen</span><span class="stat-icon">${icon('calendar')}</span></div><div class="stat-value">${bookings.length}</div><div class="stat-note">Buchungen <em>verwalten</em></div></button>` : ''}
           <button class="stat stat-inspection" data-page="inspections"><img class="stat-art" src="assets/hauskontrolle.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Hauskontrolle</span><span class="stat-icon">${icon('inspection')}</span></div><div class="stat-value">${properties.length - currentInspections} <span class="stat-open-word">offen</span></div></button>
           <button class="stat" data-page="documents"><img class="stat-art" src="assets/dokumente.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Dokumente</span><span class="stat-icon">${icon('document')}</span></div><div class="stat-value">${documents.length}</div><div class="stat-note"><em>${documents.length === 1 ? 'Datei' : 'Dateien'}</em> gespeichert</div></button>
-          <button class="stat" data-page="costs"><img class="stat-art" src="assets/kosten.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Kosten</span><span class="stat-icon">${icon('cost')}</span></div><div class="stat-value">${formattedCost} kr</div><div class="stat-note"><em>Planwerte</em> pro Jahr${singleHouse() ? '' : ' · alle Häuser'}</div></button>
+          <button class="stat" data-page="costs"><img class="stat-art" src="assets/kosten.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Kosten</span><span class="stat-icon">${icon('cost')}</span></div><div class="stat-value">${formattedCost}</div><div class="stat-note"><em>Planwerte</em> pro Jahr${singleHouse() ? '' : ' · alle Häuser'}</div></button>
         </section>
         <div class="columns">
           <section class="card"><div class="card-head"><div><h2 class="card-title">Service vor Ort</h2><p class="card-caption">${open.length} offene ${open.length === 1 ? 'Aufgabe' : 'Aufgaben'} ${singleHouse() ? 'an deinem schwedischen Ferienhaus' : 'an deinen schwedischen Ferienhäusern'}</p></div><button class="text-btn" data-page="tasks">Alle Aufgaben →</button></div><div class="task-list">${open.length ? open.slice(0, 4).map(taskRow).join('') : '<div class="empty">Alles erledigt — großartig!</div>'}</div></section>
@@ -2544,31 +2574,29 @@
       const slot = document.getElementById('house-info-slot');
       if (slot) slot.innerHTML = part ? houseInfoHtml(houseModelProperty, part) : '';
     }
+    const COST_CHART_COLORS = ['#315c49', '#c17b4a', '#6f8d70', '#d1a64a', '#728da1', '#b66a60', '#9b805b', '#788c83', '#a27691'];
+    function costBarsHtml(costs) {
+      const rows = costCategories.map((category, index) => ({ category, color: COST_CHART_COLORS[index % COST_CHART_COLORS.length], value: Math.max(0, Number(costs[category.id]) || 0) }));
+      const total = rows.reduce((sum, row) => sum + row.value, 0);
+      rows.sort((a, b) => b.value - a.value);
+      const top = rows[0]?.value || 0;
+      return rows.map((row) => {
+        const share = total ? row.value / total * 100 : 0;
+        const width = top ? Math.max(row.value ? 2 : 0, row.value / top * 100) : 0;
+        return `<li class="cost-bar-row" data-cost-bar="${row.category.id}"><span class="cost-bar-label" title="${escapeHtml(row.category.label)}">${escapeHtml(row.category.label)}</span><span class="cost-bar-track"><span class="cost-bar-fill" style="width:${width}%;background:${row.color}"></span></span><span class="cost-bar-values"><strong>${formatCost(row.value)}</strong><small>${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%</small></span></li>`;
+      }).join('');
+    }
     function costsPage() {
       const property = properties.find((item) => item.id === costProperty) || properties[0];
       const costs = annualCosts[property.id] || initialCosts[property.id];
       const total = costCategories.reduce((sum, category) => sum + Math.max(0, Number(costs[category.id]) || 0), 0);
-      const money = (amount) => new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(amount) + ' kr';
-      const chartColors = ['#315c49', '#c17b4a', '#6f8d70', '#d1a64a', '#728da1', '#b66a60', '#9b805b', '#788c83', '#a27691'];
-      let chartOffset = 0;
-      const chartSlices = costCategories.map((category, index) => {
-        const value = Math.max(0, Number(costs[category.id]) || 0);
-        const share = total ? value / total * 100 : 0;
-        const slice = `<circle class="cost-chart-slice" data-cost-chart-slice="${category.id}" cx="100" cy="100" r="76" pathLength="100" stroke="${chartColors[index % chartColors.length]}" stroke-dasharray="${share} ${100 - share}" stroke-dashoffset="${-chartOffset}" style="--slice-dash:${share};--slice-gap:${100 - share};--slice-delay:${index * 55}ms"></circle>`;
-        chartOffset += share;
-        return slice;
-      }).join('');
-      const chartLegend = costCategories.map((category, index) => {
-        const value = Math.max(0, Number(costs[category.id]) || 0);
-        const share = total ? value / total * 100 : 0;
-        return `<li data-cost-chart-item="${category.id}"><span class="cost-chart-swatch" style="background:${chartColors[index % chartColors.length]}"></span><span class="cost-chart-label">${escapeHtml(category.label)}</span><span class="cost-chart-values"><strong data-cost-chart-amount>${money(value)}</strong><small data-cost-chart-share>${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%</small></span></li>`;
-      }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Årlig planering · SEK</p><h1>Ferienhaus-Kosten</h1><p class="subtitle">${singleHouse() ? 'Planwerte für dein Ferienhaus bearbeiten' : 'Planwerte pro Ferienhaus bearbeiten'} und laufende Kosten im Blick behalten.</p></div></div>
+      const money = formatCost;
+      return `<div class="welcome"><div><p class="eyebrow">Årlig planering · ${isEuro() ? 'EUR' : 'SEK'}</p><h1>Ferienhaus-Kosten</h1><p class="subtitle">${singleHouse() ? 'Planwerte für dein Ferienhaus bearbeiten' : 'Planwerte pro Ferienhaus bearbeiten'} und laufende Kosten im Blick behalten.</p><div class="currency-bar"><label class="currency-switch"><span class="${isEuro() ? '' : 'on'}">SEK</span><input type="checkbox" id="cost-currency-toggle" role="switch" aria-label="Beträge in Euro anzeigen" ${isEuro() ? 'checked' : ''}><span class="currency-track"></span><span class="${isEuro() ? 'on' : ''}">EUR</span></label><span class="fx-note" id="fx-note">${isEuro() ? escapeHtml(fxNote()) : 'Schwedische Kronen · Umrechnung in Euro mit dem Schalter'}</span></div></div></div>
         ${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="cost-property" class="filter-select" aria-label="Ferienhaus für Jahreskosten wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <div class="cost-summary"><article class="cost-total"><small>Geschätzte Jahreskosten · ${escapeHtml(property.name)}</small><strong id="annual-total">${money(total)}</strong><span>Ändere die Beträge unten, um dein eigenes Budget abzubilden.</span></article><article class="card cost-average"><span>Monatlicher Budgetdurchschnitt</span><strong id="monthly-total">${money(Math.round(total / 12))}</strong></article></div>
-        <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Anteil der einzelnen Posten an den Jahreskosten · ${escapeHtml(property.name)}</p></div></div><div class="cost-chart-layout"><div class="cost-chart-visual"><svg class="cost-chart" viewBox="0 0 200 200" aria-hidden="true"><circle class="cost-chart-track" cx="100" cy="100" r="76"></circle>${chartSlices}<text class="cost-chart-center-total" x="100" y="98" text-anchor="middle">${escapeHtml(new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(total))}</text><text class="cost-chart-center-caption" x="100" y="114" text-anchor="middle">SEK pro Jahr</text></svg></div><ul class="cost-chart-legend">${chartLegend}</ul></div></section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">Beträge in Schwedischen Kronen (SEK) pro Jahr</p></div><span class="status pending">Planwerte bearbeiten</span></div>
-          <div class="cost-list">${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="100" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Number(costs[category.id]) || 0}"><span>kr/Jahr</span></span></label>`).join('')}</div>
+        <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Posten nach Anteil an den Jahreskosten sortiert · ${escapeHtml(property.name)}</p></div></div><ul class="cost-bars" id="cost-bars" aria-label="Kostenverteilung als Balkendiagramm">${costBarsHtml(costs)}</ul></section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><span class="status pending">Planwerte bearbeiten</span></div>
+          <div class="cost-list">${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
           <div class="cost-disclaimer">Orientierungsbudget, keine Kostenprognose: Versicherungs-, Energie-, Wasser-/Abwasser-, Abfall-, Kamin- und Wartungskosten unterscheiden sich je nach Haus, Nutzung und Gemeinde. Die Werte sind editierbare Beispiel-Planwerte. Die Immobilienabgabe 2026 ist mit dem gesetzlichen Höchstbetrag von 10 425 kr angesetzt; sie beträgt grundsätzlich 0,75 % des Steuerwerts bis zum Höchstbetrag. Ersetze Planwerte durch Bescheide und Angebote.</div>
           <p class="source-note">Quellen: <a href="https://www.skatteverket.se/privat/fastigheterochbostad/fastighetsskattfastighetsavgift.4.69ef368911e1304a625800013531.html" target="_blank" rel="noopener noreferrer">Skatteverket · Immobilienabgabe</a> · <a href="https://www.svensktvatten.se/om-oss/verksamhet-och-strategi/fakta-om-vatten/va-taxa/" target="_blank" rel="noopener noreferrer">Svenskt Vatten · lokale VA-Tarife</a> · <a href="https://www.konsumenternas.se/forsakringar/boendeforsakringar/fritidshusforsakringar/" target="_blank" rel="noopener noreferrer">Konsumenternas · Ferienhausversicherung</a>.</p>
         </section>`;
@@ -3939,30 +3967,21 @@
       }
       if (event.target.matches('[data-cost]')) {
         const costs = annualCosts[costProperty] || (annualCosts[costProperty] = { ...initialCosts[costProperty] });
-        costs[event.target.dataset.cost] = Math.max(0, Number(event.target.value) || 0);
+        costs[event.target.dataset.cost] = Math.max(0, Math.round(displayToSek(Number(event.target.value) || 0)));
         const total = costCategories.reduce((sum, category) => sum + (Number(costs[category.id]) || 0), 0);
-        const money = (amount) => new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(amount) + ' kr';
-        document.getElementById('annual-total').textContent = money(total);
-        document.getElementById('monthly-total').textContent = money(Math.round(total / 12));
-        const chartTotal = total;
-        document.querySelector('.cost-chart-center-total').textContent = new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(chartTotal);
-        let chartOffset = 0;
-        costCategories.forEach((category) => {
-          const value = Math.max(0, Number(costs[category.id]) || 0);
-          const share = chartTotal ? value / chartTotal * 100 : 0;
-          const slice = pageContent.querySelector(`[data-cost-chart-slice="${category.id}"]`);
-          const legendItem = pageContent.querySelector(`[data-cost-chart-item="${category.id}"]`);
-          if (!slice || !legendItem) return;
-          slice.style.animation = 'none';
-          slice.setAttribute('stroke-dasharray', `${share} ${100 - share}`);
-          slice.setAttribute('stroke-dashoffset', `${-chartOffset}`);
-          chartOffset += share;
-          legendItem.querySelector('[data-cost-chart-amount]').textContent = money(value);
-          legendItem.querySelector('[data-cost-chart-share]').textContent = `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%`;
-        });
+        document.getElementById('annual-total').textContent = formatCost(total);
+        document.getElementById('monthly-total').textContent = formatCost(Math.round(total / 12));
+        document.getElementById('cost-bars').innerHTML = costBarsHtml(costs);
       }
     });
     pageContent.addEventListener('change', async (event) => {
+      if (event.target.id === 'cost-currency-toggle') {
+        costCurrency = event.target.checked ? 'EUR' : 'SEK';
+        try { localStorage.setItem('stugliv-cost-currency', costCurrency); } catch (error) { /* Einstellung optional */ }
+        if (isEuro()) refreshFxRate(true);
+        render();
+        return;
+      }
       if (event.target.form?.id === 'booking-form' && Object.hasOwn(bookingDraft, event.target.name)) {
         bookingDraft[event.target.name] = event.target.value;
         if (event.target.name === 'propertyId') render();
@@ -5135,6 +5154,7 @@
     });
     runAutoTasks(false);
     removePropertiesBeyondProfileCount();
+    if (isEuro()) refreshFxRate();
     render();
   </script>
 </body>
