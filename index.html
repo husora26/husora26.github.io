@@ -58,12 +58,11 @@
     .breadcrumb-separator, .breadcrumb #breadcrumb { display: none; }
     .top-actions { display: flex; align-items: center; gap: 12px; }
     .plan-info { display: flex; align-items: center; gap: 9px; color: #e9f0e6; }
-    .plan-free { font-size: 10.5px; letter-spacing: .2px; opacity: .9; white-space: nowrap; }
     .plan-buy { padding: 5px 10px; border: 1px solid rgba(255, 253, 248, .75); border-radius: 14px; color: #fffdf8; background: rgba(255, 253, 248, .12); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
     .plan-buy:hover { color: var(--green-dark); background: #fffdf8; }
     .plan-pro { border: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 10px; border-radius: 18px; color: #fff7dc; background: rgba(185, 149, 95, .32); box-shadow: inset 0 0 0 1px rgba(227, 196, 106, .7); font-size: 15px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
     .plan-star { color: #f0cd6b; font-size: 18px; line-height: 1; }
-    @media (max-width: 520px) { .plan-free { display: none; } .plan-pro { padding: 4px 10px 4px 8px; font-size: 13px; } .plan-star { font-size: 15px; } .plan-buy { padding: 4px 8px; } }
+    @media (max-width: 520px) { .plan-pro { padding: 4px 10px 4px 8px; font-size: 13px; } .plan-star { font-size: 15px; } .plan-buy { padding: 4px 8px; } }
     .notification-wrap { position: relative; }
     .notification-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 31; display: none; width: min(360px, calc(100vw - 26px)); max-height: min(70vh, 480px); overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 16px 42px rgba(35,48,39,.16); }
     .notification-panel.open { display: block; }
@@ -1545,7 +1544,7 @@
       if (!info) return;
       info.innerHTML = isPro()
         ? `<button type="button" class="plan-pro" data-page="plans" title="Versionen ansehen"><span class="plan-star" aria-hidden="true">★</span>${escapeHtml(currentPlan().name)}</button>`
-        : '<span class="plan-free">Kostenlose Version</span><button type="button" class="plan-buy" data-page="plans">Pro Version erwerben</button>';
+        : '<button type="button" class="plan-buy" data-page="plans">Pro Version erwerben</button>';
     }
     function updateProfileSummary() {
       updatePlanInfo();
