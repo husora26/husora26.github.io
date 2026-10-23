@@ -1943,7 +1943,6 @@
       const archiveEntries = entries.map((entry, index) => ({ entry, index })).reverse();
       const lastVisit = entries.length ? formatInspectionDate(entries[entries.length - 1].date) : 'Noch keine Kontrolle protokolliert';
       const today = localDateKey(new Date());
-      const oversightProviders = providers.filter((provider) => provider.category === 'inspection' && Number.isFinite(provider.distances[property.id]) && provider.distances[property.id] <= providerRadius);
       const winterKey = `${new Date().getFullYear()}:${property.id}`;
       const checkedWinterItems = winterChecks[winterKey] || {};
       const winterComplete = winterChecklist.filter((item) => checkedWinterItems[item.id]).length;
@@ -1981,10 +1980,6 @@
             const checkedItems = Array.isArray(entry.checkedItemsSnapshot) ? entry.checkedItemsSnapshot.length : entry.checkedItems?.length || 0;
             return `<article class="inspection-archive-row"><div class="inspection-archive-main"><strong>Abwesenheitskontrolle · ${escapeHtml(formatInspectionDate(entry.date))}</strong><small>${checkedItems} geprüfte ${checkedItems === 1 ? 'Position' : 'Positionen'}${entry.completedAt ? ` · gespeichert ${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(entry.completedAt)))}` : ''}</small></div><div class="inspection-archive-actions"><button class="secondary-btn" type="button" data-inspection-archive="${index}">Protokoll ansehen / PDF</button></div></article>`;
           }).join('')}</div><p class="inspection-archive-note">Das Archiv wird lokal in diesem Browser gespeichert. Für eine externe Ablage kannst du ein Protokoll öffnen und als PDF sichern.</p>` : (planUploads[property.id] || []).length ? '' : '<div class="empty">Für dieses Ferienhaus sind noch keine Prüfprotokolle archiviert.</div>'}
-        </section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Lokale Hauskontrolle im ${providerRadius}-km-Umkreis</h2><p class="card-caption">${oversightProviders.length} Anbieter mit veröffentlichtem Angebot zur Hausaufsicht</p></div><button class="text-btn" data-action="find-inspectors">Alle Servicepartner →</button></div>
-          ${oversightProviders.length ? oversightProviders.map((provider) => `<div class="provider-card"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="provider-info"><strong>${escapeHtml(provider.name)}</strong><small>${escapeHtml(provider.services)} · ca. ${provider.distances[property.id]} km</small><span class="provider-contact-links">${providerContactLinks(provider)}</span></div></div>`).join('') : '<div class="empty">Für diesen Standort ist noch kein Anbieter mit ausdrücklich belegter Hauskontrolle hinterlegt.</div>'}
-          <p class="source-note">Die Websites belegen das angebotene Leistungsspektrum, nicht Verfügbarkeit oder einen bestehenden Auftrag. Intervall und Umfang individuell absprechen.</p>
         </section>`;
     }
     function persistInspectionData() {
@@ -2869,14 +2864,6 @@
       if (action === 'open-inspection') {
         inspectionProperty = event.target.closest('[data-action]').dataset.property;
         currentPage = 'inspections';
-        render();
-      }
-      if (action === 'find-inspectors') {
-        providerProperty = inspectionProperty;
-        providerCategory = 'house';
-        providerSearch = '';
-        onlyFavorites = false;
-        currentPage = 'providers';
         render();
       }
       if (action === 'go-back') { goBack(); return; }
