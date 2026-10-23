@@ -281,6 +281,12 @@
     #portal-key-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
     .portal-hint { margin: 0; padding: 4px 20px 14px; color: var(--muted); font-size: 11px; line-height: 1.55; }
     .portal-hint a, .portal-message a { color: var(--green); font-weight: 700; }
+    .ical-steps { margin: 0; padding-left: 18px; color: var(--muted); font-size: 11.5px; line-height: 1.6; }
+    .ical-steps strong { color: var(--ink); }
+    .ical-row { display: grid; gap: 5px; }
+    .ical-status { font-size: 10.5px; }
+    .ical-status.ok { color: var(--green-dark); }
+    .ical-status.error { color: var(--red); }
     .portal-message { margin: 6px 20px 16px; padding: 9px 12px; border-radius: 8px; background: #e9f3ec; color: var(--green-dark); font-size: 11.5px; }
     .portal-message.error { background: #fbeceb; color: var(--red); }
     .portal-connections { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -1420,8 +1426,8 @@
       else if (currentPage === 'bookings' && bookingView === 'list') render();
     }
     function portalHintHtml() {
-      const text = portalConnected()
-        ? `Über Repull mit Airbnb, Booking.com und Vrbo verbunden · letzter Abgleich: ${portalSync.lastSync ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(portalSync.lastSync)) : 'noch nie'}`
+      const text = portalConnected() || icalLinkCount()
+        ? `Buchungsportale verbunden · letzter Abgleich: ${(portalSync.lastSync || icalSync.lastSync) ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(portalSync.lastSync || icalSync.lastSync)) : 'noch nie'}`
         : 'Airbnb, Booking.com und Vrbo lassen sich automatisch in den Kalender übernehmen.';
       return `<p class="portal-link-note">${escapeHtml(text)} <button type="button" class="text-btn" data-page="profile">Buchungsportale im Benutzerprofil verwalten →</button></p>`;
     }
@@ -1557,6 +1563,130 @@
       return `<section class="card portal-card" id="portal-card"><div class="card-head"><div><h2 class="card-title">Buchungsportale</h2><p class="card-caption">Über Repull verbunden · Schlüssel …${escapeHtml(portalSync.apiKey.slice(-4))} · letzter Abgleich: ${escapeHtml(lastSync)}</p></div><span class="status active">Verbunden</span></div>
         <div class="portal-body portal-actions"><button type="button" class="primary-btn" data-action="portal-sync" ${portalBusy ? 'disabled' : ''}>${portalBusy ? 'Abgleich läuft …' : 'Jetzt abgleichen'}</button><button type="button" class="secondary-btn" data-action="portal-connect" ${portalBusy ? 'disabled' : ''}>Portal-Konto verknüpfen</button><button type="button" class="secondary-btn" data-action="portal-disconnect">Trennen</button></div>
         <div class="portal-body">${connections}${mapping}<label class="portal-auto"><input type="checkbox" id="portal-auto-toggle" ${portalSync.auto ? 'checked' : ''}> Automatisch alle 15 Minuten abgleichen, solange die App geöffnet ist</label></div>${message}</section>`;
+    }
+    let icalSync = { links: {}, status: {}, allowProxy: false, auto: true, lastSync: '' };
+    try {
+      const savedIcal = JSON.parse(localStorage.getItem('stugliv-ical-sync') || 'null');
+      if (savedIcal && typeof savedIcal === 'object') icalSync = { ...icalSync, ...savedIcal, links: { ...(savedIcal.links || {}) }, status: { ...(savedIcal.status || {}) } };
+    } catch (error) { console.warn('Kalender-Links konnten nicht geladen werden:', error); }
+    let icalBusy = false;
+    let icalMessage = null;
+    const icalLinkCount = () => Object.entries(icalSync.links).filter(([propertyId, url]) => /^https:\/\//.test(url) && properties.some((property) => property.id === propertyId)).length;
+    const icalSourceFor = (url) => { try { const host = new URL(url).hostname; return /airbnb\./i.test(host) ? 'airbnb' : /booking\.com$/i.test(host) ? 'booking.com' : /vrbo\.|homeaway\./i.test(host) ? 'vrbo' : 'other'; } catch (error) { return 'other'; } };
+    function persistIcal() {
+      try { localStorage.setItem('stugliv-ical-sync', JSON.stringify(icalSync)); return true; }
+      catch (error) { console.error('Kalender-Links konnten nicht gespeichert werden:', error); showToast('Kalender-Links konnten nicht gespeichert werden.'); return false; }
+    }
+    function showIcalState() {
+      const card = document.getElementById('ical-card');
+      if (currentPage === 'profile' && card) card.outerHTML = icalCardHtml();
+      else if (currentPage === 'bookings' && bookingView === 'list') render();
+    }
+    function parseIcs(text) {
+      const lines = String(text).replace(/\r\n?/g, '\n').replace(/\n[ \t]/g, '').split('\n');
+      const events = [];
+      let current = null;
+      const toDate = (value) => { const match = String(value || '').match(/(\d{4})(\d{2})(\d{2})/); return match ? `${match[1]}-${match[2]}-${match[3]}` : ''; };
+      lines.forEach((line) => {
+        if (/^BEGIN:VEVENT/i.test(line)) { current = {}; return; }
+        if (/^END:VEVENT/i.test(line)) { if (current) events.push(current); current = null; return; }
+        if (!current) return;
+        const separator = line.indexOf(':');
+        if (separator < 0) return;
+        const name = line.slice(0, separator).split(';')[0].toUpperCase();
+        const value = line.slice(separator + 1).replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+        if (name === 'DTSTART') current.start = toDate(value);
+        else if (name === 'DTEND') current.end = toDate(value);
+        else if (name === 'SUMMARY') current.summary = value.trim();
+        else if (name === 'UID') current.uid = value.trim();
+        else if (name === 'DESCRIPTION') current.description = value;
+        else if (name === 'STATUS') current.status = value.trim().toUpperCase();
+      });
+      return events.filter((event) => event.start).map((event) => {
+        if (!event.end || event.end <= event.start) { const day = new Date(`${event.start}T12:00:00`); day.setDate(day.getDate() + 1); event.end = localDateKey(day); }
+        return event;
+      });
+    }
+    async function fetchIcalText(url) {
+      const attempts = [url, ...(icalSync.allowProxy ? [`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, `https://api.cors.lol/?url=${encodeURIComponent(url)}`] : [])];
+      let reachedInvalid = false;
+      for (const target of attempts) {
+        try {
+          const response = await fetch(target, { cache: 'no-store' });
+          if (!response.ok) continue;
+          const text = await response.text();
+          if (/BEGIN:VCALENDAR/i.test(text)) return text;
+          reachedInvalid = true;
+        } catch (error) { /* nächster Weg */ }
+      }
+      if (reachedInvalid) throw importError('Der Link liefert keinen gültigen Kalender. Bitte den Export-Link („.ics“) aus Airbnb neu kopieren.');
+      throw importError(icalSync.allowProxy ? 'Der Kalender konnte nicht geladen werden. Bitte Link und Internetverbindung prüfen.' : 'Der Anbieter blockiert den direkten Abruf im Browser. Bitte „Abruf über Hilfsdienst erlauben“ aktivieren.');
+    }
+    async function syncIcalBookings() {
+      if (icalBusy) return;
+      const entries = Object.entries(icalSync.links).filter(([propertyId, url]) => /^https:\/\//.test(url) && properties.some((property) => property.id === propertyId));
+      if (!entries.length) { icalMessage = { text: 'Bitte zuerst für mindestens ein Ferienhaus einen Kalender-Link eintragen.', error: true }; showIcalState(); return; }
+      icalBusy = true;
+      icalMessage = { text: 'Kalender werden abgeglichen …' };
+      showIcalState();
+      const todayKey = localDateKey(new Date());
+      let next = [...bookings];
+      const stats = { added: 0, updated: 0, removed: 0 };
+      for (const [propertyId, url] of entries) {
+        try {
+          const events = parseIcs(await fetchIcalText(url));
+          const source = icalSourceFor(url);
+          const sourceName = portalSourceName(source);
+          const seen = new Set();
+          events.forEach((event) => {
+            if (event.status === 'CANCELLED' || /not available|unavailable|blocked|closed|nicht verfügbar|gesperrt/i.test(event.summary || '')) return;
+            const id = `ical-${propertyId}-${String(event.uid || `${event.start}-${event.end}`).replace(/[^A-Za-z0-9]/g, '').slice(0, 48)}`;
+            const description = String(event.description || '');
+            const code = (description.match(/reservations\/details\/([A-Z0-9]+)/i) || [])[1] || '';
+            const phone = (description.match(/\((?:Last 4 Digits|letzte 4 Ziffern)\)\s*:\s*(\d{3,4})/i) || [])[1] || '';
+            seen.add(id);
+            if (next.some((booking) => !booking.id.startsWith('ical-') && booking.propertyId === propertyId && booking.startDate === event.start && booking.endDate === event.end)) return;
+            const existingIndex = next.findIndex((booking) => booking.id === id);
+            const booking = { id, propertyId, guestName: `${sourceName}-Gast`, guestCount: '1', guestsUnknown: true, startDate: event.start, endDate: event.end, arrivalTime: '15:00', notes: [code ? `${sourceName} · Code ${code}` : '', phone ? `Telefon (letzte 4 Ziffern): ${phone}` : ''].filter(Boolean).join('\n'), source, externalId: String(event.uid || id), ...(existingIndex >= 0 && next[existingIndex].care ? { care: next[existingIndex].care } : {}) };
+            if (existingIndex < 0) { next.push(booking); stats.added += 1; }
+            else if (JSON.stringify(next[existingIndex]) !== JSON.stringify(booking)) { next[existingIndex] = booking; stats.updated += 1; }
+          });
+          const before = next.length;
+          next = next.filter((booking) => !(booking.id.startsWith(`ical-${propertyId}-`) && !seen.has(booking.id) && booking.endDate >= todayKey));
+          stats.removed += before - next.length;
+          icalSync.status[propertyId] = { ok: true, count: seen.size, at: new Date().toISOString() };
+        } catch (error) {
+          console.error('Kalender-Abgleich fehlgeschlagen:', error);
+          icalSync.status[propertyId] = { ok: false, message: error.userMessage || 'Der Abgleich ist fehlgeschlagen.', at: new Date().toISOString() };
+        }
+      }
+      if ((stats.added || stats.updated || stats.removed) && persistBookings(next)) bookings = next;
+      icalSync.lastSync = new Date().toISOString();
+      persistIcal();
+      const failed = entries.filter(([propertyId]) => icalSync.status[propertyId]?.ok === false).length;
+      const parts = [];
+      if (stats.added) parts.push(`${stats.added} neu`);
+      if (stats.updated) parts.push(`${stats.updated} aktualisiert`);
+      if (stats.removed) parts.push(`${stats.removed} storniert und entfernt`);
+      icalMessage = failed === entries.length ? { text: 'Der Abgleich ist fehlgeschlagen. Details stehen bei den Ferienhäusern.', error: true } : { text: `Abgleich abgeschlossen${parts.length ? `: ${parts.join(', ')}` : ': keine Änderungen'}.${failed ? ` Bei ${failed} Ferienhaus/-häusern gab es Fehler.` : ''}` };
+      icalBusy = false;
+      if (currentPage === 'profile') showIcalState();
+      else if (currentPage === 'bookings' || currentPage === 'dashboard' || currentPage === 'calendar') render();
+    }
+    function icalCardHtml() {
+      const stamp = (iso) => new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
+      const rows = properties.map((property) => {
+        const status = icalSync.status[property.id];
+        const info = status ? (status.ok ? `<small class="ical-status ok">✓ ${status.count} ${status.count === 1 ? 'Buchung' : 'Buchungen'} gefunden · ${escapeHtml(stamp(status.at))}</small>` : `<small class="ical-status error">${escapeHtml(status.message)}</small>`) : '';
+        return `<label class="ical-row"><span class="form-label">${escapeHtml(property.name)}</span><input class="form-control" type="url" inputmode="url" autocomplete="off" spellcheck="false" data-ical-link="${escapeHtml(property.id)}" placeholder="https://www.airbnb.de/calendar/ical/…" value="${escapeHtml(icalSync.links[property.id] || '')}">${info}</label>`;
+      }).join('');
+      const message = icalMessage ? `<p class="portal-message ${icalMessage.error ? 'error' : ''}" role="status">${escapeHtml(icalMessage.text)}</p>` : '';
+      return `<section class="card portal-card" id="ical-card"><div class="card-head"><div><h2 class="card-title">Airbnb verbinden</h2><p class="card-caption">Buchungen per Kalender-Link automatisch im Kalender eintragen · kostenlos, ohne Zusatzkonto${icalSync.lastSync ? ` · letzter Abgleich: ${escapeHtml(stamp(icalSync.lastSync))}` : ''}</p></div><span class="status ${icalLinkCount() ? '' : 'pending'}">${icalLinkCount() ? 'Verbunden' : 'Nicht verbunden'}</span></div>
+        <form id="ical-form" class="portal-body"><ol class="ical-steps"><li>In Airbnb: <strong>Kalender → Verfügbarkeit → Kalender verbinden → Kalender exportieren</strong>.</li><li>Den Link kopieren und hier beim passenden Ferienhaus einfügen (Links von Booking.com und Vrbo funktionieren ebenso).</li></ol>${rows || '<p class="portal-hint">Lege zuerst ein Ferienhaus an.</p>'}
+          <label class="portal-auto"><input type="checkbox" id="ical-proxy" ${icalSync.allowProxy ? 'checked' : ''}> Abruf über Hilfsdienst erlauben (nötig, weil Airbnb den direkten Abruf im Browser blockiert). Der Dienst sieht dabei den Kalender-Link.</label>
+          <label class="portal-auto"><input type="checkbox" id="ical-auto" ${icalSync.auto ? 'checked' : ''}> Automatisch alle 15 Minuten abgleichen, solange die App geöffnet ist</label>
+          <div class="portal-actions" style="display:flex;flex-wrap:wrap;gap:8px"><button type="submit" class="primary-btn" ${icalBusy ? 'disabled' : ''}>${icalBusy ? 'Abgleich läuft …' : 'Speichern und abgleichen'}</button></div></form>
+        <p class="portal-hint">Airbnb liefert im Kalender-Link nur Zeitraum und Buchungscode, keinen Gastnamen und keine Personenzahl. Diese Angaben bleiben leer. Blockierte Tage („nicht verfügbar“) werden nicht als Buchung übernommen.</p>${message}</section>`;
     }
     let costCurrency = 'SEK';
     try { if (localStorage.getItem('stugliv-cost-currency') === 'EUR') costCurrency = 'EUR'; } catch (error) { /* Einstellung optional */ }
@@ -2336,7 +2466,7 @@
                   const codeMatch = booking.source ? String(noteLines[0] || '').match(/ · Code (.+)$/) : null;
                   const noteText = (codeMatch ? noteLines.slice(1) : noteLines).join('\n').trim();
                   const fact = (name, label, value) => `<div class="booking-fact"><span class="booking-fact-icon">${icon(name)}</span><div><small>${label}</small><strong>${escapeHtml(value)}</strong></div></div>`;
-                  return `<div class="booking-facts">${fact('users', 'Gäste', `${guests} ${guests === 1 ? 'Person' : 'Personen'}`)}${fact('moon', 'Aufenthalt', `${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`)}${fact('clock', 'Ankunft', booking.arrivalTime ? `${booking.arrivalTime} Uhr` : '—')}${codeMatch ? fact('ticket', 'Buchungscode', codeMatch[1]) : ''}</div>${noteText ? `<div class="booking-note"><span class="booking-fact-icon">${icon('note')}</span><div><small>${booking.source ? 'Nachricht des Gasts' : 'Hinweise zur Buchung'}</small><p>${escapeHtml(noteText).replace(/\n/g, '<br>')}</p></div></div>` : ''}`;
+                  return `<div class="booking-facts">${fact('users', 'Gäste', booking.guestsUnknown ? 'nicht angegeben' : `${guests} ${guests === 1 ? 'Person' : 'Personen'}`)}${fact('moon', 'Aufenthalt', `${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`)}${fact('clock', 'Ankunft', booking.arrivalTime ? `${booking.arrivalTime} Uhr` : '—')}${codeMatch ? fact('ticket', 'Buchungscode', codeMatch[1]) : ''}</div>${noteText ? `<div class="booking-note"><span class="booking-fact-icon">${icon('note')}</span><div><small>${booking.guestsUnknown ? 'Weitere Angaben aus dem Kalender' : booking.source ? 'Nachricht des Gasts' : 'Hinweise zur Buchung'}</small><p>${escapeHtml(noteText).replace(/\n/g, '<br>')}</p></div></div>` : ''}`;
                 })()}
                 ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>`}
                 ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
@@ -2446,6 +2576,8 @@
             <div class="full profile-notice" style="margin-top:0">Es wird nur die Absender-Adresse lokal gespeichert, keine Zugangsdaten. Der Versand läuft über dein eigenes Mailprogramm oder Mailkonto.</div>
           </div></form>
         </section>
+        <div style="height:16px"></div>
+        ${icalCardHtml()}
         <div style="height:16px"></div>
         ${portalCardHtml()}
         <div style="height:16px"></div>
@@ -4403,6 +4535,24 @@
       }
     });
     pageContent.addEventListener('submit', (event) => {
+      if (event.target.id === 'ical-form') {
+        event.preventDefault();
+        const links = {};
+        let invalid = '';
+        event.target.querySelectorAll('[data-ical-link]').forEach((input) => {
+          const value = input.value.trim();
+          if (!value) return;
+          if (!/^https:\/\/[^\s]+$/i.test(value)) invalid = invalid || 'Kalender-Links müssen mit https:// beginnen.';
+          else links[input.dataset.icalLink] = value;
+        });
+        if (invalid) { icalMessage = { text: invalid, error: true }; showIcalState(); return; }
+        icalSync.links = links;
+        icalSync.status = Object.fromEntries(Object.entries(icalSync.status).filter(([propertyId]) => links[propertyId]));
+        icalSync.allowProxy = document.getElementById('ical-proxy').checked;
+        icalSync.auto = document.getElementById('ical-auto').checked;
+        if (persistIcal()) syncIcalBookings();
+        return;
+      }
       if (event.target.id === 'portal-key-form') {
         event.preventDefault();
         const key = String(document.getElementById('portal-key').value || '').trim();
@@ -5441,8 +5591,10 @@
     if (isEuro()) refreshFxRate();
     render();
     const portalDue = () => portalConnected() && portalSync.auto && (!portalSync.lastSync || Date.now() - new Date(portalSync.lastSync).getTime() > PORTAL_SYNC_INTERVAL);
+    const icalDue = () => icalSync.auto && icalLinkCount() > 0 && (!icalSync.lastSync || Date.now() - new Date(icalSync.lastSync).getTime() > PORTAL_SYNC_INTERVAL);
     if (portalDue()) syncPortalBookings();
-    setInterval(() => { if (portalDue()) syncPortalBookings(); }, 60 * 1000);
+    if (icalDue()) syncIcalBookings();
+    setInterval(() => { if (portalDue()) syncPortalBookings(); if (icalDue()) syncIcalBookings(); }, 60 * 1000);
   </script>
 </body>
 </html>
