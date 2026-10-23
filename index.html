@@ -876,9 +876,15 @@
     .booking-overview-date { padding: 10px 12px; border-radius: 8px; background: #f5f6f2; }
     .booking-overview-date span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .booking-overview-date strong { display: block; margin-top: 4px; font-size: 12px; }
-    .booking-overview-meta { display: flex; flex-wrap: wrap; gap: 7px 14px; grid-column: 1 / -1; color: #576159; font-size: 11px; }
-    .booking-overview-meta span { display: inline-flex; align-items: center; gap: 5px; }
-    .booking-overview-notes { grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .booking-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; grid-column: 1 / -1; }
+    .booking-fact { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e3eadf; border-radius: 10px; background: linear-gradient(180deg, #fbfdf9, #f1f6ee); }
+    .booking-fact-icon { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: var(--green); background: #dfeadb; }
+    .booking-fact-icon svg { width: 17px; height: 17px; }
+    .booking-fact small, .booking-note small { display: block; color: var(--muted); font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .booking-fact strong { display: block; margin-top: 2px; font-size: 12.5px; }
+    .booking-note { display: flex; gap: 12px; grid-column: 1 / -1; padding: 12px 14px; border: 1px solid #efe3c6; border-left: 3px solid #d1a64a; border-radius: 10px; background: #fffaf0; }
+    .booking-note .booking-fact-icon { color: #8a6a1f; background: #f6e9c8; }
+    .booking-note p { margin: 3px 0 0; color: #4a4f46; font-size: 12px; line-height: 1.55; }
     .profile-form { max-width: 650px; padding: 20px; }
     .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
     .profile-grid .full { grid-column: 1 / -1; }
@@ -927,7 +933,7 @@
       .provider-results { grid-template-columns: 1fr; padding: 12px; }
       .cost-summary { grid-template-columns: 1fr; }
       .booking-overview-card { grid-template-columns: minmax(0, 1fr); }
-      .booking-status, .booking-overview-dates, .booking-overview-meta, .booking-overview-notes { grid-column: 1; }
+      .booking-status, .booking-overview-dates, .booking-facts, .booking-note { grid-column: 1; }
       .booking-overview-dates { gap: 7px; }
       .cost-input { width: 98px; }
       .property-form-grid { grid-template-columns: 1fr; }
@@ -1156,7 +1162,12 @@
         document: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8m-8 4h8"/>',
         cost: '<path d="M12 2v20m5-15H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
         search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
-        plus: '<path d="M12 5v14M5 12h14"/>'
+        plus: '<path d="M12 5v14M5 12h14"/>',
+        users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M18 14.4c1.9.8 3 2.6 3 5.6"/>',
+        moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+        note: '<path d="M5 4h14a1 1 0 0 1 1 1v10l-5 5H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M15 20v-4a1 1 0 0 1 1-1h4M8 9h8M8 13h4"/>',
+        ticket: '<path d="M4 8a2 2 0 0 0 0 4v0a2 2 0 0 1 0 4v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1a2 2 0 0 1 0-4v0a2 2 0 0 0 0-4V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1z"/><path d="M14 6v12" stroke-dasharray="2 2.4"/>'
       };
       return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || ''}</svg>`;
     };
@@ -2320,8 +2331,13 @@
                 <div class="booking-overview-title"><strong>${escapeHtml(booking.guestName)}${booking.source ? `<span class="booking-source">${escapeHtml(portalSourceName(booking.source))}</span>` : ''}</strong><small>${escapeHtml(propertyName)}</small></div>
                 <span class="booking-status ${checkedOut ? 'past' : ''}">${checkedOut ? 'Ausgecheckt' : 'Gebucht'}</span>
                 <div class="booking-overview-dates"><div class="booking-overview-date"><span>Anreise</span><strong>${escapeHtml(detailedDate(booking.startDate))}</strong></div><div class="booking-overview-date"><span>Abreise</span><strong>${escapeHtml(detailedDate(booking.endDate))}</strong></div></div>
-                <div class="booking-overview-meta"><span>${guests} ${guests === 1 ? 'Person' : 'Personen'}</span><span>${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}</span><span>Ankunft um ${escapeHtml(booking.arrivalTime || '—')}</span></div>
-                ${booking.notes ? `<div class="booking-overview-notes">${escapeHtml(booking.notes)}</div>` : ''}
+                ${(() => {
+                  const noteLines = String(booking.notes || '').split('\n');
+                  const codeMatch = booking.source ? String(noteLines[0] || '').match(/ · Code (.+)$/) : null;
+                  const noteText = (codeMatch ? noteLines.slice(1) : noteLines).join('\n').trim();
+                  const fact = (name, label, value) => `<div class="booking-fact"><span class="booking-fact-icon">${icon(name)}</span><div><small>${label}</small><strong>${escapeHtml(value)}</strong></div></div>`;
+                  return `<div class="booking-facts">${fact('users', 'Gäste', `${guests} ${guests === 1 ? 'Person' : 'Personen'}`)}${fact('moon', 'Aufenthalt', `${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`)}${fact('clock', 'Ankunft', booking.arrivalTime ? `${booking.arrivalTime} Uhr` : '—')}${codeMatch ? fact('ticket', 'Buchungscode', codeMatch[1]) : ''}</div>${noteText ? `<div class="booking-note"><span class="booking-fact-icon">${icon('note')}</span><div><small>${booking.source ? 'Nachricht des Gasts' : 'Hinweise zur Buchung'}</small><p>${escapeHtml(noteText).replace(/\n/g, '<br>')}</p></div></div>` : ''}`;
+                })()}
                 ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>`}
                 ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
               </article>`;
@@ -2419,12 +2435,16 @@
             <label><span class="form-label">Username</span><input class="form-control" name="username" required maxlength="40" value="${escapeHtml(profileData.username)}"></label>
             <label class="full"><span class="form-label">E-Mail</span><input class="form-control" name="email" type="email" maxlength="120" value="${escapeHtml(profileData.email)}"></label>
             <div class="full profile-notice" style="margin-top:0">Nutzung der Immobilie und Anzahl der Ferienhäuser stellst du jetzt unter <button type="button" class="text-btn" data-page="properties" style="padding:0">Mein Ferienhaus</button> ein.</div>
-            <div class="full"><p class="profile-section-title">E-Mail-Konto verbinden <span class="mail-status ${profileData.mailAccount ? 'connected' : ''}">${profileData.mailAccount ? '● Verbunden' + (profileData.mailConnectedAt ? ' seit ' + new Date(profileData.mailConnectedAt).toLocaleDateString('de-DE') : '') : 'Nicht verbunden'}</span></p></div>
+</div><div class="profile-notice">Diese App speichert ihre Daten nur lokal in diesem Browser.</div><div class="form-actions"><button type="submit" class="primary-btn">Benutzerprofil speichern</button></div></form>
+        </section>
+        <div style="height:16px"></div>
+        <section class="card profile-form"><div class="card-head" style="padding:0 0 4px"><div><h2 class="card-title">E-Mail-Konto verbinden</h2><p class="card-caption">Absender für Nachrichten an deine Servicepartner</p></div><span class="mail-status ${profileData.mailAccount ? 'connected' : ''}">${profileData.mailAccount ? '● Verbunden' + (profileData.mailConnectedAt ? ' seit ' + new Date(profileData.mailConnectedAt).toLocaleDateString('de-DE') : '') : 'Nicht verbunden'}</span></div>
+          <form id="mail-form" style="padding-top:14px"><div class="profile-grid">
             <label><span class="form-label">E-Mail-Anbieter</span><select class="form-control" name="mailProvider">${[['default', 'Standard-Mailprogramm'], ['gmail', 'Gmail'], ['outlook', 'Outlook / Microsoft 365'], ['icloud', 'iCloud Mail'], ['other', 'Anderer Anbieter']].map(([value, label]) => `<option value="${value}" ${(profileData.mailProvider || 'default') === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
             <label><span class="form-label">Absender-Adresse</span><input class="form-control" name="mailAccount" type="email" maxlength="120" placeholder="du@beispiel.de" value="${escapeHtml(profileData.mailAccount || '')}"></label>
             <div class="full form-actions" style="justify-content:flex-start"><button type="submit" class="secondary-btn" name="mailAction" value="connect">Mailkonto verbinden</button>${profileData.mailAccount ? '<button type="button" class="secondary-btn" data-mail-test>Test-E-Mail senden</button><button type="submit" class="secondary-btn" name="mailAction" value="disconnect" formnovalidate>Verbindung trennen</button>' : ''}</div>
             <div class="full profile-notice" style="margin-top:0">Es wird nur die Absender-Adresse lokal gespeichert, keine Zugangsdaten. Der Versand läuft über dein eigenes Mailprogramm oder Mailkonto.</div>
-          </div><div class="profile-notice">Diese App speichert ihre Daten nur lokal in diesem Browser.</div><div class="form-actions"><button type="submit" class="primary-btn">Benutzerprofil speichern</button></div></form>
+          </div></form>
         </section>
         <div style="height:16px"></div>
         ${portalCardHtml()}
@@ -4454,15 +4474,16 @@
         showToast(isEditing ? 'Buchung wurde aktualisiert.' : 'Buchung wurde gespeichert.');
         return;
       }
-      if (event.target.id !== 'profile-form') return;
+      if (event.target.id !== 'profile-form' && event.target.id !== 'mail-form') return;
       event.preventDefault();
+      const isMailForm = event.target.id === 'mail-form';
       const formData = new FormData(event.target);
       const updatedProfile = {
-        name: String(formData.get('name')).trim(),
-        username: String(formData.get('username')).trim(),
-        email: String(formData.get('email')).trim(),
-        mailProvider: String(formData.get('mailProvider') || 'default'),
-        mailAccount: String(formData.get('mailAccount') || '').trim(),
+        name: isMailForm ? profileData.name : String(formData.get('name')).trim(),
+        username: isMailForm ? profileData.username : String(formData.get('username')).trim(),
+        email: isMailForm ? profileData.email : String(formData.get('email')).trim(),
+        mailProvider: isMailForm ? String(formData.get('mailProvider') || 'default') : (profileData.mailProvider || 'default'),
+        mailAccount: isMailForm ? String(formData.get('mailAccount') || '').trim() : (profileData.mailAccount || ''),
         usage: profileData.usage === 'self' ? 'self' : 'rental',
         houseCount: Math.min(50, Math.max(1, Math.floor(Number(profileData.houseCount)) || 1)),
         ...(profileData.desiredHouseCount ? { desiredHouseCount: profileData.desiredHouseCount } : {})
