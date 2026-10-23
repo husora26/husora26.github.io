@@ -273,6 +273,26 @@
     .currency-switch input:focus-visible + .currency-track { outline: 3px solid var(--amber); outline-offset: 2px; }
     .currency-switch .on { color: var(--green-dark); }
     .fx-note { color: var(--muted); font-size: 11px; }
+    .portal-card { margin-bottom: 17px; }
+    .portal-body { display: grid; gap: 12px; padding: 14px 20px 4px; }
+    .portal-body.portal-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 0; }
+    #portal-key-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+    .portal-hint { margin: 0; padding: 4px 20px 14px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .portal-hint a, .portal-message a { color: var(--green); font-weight: 700; }
+    .portal-message { margin: 6px 20px 16px; padding: 9px 12px; border-radius: 8px; background: #e9f3ec; color: var(--green-dark); font-size: 11.5px; }
+    .portal-message.error { background: #fbeceb; color: var(--red); }
+    .portal-connections { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .portal-connections li { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .portal-pill { padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+    .portal-pill.ok { color: var(--green-dark); background: #e1efe5; }
+    .portal-pill.warn { color: #805526; background: var(--amber-soft); }
+    .portal-mapping h3 { margin: 4px 0 8px; font-size: 12px; }
+    .portal-map-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 240px); align-items: center; gap: 12px; padding: 6px 0; font-size: 12px; }
+    .portal-map-row.attention span { color: var(--red); font-weight: 700; }
+    .portal-auto { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+    .booking-source { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; color: var(--green-dark); background: #e1efe5; font-size: 9.5px; font-weight: 700; vertical-align: middle; }
+    .booking-managed { color: var(--muted); font-size: 10.5px; }
+    @media (max-width: 560px) { #portal-key-form { grid-template-columns: 1fr; } .portal-map-row { grid-template-columns: 1fr; gap: 4px; } }
     .booking-automation { margin-bottom: 17px; padding: 18px 20px; }
     .booking-automation-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
     .booking-automation-main .card-caption { margin-top: 4px; }
@@ -1353,6 +1373,154 @@
     }
     let bookingAutomation = false;
     try { bookingAutomation = localStorage.getItem('stugliv-booking-automation') === 'on'; } catch (error) { /* Einstellung optional */ }
+    const PORTAL_API = 'https://api.repull.dev';
+    const PORTAL_NAMES = { airbnb: 'Airbnb', 'booking.com': 'Booking.com', vrbo: 'Vrbo', direct: 'Direktbuchung', website: 'Website', owner: 'Eigentümer', other: 'Portal' };
+    const PORTAL_SYNC_INTERVAL = 15 * 60 * 1000;
+    let portalSync = { apiKey: '', lastSync: '', watermark: '', mapping: {}, listings: [], connections: [], unmapped: [], auto: true };
+    try {
+      const savedPortal = JSON.parse(localStorage.getItem('stugliv-portal-sync') || 'null');
+      if (savedPortal && typeof savedPortal === 'object') portalSync = { ...portalSync, ...savedPortal, mapping: { ...(savedPortal.mapping || {}) } };
+    } catch (error) { console.warn('Portal-Einstellungen konnten nicht geladen werden:', error); }
+    let portalBusy = false;
+    let portalMessage = null;
+    const portalConnected = () => /^sk_[A-Za-z0-9_-]{8,}$/.test(portalSync.apiKey);
+    const portalSourceName = (source) => PORTAL_NAMES[String(source || '').toLowerCase()] || 'Portal';
+    function persistPortal() {
+      try { localStorage.setItem('stugliv-portal-sync', JSON.stringify(portalSync)); return true; }
+      catch (error) { console.error('Portal-Einstellungen konnten nicht gespeichert werden:', error); showToast('Portal-Einstellungen konnten nicht gespeichert werden.'); return false; }
+    }
+    function showPortalState() { if (currentPage === 'bookings' && bookingView === 'list') render(); }
+    async function portalRequest(path, { method = 'GET', body } = {}) {
+      let response;
+      try {
+        response = await fetch(`${PORTAL_API}${path}`, { method, headers: { Authorization: `Bearer ${portalSync.apiKey}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
+      } catch (error) { throw importError('Repull ist nicht erreichbar. Bitte Internetverbindung prüfen.'); }
+      const data = await response.json().catch(() => null);
+      if (response.ok) return data || {};
+      const detail = importClean(data?.error?.message || data?.message || data?.error || '');
+      if (response.status === 401) throw Object.assign(importError('Der API-Schlüssel ist ungültig oder wurde widerrufen.'), { authFailed: true });
+      if (response.status === 402) throw importError(`Repull verlangt für diese Funktion einen anderen Tarif${detail ? `: ${detail}` : '.'}`);
+      if (response.status === 429) throw importError('Zu viele Anfragen an Repull. Bitte in ein paar Minuten erneut versuchen.');
+      throw importError(`Repull meldet einen Fehler (${response.status})${detail ? `: ${detail}` : '.'}`);
+    }
+    async function portalFetchPages(path, params = {}) {
+      const rows = [];
+      let cursor = '';
+      for (let page = 0; page < 30; page += 1) {
+        const query = new URLSearchParams({ limit: '100', ...params, ...(cursor ? { cursor } : {}) });
+        const data = await portalRequest(`${path}?${query}`);
+        rows.push(...(Array.isArray(data.data) ? data.data : []));
+        if (!data.pagination?.hasMore || !data.pagination.nextCursor) break;
+        cursor = data.pagination.nextCursor;
+      }
+      return rows;
+    }
+    function portalBookingFrom(reservation, propertyId) {
+      const checkIn = String(reservation.checkIn || '').slice(0, 10);
+      const checkOut = String(reservation.checkOut || '').slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(checkIn) || !/^\d{4}-\d{2}-\d{2}$/.test(checkOut) || checkOut <= checkIn) return null;
+      const guest = reservation.primaryGuest || {};
+      const guestName = importClean(reservation.guestName || [guest.firstName, guest.lastName].filter(Boolean).join(' ')) || 'Gast';
+      const people = Number(reservation.occupancy?.total) || (Number(reservation.occupancy?.adults) || 0) + (Number(reservation.occupancy?.children) || 0) || 1;
+      const source = String(reservation.source || reservation.platform || '').toLowerCase();
+      const notes = [`${portalSourceName(source)}${reservation.confirmationCode ? ` · Code ${reservation.confirmationCode}` : ''}`, importClean(reservation.guestNotes).slice(0, 300)].filter(Boolean).join('\n');
+      return { id: `portal-${reservation.id}`, propertyId, guestName: guestName.slice(0, 80), guestCount: String(Math.max(1, Math.min(50, Math.round(people)))), startDate: checkIn, endDate: checkOut, arrivalTime: /^\d{2}:\d{2}$/.test(reservation.checkInTime || '') ? reservation.checkInTime : '15:00', notes, source: source || 'other', externalId: String(reservation.id) };
+    }
+    async function syncPortalBookings() {
+      if (!portalConnected() || portalBusy) return;
+      portalBusy = true;
+      portalMessage = { text: 'Buchungen werden abgeglichen …' };
+      showPortalState();
+      const startedAt = new Date().toISOString();
+      try {
+        portalSync.listings = (await portalFetchPages('/v1/listings')).map((listing) => ({ id: String(listing.id), name: importClean(listing.publicName || listing.name) || `Unterkunft ${listing.id}` }));
+        try {
+          const connections = await portalRequest('/v1/connect');
+          portalSync.connections = (connections.data || []).map((entry) => ({ provider: String(entry.provider || ''), status: String(entry.status || ''), fixUrl: /^https:\/\//.test(entry.fixUrl || '') ? entry.fixUrl : '', needsAction: Boolean(entry.action?.required) }));
+        } catch (error) { console.warn('Verbindungen konnten nicht geladen werden:', error); }
+        const since = new Date(); since.setDate(since.getDate() - 30);
+        const reservations = await portalFetchPages('/v1/reservations', { include_total: 'false', ...(portalSync.watermark ? { updated_since: portalSync.watermark } : { check_out_after: localDateKey(since) }) });
+        let next = [...bookings];
+        const stats = { added: 0, updated: 0, removed: 0 };
+        const unmapped = new Set();
+        reservations.forEach((reservation) => {
+          const id = `portal-${reservation.id}`;
+          const index = next.findIndex((booking) => booking.id === id);
+          const status = String(reservation.status || '').toLowerCase();
+          if (status === 'cancelled') { if (index >= 0) { next.splice(index, 1); stats.removed += 1; } return; }
+          if (status !== 'confirmed' && status !== 'completed') return;
+          const propertyId = portalSync.mapping[String(reservation.listingId)];
+          if (!propertyId || !properties.some((property) => property.id === propertyId)) { unmapped.add(String(reservation.listingId)); return; }
+          const booking = portalBookingFrom(reservation, propertyId);
+          if (!booking) return;
+          if (index < 0) { next.push(booking); stats.added += 1; }
+          else if (JSON.stringify(next[index]) !== JSON.stringify(booking)) { next[index] = booking; stats.updated += 1; }
+        });
+        if ((stats.added || stats.updated || stats.removed) && !persistBookings(next)) throw importError('Die Buchungen konnten nicht gespeichert werden.');
+        bookings = next;
+        portalSync.watermark = startedAt;
+        portalSync.lastSync = startedAt;
+        portalSync.unmapped = [...unmapped];
+        persistPortal();
+        const parts = [];
+        if (stats.added) parts.push(`${stats.added} neu`);
+        if (stats.updated) parts.push(`${stats.updated} aktualisiert`);
+        if (stats.removed) parts.push(`${stats.removed} storniert und entfernt`);
+        portalMessage = { text: `Abgleich abgeschlossen${parts.length ? `: ${parts.join(', ')}` : ': keine Änderungen'}.${unmapped.size ? ` ${unmapped.size === 1 ? 'Eine Unterkunft ist' : `${unmapped.size} Unterkünfte sind`} noch keinem Ferienhaus zugeordnet.` : ''}` };
+      } catch (error) {
+        console.error('Portal-Abgleich fehlgeschlagen:', error);
+        portalMessage = { text: error.userMessage || 'Der Abgleich ist fehlgeschlagen.', error: true };
+        if (error.authFailed) portalSync.apiKey = '';
+        persistPortal();
+      } finally {
+        portalBusy = false;
+        if (currentPage === 'bookings' || currentPage === 'dashboard' || currentPage === 'calendar') render();
+      }
+    }
+    async function openPortalConnect() {
+      if (!portalConnected() || portalBusy) return;
+      const popup = window.open('', '_blank');
+      try {
+        const redirectUrl = /^https?:$/.test(window.location.protocol) ? `${window.location.origin}${window.location.pathname}` : 'https://husora26.github.io/';
+        const session = await portalRequest('/v1/connect', { method: 'POST', body: { redirectUrl, state: 'husora' } });
+        if (!/^https:\/\/connect\.repull\.dev\//.test(session.url || '')) throw importError('Unerwartete Antwort von Repull.');
+        if (popup) { popup.location.href = session.url; portalMessage = { text: 'Die Verknüpfung wurde in einem neuen Tab geöffnet. Danach hier auf „Jetzt abgleichen“ klicken.' }; }
+        else portalMessage = { text: 'Der Browser hat das neue Fenster blockiert.', link: session.url };
+      } catch (error) {
+        if (popup) popup.close();
+        portalMessage = { text: error.userMessage || 'Die Verknüpfung konnte nicht gestartet werden.', error: true };
+      }
+      showPortalState();
+    }
+    function disconnectPortal() {
+      if (!window.confirm('Die Verbindung zu Repull in Husora trennen? Der Schlüssel wird aus diesem Browser gelöscht.')) return;
+      if (bookings.some((booking) => booking.source) && window.confirm('Sollen die von den Portalen importierten Buchungen ebenfalls aus dem Kalender entfernt werden?')) {
+        const next = bookings.filter((booking) => !booking.source);
+        if (persistBookings(next)) bookings = next;
+      }
+      portalSync = { apiKey: '', lastSync: '', watermark: '', mapping: {}, listings: [], connections: [], unmapped: [], auto: true };
+      portalMessage = null;
+      persistPortal();
+      render();
+      showToast('Verbindung zu Repull wurde getrennt.');
+    }
+    function portalCardHtml() {
+      const connected = portalConnected();
+      const lastSync = portalSync.lastSync ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(portalSync.lastSync)) : 'noch nie';
+      const message = portalMessage ? `<p class="portal-message ${portalMessage.error ? 'error' : ''}" role="status">${escapeHtml(portalMessage.text)}${portalMessage.link ? ` <a href="${escapeHtml(portalMessage.link)}" target="_blank" rel="noopener noreferrer">Verknüpfung öffnen ↗</a>` : ''}</p>` : '';
+      if (!connected) {
+        return `<section class="card portal-card"><div class="card-head"><div><h2 class="card-title">Buchungsportale verbinden</h2><p class="card-caption">Airbnb, Booking.com und Vrbo über Repull: Buchungen erscheinen automatisch im Kalender.</p></div><span class="status pending">Nicht verbunden</span></div>
+          <form id="portal-key-form" class="portal-body"><label><span class="form-label">Repull API-Schlüssel</span><input class="form-control" id="portal-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk_live_…" aria-describedby="portal-key-hint"></label>
+          <button type="submit" class="primary-btn" ${portalBusy ? 'disabled' : ''}>Verbinden</button></form>
+          <p class="portal-hint" id="portal-key-hint">Den Schlüssel erstellst du in deinem Repull-Konto unter <a href="https://repull.dev/dashboard/keys" target="_blank" rel="noopener noreferrer">repull.dev/dashboard/keys</a>. Er wird nur in diesem Browser gespeichert und direkt an Repull gesendet. Auf gemeinsam genutzten Geräten bitte nicht verwenden.</p>${message}</section>`;
+      }
+      const providerLabel = (provider) => portalSourceName(provider.replace(/_/g, '.').toLowerCase().replace('booking.com.extranet.login', 'booking.com').replace('bookingcom', 'booking.com'));
+      const connections = portalSync.connections.length ? `<ul class="portal-connections">${portalSync.connections.map((entry) => `<li><strong>${escapeHtml(providerLabel(entry.provider))}</strong><span class="portal-pill ${entry.status === 'active' ? 'ok' : 'warn'}">${entry.status === 'active' ? 'Aktiv' : escapeHtml(entry.status || 'Unbekannt')}</span>${entry.needsAction && entry.fixUrl ? `<a href="${escapeHtml(entry.fixUrl)}" target="_blank" rel="noopener noreferrer">Beheben ↗</a>` : ''}</li>`).join('')}</ul>` : '<p class="portal-hint">Noch kein Portal-Konto verknüpft. Mit „Portal-Konto verknüpfen“ verbindest du Airbnb, Booking.com oder Vrbo.</p>';
+      const mapping = portalSync.listings.length ? `<div class="portal-mapping"><h3>Unterkünfte den Ferienhäusern zuordnen</h3>${portalSync.listings.map((listing) => `<label class="portal-map-row ${portalSync.unmapped.includes(listing.id) ? 'attention' : ''}"><span>${escapeHtml(listing.name)}</span><select class="form-control" data-portal-listing="${escapeHtml(listing.id)}" aria-label="Ferienhaus für ${escapeHtml(listing.name)}"><option value="">Nicht importieren</option>${properties.map((property) => `<option value="${escapeHtml(property.id)}" ${portalSync.mapping[listing.id] === property.id ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select></label>`).join('')}</div>` : '';
+      return `<section class="card portal-card"><div class="card-head"><div><h2 class="card-title">Buchungsportale</h2><p class="card-caption">Über Repull verbunden · Schlüssel …${escapeHtml(portalSync.apiKey.slice(-4))} · letzter Abgleich: ${escapeHtml(lastSync)}</p></div><span class="status active">Verbunden</span></div>
+        <div class="portal-body portal-actions"><button type="button" class="primary-btn" data-action="portal-sync" ${portalBusy ? 'disabled' : ''}>${portalBusy ? 'Abgleich läuft …' : 'Jetzt abgleichen'}</button><button type="button" class="secondary-btn" data-action="portal-connect" ${portalBusy ? 'disabled' : ''}>Portal-Konto verknüpfen</button><button type="button" class="secondary-btn" data-action="portal-disconnect">Trennen</button></div>
+        <div class="portal-body">${connections}${mapping}<label class="portal-auto"><input type="checkbox" id="portal-auto-toggle" ${portalSync.auto ? 'checked' : ''}> Automatisch alle 15 Minuten abgleichen, solange die App geöffnet ist</label></div>${message}</section>`;
+    }
     let costCurrency = 'SEK';
     try { if (localStorage.getItem('stugliv-cost-currency') === 'EUR') costCurrency = 'EUR'; } catch (error) { /* Einstellung optional */ }
     let fxRate = { rate: 0.09, date: '', live: false };
@@ -1909,6 +2077,7 @@
     }
     function editBooking(booking) {
       if (!booking) return;
+      if (booking.source) { showToast(`Diese Buchung wird über ${portalSourceName(booking.source)} verwaltet und kann hier nicht geändert werden.`); return; }
       editingBookingId = booking.id;
       bookingView = 'form';
       bookingDraft = {
@@ -2113,6 +2282,7 @@
         const nightCount = (startDate, endDate) => Math.round((new Date(`${endDate}T12:00:00`) - new Date(`${startDate}T12:00:00`)) / 86400000);
         return `<div class="welcome"><div><p class="eyebrow">Buchungsplanung · Schweden</p><h1>Buchungen</h1><p class="subtitle">${singleHouse() ? 'Alle gebuchten Aufenthalte mit An- und Abreise und Gastdetails.' : 'Alle gebuchten Aufenthalte mit An- und Abreise, Ferienhaus und Gastdetails.'}</p></div><button class="primary-btn" data-action="new-booking">${icon('plus')} Neue Buchung</button></div>
           <section class="card booking-automation"><div class="booking-automation-main"><div><h2 class="card-title">Automatik nach Buchung</h2><p class="card-caption">Startet nach einer Buchung automatisch Hausservice-Dienste. Welche Dienste das sind, legst du später fest.</p></div><label class="currency-switch automation-switch"><span class="${bookingAutomation ? '' : 'on'}">Aus</span><input type="checkbox" id="booking-automation-toggle" role="switch" aria-label="Automatik nach Buchung" ${bookingAutomation ? 'checked' : ''}><span class="currency-track"></span><span class="${bookingAutomation ? 'on' : ''}">An</span></label></div><p class="booking-automation-note ${bookingAutomation ? 'active' : ''}">${bookingAutomation ? 'Automatik ist aktiv. Es sind noch keine Dienste hinterlegt, daher wird aktuell nichts gestartet.' : 'Automatik ist ausgeschaltet.'}</p></section>
+          ${portalCardHtml()}
           <section class="card booking-overview"><div class="card-head"><div><h2 class="card-title">Gebuchte Termine</h2><p class="card-caption">${bookings.length} ${bookings.length === 1 ? 'Buchung' : 'Buchungen'} gespeichert</p></div></div>
             ${sortedBookings.length ? `<div class="booking-overview-list">${sortedBookings.map((booking) => {
               const propertyName = properties.find((property) => property.id === booking.propertyId)?.name || 'Ferienhaus entfernt';
@@ -2120,12 +2290,12 @@
               const guests = Number(booking.guestCount) || 1;
               const nights = nightCount(booking.startDate, booking.endDate);
               return `<article class="booking-overview-card ${checkedOut ? 'past' : ''}">
-                <div class="booking-overview-title"><strong>${escapeHtml(booking.guestName)}</strong><small>${escapeHtml(propertyName)}</small></div>
+                <div class="booking-overview-title"><strong>${escapeHtml(booking.guestName)}${booking.source ? `<span class="booking-source">${escapeHtml(portalSourceName(booking.source))}</span>` : ''}</strong><small>${escapeHtml(propertyName)}</small></div>
                 <span class="booking-status ${checkedOut ? 'past' : ''}">${checkedOut ? 'Ausgecheckt' : 'Gebucht'}</span>
                 <div class="booking-overview-dates"><div class="booking-overview-date"><span>Anreise</span><strong>${escapeHtml(detailedDate(booking.startDate))}</strong></div><div class="booking-overview-date"><span>Abreise</span><strong>${escapeHtml(detailedDate(booking.endDate))}</strong></div></div>
                 <div class="booking-overview-meta"><span>${guests} ${guests === 1 ? 'Person' : 'Personen'}</span><span>${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}</span><span>Ankunft um ${escapeHtml(booking.arrivalTime || '—')}</span></div>
                 ${booking.notes ? `<div class="booking-overview-notes">${escapeHtml(booking.notes)}</div>` : ''}
-                <div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>
+                ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten">Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen">Löschen</button></div>`}
               </article>`;
             }).join('')}</div>` : '<div class="empty">Noch keine Buchungen vorhanden. Über „Neue Buchung“ kannst du einen Aufenthalt erfassen.</div>'}
           </section>`;
@@ -3759,6 +3929,7 @@
       const bookingToDelete = event.target.closest('[data-delete-booking]');
       if (bookingToDelete) {
         const booking = bookings.find((item) => item.id === bookingToDelete.dataset.deleteBooking);
+        if (booking?.source) { showToast(`Diese Buchung wird über ${portalSourceName(booking.source)} verwaltet.`); return; }
         if (!booking || !window.confirm(`Möchtest du die Buchung von „${booking.guestName}“ wirklich löschen?`)) return;
         const nextBookings = bookings.filter((item) => item.id !== booking.id);
         if (!persistBookings(nextBookings)) return;
@@ -3904,6 +4075,9 @@
         currentPage = 'inspections';
         render();
       }
+      if (action === 'portal-sync') { syncPortalBookings(); return; }
+      if (action === 'portal-connect') { openPortalConnect(); return; }
+      if (action === 'portal-disconnect') { disconnectPortal(); return; }
       if (action === 'go-back') { goBack(); return; }
       if (action === 'find-providers') {
         providerProperty = event.target.closest('[data-action]').dataset.property;
@@ -3991,6 +4165,18 @@
       }
     });
     pageContent.addEventListener('change', async (event) => {
+      if (event.target.matches('[data-portal-listing]')) {
+        const listingId = event.target.dataset.portalListing;
+        if (event.target.value) portalSync.mapping[listingId] = event.target.value; else delete portalSync.mapping[listingId];
+        portalSync.watermark = '';
+        if (persistPortal()) syncPortalBookings();
+        return;
+      }
+      if (event.target.id === 'portal-auto-toggle') {
+        portalSync.auto = event.target.checked;
+        persistPortal();
+        return;
+      }
       if (event.target.id === 'booking-automation-toggle') {
         bookingAutomation = event.target.checked;
         try { localStorage.setItem('stugliv-booking-automation', bookingAutomation ? 'on' : 'off'); } catch (error) { showToast('Einstellung konnte nicht gespeichert werden.'); }
@@ -4154,6 +4340,15 @@
       }
     });
     pageContent.addEventListener('submit', (event) => {
+      if (event.target.id === 'portal-key-form') {
+        event.preventDefault();
+        const key = String(document.getElementById('portal-key').value || '').trim();
+        if (!/^sk_[A-Za-z0-9_-]{8,}$/.test(key)) { portalMessage = { text: 'Bitte einen gültigen Repull-Schlüssel eingeben (beginnt mit sk_).', error: true }; render(); return; }
+        portalSync = { ...portalSync, apiKey: key, watermark: '' };
+        portalMessage = null;
+        if (persistPortal()) syncPortalBookings();
+        return;
+      }
       if (event.target.id === 'booking-form') {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -5180,6 +5375,9 @@
     removePropertiesBeyondProfileCount();
     if (isEuro()) refreshFxRate();
     render();
+    const portalDue = () => portalConnected() && portalSync.auto && (!portalSync.lastSync || Date.now() - new Date(portalSync.lastSync).getTime() > PORTAL_SYNC_INTERVAL);
+    if (portalDue()) syncPortalBookings();
+    setInterval(() => { if (portalDue()) syncPortalBookings(); }, 60 * 1000);
   </script>
 </body>
 </html>
