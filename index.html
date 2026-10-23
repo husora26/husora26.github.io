@@ -210,6 +210,23 @@
     .partner-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink); }
     .partner-list em { font-style: normal; color: var(--muted); white-space: nowrap; }
     .favorite-btn.active { border-color: #f0dfd4; color: #bd694e; background: #fff5ef; }
+    .add-choice-modal { width: min(520px, 100%); }
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .choice-card { display: grid; gap: 6px; align-content: start; padding: 16px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #fbfcfa; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .choice-card:hover, .choice-card:focus-visible { border-color: var(--green); box-shadow: 0 4px 16px rgba(40, 73, 51, .12); outline: none; }
+    .choice-card strong { font-size: 14px; }
+    .choice-card span { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+    @media (max-width: 520px) { .choice-grid { grid-template-columns: 1fr; } }
+    .import-modes { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; border: 0; }
+    .import-modes legend { padding: 0; margin-bottom: 6px; }
+    .import-mode { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; cursor: pointer; }
+    .import-mode:has(input:checked) { border-color: var(--green); background: #eef5ef; }
+    .import-mode input { margin-top: 3px; accent-color: var(--green); }
+    .import-mode strong { display: block; font-size: 12.5px; }
+    .import-mode small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .facts-plans { padding: 4px 18px 6px; }
+    .facts-plans h3 { margin: 12px 0 8px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+    .facts-plan { display: block; width: 100%; max-height: 460px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 9px; background: white; object-fit: contain; }
     .import-modal { width: min(520px, 100%); }
     .import-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
     .import-status { margin: 12px 0 0; padding: 10px 13px; border-radius: 9px; color: #1f5a3f; background: #e8f3ec; font-size: 12px; line-height: 1.5; }
@@ -923,11 +940,24 @@
       <div class="page" id="page-content"></div>
     </main>
   </div>
+  <div class="modal-backdrop" id="add-choice-modal" role="dialog" aria-modal="true" aria-labelledby="add-choice-title">
+    <section class="modal add-choice-modal">
+      <div class="modal-head"><div><h2 id="add-choice-title">Ferienhaus hinzufügen</h2><p>Wie möchtest du das Haus anlegen?</p></div><button class="close-btn" type="button" id="close-add-choice" aria-label="Schließen">✕</button></div>
+      <div class="choice-grid">
+        <button type="button" class="choice-card" data-add-choice="manual"><strong>Manuelle Eingabe</strong><span>Du trägst die Daten selbst in die Eingabemaske ein.</span></button>
+        <button type="button" class="choice-card" data-add-choice="import"><strong>Automatischer Import</strong><span>Du fügst den Link zu einem Inserat ein, Husora liest die Daten für dich ein.</span></button>
+      </div>
+    </section>
+  </div>
   <div class="modal-backdrop" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
     <section class="modal import-modal">
       <div class="modal-head"><div><h2 id="import-modal-title">Ferienhaus importieren</h2><p>Link zu einem Inserat einfügen</p></div><button class="close-btn" type="button" id="close-import-modal" aria-label="Schließen">✕</button></div>
       <label><span class="form-label">Link zum Inserat</span><input class="form-control" id="import-url" type="url" inputmode="url" autocomplete="off" placeholder="https://www.fastighetsbyran.com/…/objekt/?objektID=…"></label>
-      <p class="import-hint">Husora liest Adresse, Gebäudedaten, Kosten und 2–3 Fotos aus dem Inserat und legt daraus ein Ferienhaus an. Du kannst alles vor dem Speichern prüfen und ändern.<br><strong>Unterstützt:</strong> Fastighetsbyrån (fastighetsbyran.com). Hemnet blockiert automatische Abrufe und kann daher nicht eingelesen werden.</p>
+      <fieldset class="import-modes"><legend class="form-label">Umfang des Imports</legend>
+        <label class="import-mode"><input type="radio" name="import-mode" value="simple" checked><span><strong>Einfacher Import</strong><small>Nur die üblichen Felder der Eingabemaske: Adresse, Baujahr, Flächen, Zimmer, Heizung und Kamin.</small></span></label>
+        <label class="import-mode"><input type="radio" name="import-mode" value="full"><span><strong>Umfangreicher Import</strong><small>Zusätzlich Beschreibungen, Gebäude-, Grundstücks- und Kostenangaben (automatisch ins Deutsche übersetzt), 4 Fotos und Grundrisse.</small></span></label>
+      </fieldset>
+      <p class="import-hint">Du kannst alles vor dem Speichern prüfen und ändern. Für die Übersetzung werden die Inseratstexte an einen Übersetzungsdienst gesendet.<br><strong>Unterstützt:</strong> Fastighetsbyrån (fastighetsbyran.com). Hemnet blockiert automatische Abrufe und kann daher nicht eingelesen werden.</p>
       <p class="import-status" id="import-status" role="status" aria-live="polite" hidden></p>
       <div class="form-actions"><button type="button" class="secondary-btn" id="import-cancel">Abbrechen</button><button type="button" class="primary-btn" id="import-run">Daten einlesen</button></div>
     </section>
@@ -1603,7 +1633,7 @@
         button.setAttribute('aria-label', `Benutzerprofil: ${profileData.name}`);
       });
     }
-    function compressPropertyPhoto(file) {
+    function compressPropertyPhoto(file, maxEdge = 1200, quality = 0.78) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = () => reject(new Error('Bilddatei konnte nicht gelesen werden.'));
@@ -1611,13 +1641,12 @@
           const image = new Image();
           image.onerror = () => reject(new Error('Die ausgewählte Datei ist kein lesbares Bild.'));
           image.onload = () => {
-            const maxEdge = 1200;
             const scale = Math.min(1, maxEdge / Math.max(image.naturalWidth, image.naturalHeight));
             const canvas = document.createElement('canvas');
             canvas.width = Math.round(image.naturalWidth * scale);
             canvas.height = Math.round(image.naturalHeight * scale);
             canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.78));
+            resolve(canvas.toDataURL('image/jpeg', quality));
           };
           image.src = String(reader.result);
         };
@@ -1728,6 +1757,17 @@
     function canAddProperty() {
       return properties.length < currentPlan().houseLimit;
     }
+    function openAddChoice() {
+      if (!canAddProperty()) {
+        showToast(`Für mehr als ${FREE_HOUSE_LIMIT} Ferienhaus brauchst du Husora Pro – du kannst es unter „Versionen“ erwerben.`);
+        currentPage = 'plans';
+        render();
+        return;
+      }
+      document.getElementById('add-choice-modal').classList.add('open');
+      document.querySelector('#add-choice-modal [data-add-choice="manual"]').focus();
+    }
+    function closeAddChoice() { document.getElementById('add-choice-modal').classList.remove('open'); }
     function openPropertyModal(property = null) {
       if (!property && !canAddProperty()) {
         showToast(`Für mehr als ${FREE_HOUSE_LIMIT} Ferienhaus brauchst du Husora Pro – du kannst es unter „Versionen“ erwerben.`);
@@ -2172,7 +2212,7 @@
         <div class="house-settings-actions"><button type="submit" class="secondary-btn">Übernehmen</button><button type="button" class="primary-btn" id="buy-pro-btn" data-action="open-pro" data-plan="pro" ${needsPro ? '' : 'hidden'}>Husora Pro erwerben</button></div></form></section>`;
     }
     function propertiesPage() {
-      return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div>${isPro() ? `<div class="header-actions"><button class="secondary-btn" data-action="import-property">Ferienhaus importieren</button><button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button></div>` : ''}</div>
+      return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div>${isPro() ? `<button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button>` : ''}</div>
         ${houseSettingsCard()}
         <div class="property-grid ${singleHouse() ? 'single' : ''}">${properties.map((rawProperty) => {
           const property = propertyWithDefaults(rawProperty);
@@ -2227,7 +2267,7 @@
           <article class="property-card"><span class="form-label">Region</span><strong>${escapeHtml(property.region || '')}</strong></article>
         </div></div></section>
         ${(() => {
-          if (!(property.facts || []).length && !property.description) return '';
+          if (!(property.facts || []).length && !property.description && !(property.floorplans || []).length) return '';
           const groups = [];
           (property.facts || []).forEach((fact) => {
             let group = groups.find((entry) => entry.title === fact.group);
@@ -2235,7 +2275,7 @@
             group.items.push(fact);
           });
           const safeSource = /^https:\/\//.test(property.sourceUrl || '') ? property.sourceUrl : '';
-          return `<section class="card"><div class="card-head"><div><h2 class="card-title">Weitere Angaben aus dem Inserat</h2><p class="card-caption">${escapeHtml(property.sourceName || 'Importiert')}</p></div>${safeSource ? `<a class="text-btn" href="${escapeHtml(safeSource)}" target="_blank" rel="noopener noreferrer">Inserat öffnen ↗</a>` : ''}</div>${property.description ? `<p class="facts-description">${escapeHtml(property.description)}</p>` : ''}${groups.map((group) => `<div class="facts-group"><h3>${escapeHtml(group.title)}</h3><dl class="facts-grid">${group.items.map((fact) => `<div><dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}</dd></div>`).join('')}</dl></div>`).join('')}</section>`;
+          return `<section class="card"><div class="card-head"><div><h2 class="card-title">Weitere Angaben aus dem Inserat</h2><p class="card-caption">${escapeHtml(property.sourceName || 'Importiert')}</p></div>${safeSource ? `<a class="text-btn" href="${escapeHtml(safeSource)}" target="_blank" rel="noopener noreferrer">Inserat öffnen ↗</a>` : ''}</div>${property.description ? `<p class="facts-description">${escapeHtml(property.description)}</p>` : ''}${(property.floorplans || []).length ? `<div class="facts-plans"><h3>Grundrisse</h3>${property.floorplans.map((source) => `<img class="facts-plan" src="${escapeHtml(source)}" alt="Grundriss ${escapeHtml(property.name)}" loading="lazy">`).join('')}</div>` : ''}${groups.map((group) => `<div class="facts-group"><h3>${escapeHtml(group.title)}</h3><dl class="facts-grid">${group.items.map((fact) => `<div><dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}</dd></div>`).join('')}</dl></div>`).join('')}</section>`;
         })()}
         <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.lastRenovations ? escapeHtml(property.lastRenovations).replace(/\\n/g, '<br>') : 'Noch keine Sanierungen eingetragen.'}</div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
@@ -3718,8 +3758,7 @@
         }
         return;
       }
-      if (action === 'add-property') openPropertyModal();
-      if (action === 'import-property') openImportModal();
+      if (action === 'add-property') openAddChoice();
       if (action === 'open-pro') openProModal(Number(document.getElementById('house-count-input')?.value) || profileData.desiredHouseCount || 2, event.target.closest('[data-action]').dataset.plan || 'pro');
       if (action === 'edit-property') {
         const property = properties.find((item) => item.id === event.target.closest('[data-action]').dataset.property);
@@ -4164,7 +4203,7 @@
       if (event.target.id === 'pro-modal') closeProModal();
       if (event.target.id === 'pro-retry') renderPaypalButtons();
       if (event.target.id === 'pro-done') closeProModal();
-      if (event.target.id === 'pro-add-house') { closeProModal(); openPropertyModal(); }
+      if (event.target.id === 'pro-add-house') { closeProModal(); openAddChoice(); }
     });
     document.addEventListener('input', (event) => {
       if (event.target.id !== 'house-count-input') return;
@@ -4298,21 +4337,25 @@
       if (costValue('Fastighetsavgift/-skatt')) costs.propertyFee = costValue('Fastighetsavgift/-skatt');
       const facts = [];
       const price = importClean(base.pris);
-      if (price) facts.push({ group: 'Inserat', label: base.pristyp ? `Preis (${base.pristyp})` : 'Preis', value: price });
-      if (base.webbnummer) facts.push({ group: 'Inserat', label: 'Webbnummer', value: importClean(base.webbnummer) });
+      const priceTypes = { 'utgångspris': 'Ausgangspreis', 'accepterat pris': 'Akzeptierter Preis', slutpris: 'Endpreis' };
+      if (price) facts.push({ group: 'Inserat', label: base.pristyp ? `Preis (${priceTypes[String(base.pristyp).toLowerCase()] || base.pristyp})` : 'Preis', value: price, tv: false });
+      if (base.webbnummer) facts.push({ group: 'Inserat', label: 'Webbnummer', value: importClean(base.webbnummer), tv: false });
       if (base.antalRum) facts.push({ group: 'Gebäude', label: 'Zimmer', value: importClean(base.antalRum) });
-      if (base.area) facts.push({ group: 'Gebäude', label: importClean(base.areaNamn) || 'Fläche', value: `${importClean(base.area)}` });
-      posts.forEach((entry) => facts.push({ group: entry.group, label: entry.label, value: entry.value }));
-      (object.objektsbeskrivning?.rumsbeskrivning || []).forEach((room) => { if (room.rubrik && importClean(room.broedText)) facts.push({ group: 'Räume', label: room.rubrik, value: importClean(room.broedText) }); });
+      if (base.area) facts.push({ group: 'Gebäude', label: 'Wohn-/Nebenfläche', value: importClean(base.area).replace(/kvm/gi, 'm²'), tv: false });
+      posts.forEach((entry) => facts.push({ group: entry.group, label: entry.label, value: entry.value, tl: entry.label === entry.rawLabel }));
+      (object.objektsbeskrivning?.rumsbeskrivning || []).forEach((room) => { if (room.rubrik && importClean(room.broedText)) facts.push({ group: 'Räume', label: room.rubrik, value: importClean(room.broedText), tl: true }); });
       const broker = object.maeklare;
-      if (broker && (broker.foernamn || broker.efternamn)) facts.push({ group: 'Kontakt', label: 'Makler', value: [`${broker.foernamn || ''} ${broker.efternamn || ''}`.trim(), object.kontor?.namn ? `Fastighetsbyrån ${object.kontor.namn}` : '', broker.mobiltelefonnummer || ''].filter(Boolean).join(' · ') });
-      const photoUrls = [...new Set((object.bilderObjekt?.bilder || []).map((entry) => entry.url).filter((url) => /^https:\/\//.test(url || '')))].slice(0, 3);
-      if (!photoUrls.length && /^https:\/\//.test(object.bild?.url || '')) photoUrls.push(object.bild.url);
+      if (broker && (broker.foernamn || broker.efternamn)) facts.push({ group: 'Kontakt', label: 'Makler', tv: false, value: [`${broker.foernamn || ''} ${broker.efternamn || ''}`.trim(), object.kontor?.namn ? `Fastighetsbyrån ${object.kontor.namn}` : '', broker.mobiltelefonnummer || ''].filter(Boolean).join(' · ') });
+      const imageUrl = (entry) => (/^https:\/\//.test(entry?.url || '') ? entry.url : '');
+      const floorplanUrls = [...new Set([...(object.bilderObjekt?.planritning || []), ...(object.basfaktaPlanloesning?.planloesningar || [])].map(imageUrl).filter(Boolean))].slice(0, 2);
+      const photoUrls = [...new Set([...(object.bilderObjekt?.bilder || []).map(imageUrl), imageUrl(object.bild)].filter((url) => url && !floorplanUrls.includes(url)))].slice(0, 4);
       return {
         sourceName: 'Fastighetsbyrån',
         sourceUrl: link,
         description: importClean(object.beskrivningKort),
         photoUrls,
+        floorplanUrls,
+        heatingText,
         costs,
         facts,
         fields: {
@@ -4325,8 +4368,7 @@
           rooms: base.oformateratAntalRum ? String(Math.round(base.oformateratAntalRum)) : importNumber(base.antalRum),
           heatingSystem: importHeating(heatingText),
           fireplace: fireplace.fireplace,
-          fireplaceType: fireplace.fireplaceType,
-          fireplaceNotes: heatingText ? `Heizung laut Inserat: ${heatingText}`.slice(0, 300) : ''
+          fireplaceType: fireplace.fireplaceType
         }
       };
     }
@@ -4346,11 +4388,85 @@
         return mapFastighetsbyran(await response.json(), link);
       }
     }];
-    async function importPhoto(url) {
-      const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}&w=1200&h=1200&fit=inside&output=jpg&q=80`;
+    async function importPhoto(url, { edge = 1000, quality = 0.72, width = 1200 } = {}) {
+      const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}&w=${width}&h=${width}&fit=inside&output=jpg&q=80`;
       const response = await fetch(proxied);
       if (!response.ok) throw new Error(`Bild ${response.status}`);
-      return compressPropertyPhoto(await response.blob());
+      return compressPropertyPhoto(await response.blob(), edge, quality);
+    }
+    const translationCache = new Map();
+    const importUnits = (text) => String(text).replace(/kr\/år/gi, 'kr/Jahr').replace(/kwh\/år/gi, 'kWh/Jahr').replace(/\bkvm\b/gi, 'm²');
+    function chunkForTranslation(text, limit) {
+      const pieces = text.split('\n').flatMap((line) => (line.length <= limit ? [line] : line.split(/(?<=[.!?])\s+/).flatMap((sentence) => (sentence.length <= limit ? [sentence] : sentence.match(new RegExp(`.{1,${limit}}`, 'g')) || []))));
+      const chunks = [];
+      pieces.forEach((piece) => {
+        const last = chunks[chunks.length - 1];
+        if (last !== undefined && last.length + piece.length + 1 <= limit) chunks[chunks.length - 1] = `${last}\n${piece}`;
+        else chunks.push(piece);
+      });
+      return chunks;
+    }
+    async function translateWithGoogle(text) {
+      const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=sv&tl=de&dt=t&q=${encodeURIComponent(text)}`);
+      if (!response.ok) throw new Error(`Übersetzung ${response.status}`);
+      const data = await response.json();
+      const result = (data[0] || []).map((part) => part[0] || '').join('');
+      if (!result) throw new Error('Leere Übersetzung');
+      return result;
+    }
+    async function translateWithMyMemory(text) {
+      const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=sv%7Cde`);
+      if (!response.ok) throw new Error(`Übersetzung ${response.status}`);
+      const data = await response.json();
+      const result = data?.responseData?.translatedText;
+      if (!result || data.quotaFinished || /MYMEMORY WARNING/i.test(result)) throw new Error('Übersetzungslimit erreicht');
+      return result;
+    }
+    async function translateToGerman(text) {
+      const clean = importClean(text);
+      if (!clean) return '';
+      if (!/[a-zåäö]{3,}/i.test(clean.replace(/\b(kr|kvm|kwh|år|m2)\b/gi, ''))) return importUnits(clean);
+      if (translationCache.has(clean)) return translationCache.get(clean);
+      const parts = [];
+      for (const chunk of chunkForTranslation(clean, 1500)) {
+        try { parts.push(await translateWithGoogle(chunk)); }
+        catch (error) {
+          const fallback = [];
+          for (const small of chunkForTranslation(chunk, 450)) fallback.push(await translateWithMyMemory(small));
+          parts.push(fallback.join('\n'));
+        }
+      }
+      const result = importUnits(parts.join('\n').replace(/[ \t]+\n/g, '\n').trim());
+      translationCache.set(clean, result);
+      return result;
+    }
+    async function runPool(items, limit, worker) {
+      let next = 0;
+      await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (next < items.length) { const index = next; next += 1; await worker(items[index], index); }
+      }));
+    }
+    async function translateImportResult(result, onProgress) {
+      const jobs = [];
+      const failures = { count: 0 };
+      const add = (text, assign) => { if (importClean(text)) jobs.push({ text, assign }); };
+      add(result.description, (value) => { result.description = value; });
+      add(result.heatingText, (value) => { result.heatingText = value; });
+      result.facts.forEach((fact) => {
+        if (fact.tv !== false) add(fact.value, (value) => { fact.value = value; });
+        if (fact.tl) add(fact.label, (value) => { fact.label = value; });
+      });
+      let done = 0;
+      await runPool(jobs, 4, async (job) => {
+        try { job.assign(await translateToGerman(job.text)); }
+        catch (error) { failures.count += 1; console.warn('Übersetzung fehlgeschlagen:', error); }
+        done += 1;
+        onProgress(done, jobs.length);
+      });
+      result.facts.forEach((fact) => { delete fact.tv; delete fact.tl; });
+      result.translationFailures = failures.count;
+      result.translationTotal = jobs.length;
+      return result;
     }
     function setImportStatus(message, isError = false) {
       const status = document.getElementById('import-status');
@@ -4360,6 +4476,7 @@
     }
     function openImportModal() {
       document.getElementById('import-url').value = '';
+      document.querySelector('input[name="import-mode"][value="simple"]').checked = true;
       setImportStatus('');
       document.getElementById('import-run').disabled = false;
       document.getElementById('import-modal').classList.add('open');
@@ -4377,22 +4494,39 @@
       if (!source) { setImportStatus('Diese Seite wird noch nicht unterstützt. Aktuell funktioniert der Import mit Fastighetsbyrån (fastighetsbyran.com).', true); return; }
       const id = source.objectId(url);
       if (!id) { setImportStatus('Im Link fehlt die Objekt-ID (objektID=…). Bitte den Link der Objektseite verwenden.', true); return; }
+      const full = document.querySelector('input[name="import-mode"]:checked')?.value === 'full';
       run.disabled = true;
       try {
         setImportStatus('Inserat wird gelesen …');
         const result = await source.load(id, url.href);
-        setImportStatus(`Daten gelesen. ${result.photoUrls.length ? 'Fotos werden geladen …' : ''}`);
-        const photos = (await Promise.allSettled(result.photoUrls.map(importPhoto))).filter((entry) => entry.status === 'fulfilled').map((entry) => entry.value);
+        let photos = [];
+        let floorplans = [];
+        if (full) {
+          setImportStatus('Texte werden ins Deutsche übersetzt …');
+          await translateImportResult(result, (done, total) => setImportStatus(`Texte werden ins Deutsche übersetzt … (${done}/${total})`));
+          setImportStatus('Fotos und Grundrisse werden geladen …');
+          const [photoResults, planResults] = await Promise.all([
+            Promise.allSettled(result.photoUrls.map((photoUrl) => importPhoto(photoUrl))),
+            Promise.allSettled(result.floorplanUrls.map((planUrl) => importPhoto(planUrl, { edge: 1400, quality: 0.8, width: 1600 })))
+          ]);
+          photos = photoResults.filter((entry) => entry.status === 'fulfilled').map((entry) => entry.value);
+          floorplans = planResults.filter((entry) => entry.status === 'fulfilled').map((entry) => entry.value);
+        }
         closeImportModal();
         openPropertyModal();
         const form = document.getElementById('property-form');
-        Object.entries(result.fields).forEach(([name, value]) => { if (form.elements[name] && value) form.elements[name].value = value; });
+        const fields = { ...result.fields, ...(full && result.heatingText ? { fireplaceNotes: `Heizung laut Inserat: ${result.heatingText}`.slice(0, 300) } : {}) };
+        Object.entries(fields).forEach(([name, value]) => { if (form.elements[name] && value) form.elements[name].value = value; });
         pendingPropertyPhotos = photos;
         pendingPropertyPhoto = photos[0] || '';
         renderPhotoGallery();
-        pendingImport = { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs };
+        pendingImport = full ? { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs, floorplans } : null;
         document.getElementById('property-modal-title').textContent = 'Importiertes Ferienhaus prüfen';
-        showToast(photos.length === result.photoUrls.length ? `Daten und ${photos.length} Fotos aus dem Inserat übernommen. Bitte prüfen und speichern.` : 'Daten übernommen. Nicht alle Fotos konnten geladen werden. Bitte prüfen und speichern.');
+        const notes = [];
+        if (full && result.translationFailures) notes.push(result.translationFailures >= result.translationTotal ? 'Die Übersetzung war nicht erreichbar, die Texte stehen im Original.' : 'Einige Texte konnten nicht übersetzt werden.');
+        if (full && photos.length < result.photoUrls.length) notes.push('Nicht alle Fotos konnten geladen werden.');
+        if (full && floorplans.length < result.floorplanUrls.length) notes.push('Nicht alle Grundrisse konnten geladen werden.');
+        showToast(full ? `Daten, ${photos.length} Fotos${floorplans.length ? ` und ${floorplans.length} Grundriss${floorplans.length === 1 ? '' : 'e'}` : ''} übernommen. ${notes.join(' ')} Bitte prüfen und speichern.`.replace(/\s+/g, ' ') : 'Daten aus dem Inserat übernommen. Bitte prüfen und speichern.');
       } catch (error) {
         console.error('Import fehlgeschlagen:', error);
         setImportStatus(error.userMessage || 'Der Import ist fehlgeschlagen. Bitte den Link prüfen und erneut versuchen.', true);
@@ -4400,6 +4534,15 @@
         run.disabled = false;
       }
     }
+    document.getElementById('close-add-choice').addEventListener('click', closeAddChoice);
+    document.getElementById('add-choice-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'add-choice-modal') closeAddChoice();
+      const choice = event.target.closest('[data-add-choice]')?.dataset.addChoice;
+      if (!choice) return;
+      closeAddChoice();
+      if (choice === 'manual') openPropertyModal();
+      else openImportModal();
+    });
     document.getElementById('close-import-modal').addEventListener('click', closeImportModal);
     document.getElementById('import-cancel').addEventListener('click', closeImportModal);
     document.getElementById('import-run').addEventListener('click', runPropertyImport);
@@ -4432,7 +4575,7 @@
         condition: String(formData.get('condition')),
         lastRenovations: String(formData.get('lastRenovations')).trim(),
         plannedRenovations: String(formData.get('plannedRenovations')).trim(),
-        ...(!previous && pendingImport ? { facts: pendingImport.facts, description: pendingImport.description, sourceUrl: pendingImport.sourceUrl, sourceName: pendingImport.sourceName } : {})
+        ...(!previous && pendingImport ? { facts: pendingImport.facts, description: pendingImport.description, sourceUrl: pendingImport.sourceUrl, sourceName: pendingImport.sourceName, floorplans: pendingImport.floorplans || [] } : {})
       });
       const index = properties.findIndex((item) => item.id === property.id);
       if (index === -1) properties.push(property);
@@ -4546,6 +4689,7 @@
         closeControlPositions();
         closeProModal();
         closeImportModal();
+        closeAddChoice();
         autoModal.classList.remove('open');
       }
     });
