@@ -324,6 +324,34 @@
     .photo-thumb.cover { border-color: var(--green); }
     .photo-thumb .cover-badge { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0; color: white; background: rgba(40, 92, 69, .85); font-size: 9px; font-weight: 700; text-align: center; }
     .photo-thumb .thumb-remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border: 0; border-radius: 50%; color: white; background: rgba(0, 0, 0, .6); font-size: 12px; line-height: 18px; cursor: pointer; }
+    .pro-modal { width: min(560px, 100%); max-height: 92vh; overflow-y: auto; }
+    .pro-box { margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcfa; }
+    .pro-box h3 { margin: 0 0 8px; font-size: 13px; }
+    .pro-price { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .pro-price strong { font-size: 26px; letter-spacing: -.5px; }
+    .pro-price span { color: var(--muted); font-size: 11px; }
+    .pro-features { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 12px; }
+    .pro-features li::before { content: '✓'; margin-right: 8px; color: var(--green); font-weight: 800; }
+    .pro-summary { display: grid; gap: 6px; margin: 0; font-size: 12px; }
+    .pro-summary div { display: flex; justify-content: space-between; gap: 12px; }
+    .pro-summary dt { color: var(--muted); }
+    .pro-summary dd { margin: 0; font-weight: 700; text-align: right; }
+    .pro-total { padding-top: 8px; border-top: 1px solid var(--line); font-size: 14px; }
+    .pro-legal { display: grid; gap: 9px; margin: 10px 0 14px; }
+    .pro-legal label { display: flex; align-items: flex-start; gap: 9px; font-size: 11px; line-height: 1.5; cursor: pointer; }
+    .pro-legal input { margin-top: 2px; accent-color: var(--green); }
+    .pro-test-note { margin-bottom: 12px; padding: 9px 12px; border-radius: 9px; color: #745a35; background: #fff8e9; font-size: 11px; line-height: 1.5; }
+    .pro-paypal { min-height: 52px; }
+    .pro-fineprint { margin: 10px 0 0; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+    .pro-success { text-align: center; padding: 6px 0 2px; }
+    .pro-success .pro-check { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%; color: white; background: #2f8a57; font-size: 26px; }
+    .house-settings-card { margin-bottom: 16px; }
+    .house-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 18px 6px; }
+    .house-settings-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 18px 16px; }
+    .pro-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .pro-badge.on { color: #1f6b41; background: #e2f2e8; }
+    .pro-badge.off { color: #4f5852; background: #eceeea; }
+    @media (max-width: 520px) { .house-settings-grid { grid-template-columns: 1fr; } }
     .house-map-card { margin-top: 16px; }
     .house-map { display: block; width: 100%; height: 240px; border: 0; border-radius: 0 0 11px 11px; background: #e8eee4; }
     .photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
@@ -841,6 +869,12 @@
       <div class="page" id="page-content"></div>
     </main>
   </div>
+  <div class="modal-backdrop" id="pro-modal" role="dialog" aria-modal="true" aria-labelledby="pro-modal-title">
+    <section class="modal pro-modal">
+      <div class="modal-head"><div><h2 id="pro-modal-title">Husora Pro erwerben</h2><p id="pro-modal-subtitle"></p></div><button class="close-btn" type="button" id="close-pro-modal" aria-label="Schließen">✕</button></div>
+      <div id="pro-modal-body"></div>
+    </section>
+  </div>
   <div class="modal-backdrop" id="control-positions-modal" role="dialog" aria-modal="true" aria-labelledby="control-positions-title">
     <section class="modal send-plan-modal">
       <div class="modal-head"><div><h2 id="control-positions-title">Kontrollpositionen</h2><p id="control-positions-subtitle"></p></div><button class="close-btn" type="button" id="close-control-positions" aria-label="Schließen">✕</button></div>
@@ -1338,6 +1372,12 @@
     let profileData = { name: 'Max Mustermann', username: 'Alex', email: '', usage: 'rental', houseCount: 1 };
     const bookingsEnabled = () => profileData.usage !== 'self';
     const singleHouse = () => Number(profileData.houseCount) === 1;
+    // Konfiguration für Husora Pro. Mit client-id "sb" läuft PayPal im Testmodus (Sandbox).
+    const PRO_PLAN = { name: 'Husora Pro', price: '29.00', currency: 'EUR', paypalClientId: 'sb', supportEmail: '' };
+    const FREE_HOUSE_LIMIT = 1;
+    let proState = null;
+    try { proState = JSON.parse(localStorage.getItem('stugliv-pro') || 'null'); } catch (error) { proState = null; }
+    const isPro = () => Boolean(proState && proState.orderId);
     try {
       const savedProfile = localStorage.getItem('stugliv-profile');
       if (savedProfile) profileData = { ...profileData, ...JSON.parse(savedProfile) };
@@ -1345,6 +1385,11 @@
       console.error('Profil konnte nicht geladen werden:', error);
     }
     if (profileData.username === 'max.mustermann') profileData.username = 'Alex';
+    if (!proState && Number(profileData.houseCount) > FREE_HOUSE_LIMIT) {
+      // Bestehende Nutzung mit mehreren Häusern bleibt erhalten, damit keine Daten verloren gehen.
+      proState = { orderId: 'legacy', legacy: true, purchasedAt: new Date().toISOString() };
+      try { localStorage.setItem('stugliv-pro', JSON.stringify(proState)); } catch (error) { console.error(error); }
+    }
     let taskFilter = 'all';
     let taskPropertyFilter = 'all';
     let taskPriorityFilter = 'all';
@@ -1591,7 +1636,15 @@
       }
       return true;
     }
+    function canAddProperty() {
+      return isPro() ? properties.length < 50 : properties.length < FREE_HOUSE_LIMIT;
+    }
     function openPropertyModal(property = null) {
+      if (!property && !canAddProperty()) {
+        showToast(`Für mehr als ${FREE_HOUSE_LIMIT} Ferienhaus brauchst du Husora Pro.`);
+        openProModal(Math.max(2, properties.length + 1));
+        return;
+      }
       editingPropertyId = property?.id || null;
       const form = document.getElementById('property-form');
       form.reset();
@@ -1952,8 +2005,7 @@
             <label><span class="form-label">Name</span><input class="form-control" name="name" required maxlength="80" value="${escapeHtml(profileData.name)}"></label>
             <label><span class="form-label">Username</span><input class="form-control" name="username" required maxlength="40" value="${escapeHtml(profileData.username)}"></label>
             <label class="full"><span class="form-label">E-Mail</span><input class="form-control" name="email" type="email" maxlength="120" value="${escapeHtml(profileData.email)}"></label>
-            <label><span class="form-label">Nutzung der Immobilie</span><select class="form-control" name="usage"><option value="self" ${profileData.usage === 'self' ? 'selected' : ''}>Nur Eigennutzung</option><option value="rental" ${profileData.usage !== 'self' ? 'selected' : ''}>Eigennutzung und Vermietung</option></select></label>
-            <label><span class="form-label">Anzahl Ferienhäuser</span><input class="form-control" name="houseCount" type="number" min="1" max="50" required value="${Number(profileData.houseCount) || 1}"></label>
+            <div class="full profile-notice" style="margin-top:0">Nutzung der Immobilie und Anzahl der Ferienhäuser stellst du jetzt unter <button type="button" class="text-btn" data-page="properties" style="padding:0">Mein Ferienhaus</button> ein.</div>
             <div class="full"><p class="profile-section-title">E-Mail-Konto verbinden <span class="mail-status ${profileData.mailAccount ? 'connected' : ''}">${profileData.mailAccount ? '● Verbunden' + (profileData.mailConnectedAt ? ' seit ' + new Date(profileData.mailConnectedAt).toLocaleDateString('de-DE') : '') : 'Nicht verbunden'}</span></p></div>
             <label><span class="form-label">E-Mail-Anbieter</span><select class="form-control" name="mailProvider">${[['default', 'Standard-Mailprogramm'], ['gmail', 'Gmail'], ['outlook', 'Outlook / Microsoft 365'], ['icloud', 'iCloud Mail'], ['other', 'Anderer Anbieter']].map(([value, label]) => `<option value="${value}" ${(profileData.mailProvider || 'default') === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
             <label><span class="form-label">Absender-Adresse</span><input class="form-control" name="mailAccount" type="email" maxlength="120" placeholder="du@beispiel.de" value="${escapeHtml(profileData.mailAccount || '')}"></label>
@@ -1990,8 +2042,19 @@
         <div class="section-toolbar" style="padding:0 18px"><div class="toolbar-right"><select id="task-filter" class="filter-select" aria-label="Nach Status filtern"><option value="all">Alle Status</option>${taskStatuses.map((value) => `<option ${taskFilter === value ? 'selected' : ''}>${value}</option>`).join('')}</select>${singleHouse() ? '' : `<select id="task-property-filter" class="filter-select" aria-label="Nach Gebäude filtern"><option value="all">Alle Gebäude</option>${properties.map((property) => `<option value="${escapeHtml(property.name)}" ${taskPropertyFilter === property.name ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select>`}<select id="task-priority-filter" class="filter-select" aria-label="Nach Priorität filtern"><option value="all">Alle Prioritäten</option><option value="urgent" ${taskPriorityFilter === 'urgent' ? 'selected' : ''}>Dringend</option><option value="soon" ${taskPriorityFilter === 'soon' ? 'selected' : ''}>Wichtig</option><option value="normal" ${taskPriorityFilter === 'normal' ? 'selected' : ''}>Normal</option></select></div></div>
         <div class="task-table-wrap"><table class="task-table"><thead><tr><th>Aufgabe</th><th>Haus / Bereich</th><th>Fälligkeit</th><th>Priorität</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="empty">Keine Aufgaben gefunden. Erstelle eine Aufgabe oder ändere die Filter.</div></td></tr>'}</tbody></table></div></section>`;
     }
+    function houseSettingsCard() {
+      const desired = Math.max(1, Math.floor(Number(profileData.desiredHouseCount || profileData.houseCount)) || 1);
+      const needsPro = !isPro() && desired > FREE_HOUSE_LIMIT;
+      return `<section class="card house-settings-card"><div class="card-head"><div><h2 class="card-title">Nutzung & Anzahl</h2><p class="card-caption">${isPro() ? 'Husora Pro ist aktiv – du kannst mehrere Ferienhäuser verwalten.' : `Kostenlos ist ${FREE_HOUSE_LIMIT} Ferienhaus enthalten. Für mehr Häuser brauchst du Husora Pro.`}</p></div><span class="pro-badge ${isPro() ? 'on' : 'off'}">${isPro() ? '★ Husora Pro aktiv' : 'Kostenlose Version'}</span></div>
+        <form id="house-settings-form"><div class="house-settings-grid">
+          <label><span class="form-label">Nutzung der Immobilie</span><select class="form-control" name="usage"><option value="self" ${profileData.usage === 'self' ? 'selected' : ''}>Nur Eigennutzung</option><option value="rental" ${profileData.usage !== 'self' ? 'selected' : ''}>Eigennutzung und Vermietung</option></select></label>
+          <label><span class="form-label">Anzahl Ferienhäuser</span><input class="form-control" name="houseCount" id="house-count-input" type="number" min="1" max="50" required value="${desired}"></label>
+        </div>
+        <div class="house-settings-actions"><button type="submit" class="secondary-btn">Übernehmen</button><button type="button" class="primary-btn" id="buy-pro-btn" data-action="open-pro" ${needsPro ? '' : 'hidden'}>★ Husora Pro erwerben</button></div></form></section>`;
+    }
     function propertiesPage() {
       return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div><button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button></div>
+        ${houseSettingsCard()}
         <div class="property-grid ${singleHouse() ? 'single' : ''}">${properties.map((rawProperty) => {
           const property = propertyWithDefaults(rawProperty);
           const assignedProviders = providers.filter((provider) => (servicePartnerAssignments[property.id] || []).includes(provider.id));
@@ -3514,6 +3577,7 @@
         return;
       }
       if (action === 'add-property') openPropertyModal();
+      if (action === 'open-pro') openProModal(Number(document.getElementById('house-count-input')?.value) || profileData.desiredHouseCount || 2);
       if (action === 'edit-property') {
         const property = properties.find((item) => item.id === event.target.closest('[data-action]').dataset.property);
         if (property) openPropertyModal(property);
@@ -3794,8 +3858,9 @@
         email: String(formData.get('email')).trim(),
         mailProvider: String(formData.get('mailProvider') || 'default'),
         mailAccount: String(formData.get('mailAccount') || '').trim(),
-        usage: formData.get('usage') === 'self' ? 'self' : 'rental',
-        houseCount: Math.min(50, Math.max(1, Math.floor(Number(formData.get('houseCount'))) || 1))
+        usage: profileData.usage === 'self' ? 'self' : 'rental',
+        houseCount: Math.min(50, Math.max(1, Math.floor(Number(profileData.houseCount)) || 1)),
+        ...(profileData.desiredHouseCount ? { desiredHouseCount: profileData.desiredHouseCount } : {})
       };
       const mailAction = event.submitter?.value;
       if (mailAction === 'disconnect') updatedProfile.mailAccount = '';
@@ -3829,6 +3894,148 @@
       if (!to) return;
       const body = 'Die Verbindung zwischen Husora und diesem Mailkonto funktioniert.';
       openMailUrl(webmailUrl(profileData.mailProvider || 'default', to, 'Husora: Test der Mailverbindung', body), body);
+    });
+    let proDesiredCount = 2;
+    let paypalSdkPromise = null;
+    function loadPaypalSdk() {
+      if (window.paypal?.Buttons) return Promise.resolve(window.paypal);
+      if (paypalSdkPromise) return paypalSdkPromise;
+      paypalSdkPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(PRO_PLAN.paypalClientId)}&currency=${PRO_PLAN.currency}&intent=capture&components=buttons&locale=de_DE`;
+        script.onload = () => (window.paypal?.Buttons ? resolve(window.paypal) : reject(new Error('PayPal-SDK ohne Buttons')));
+        script.onerror = () => reject(new Error('PayPal-SDK konnte nicht geladen werden'));
+        document.head.appendChild(script);
+      }).catch((error) => { paypalSdkPromise = null; throw error; });
+      return paypalSdkPromise;
+    }
+    const formatMoney = (value) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: PRO_PLAN.currency }).format(Number(value));
+    function openProModal(desiredCount) {
+      proDesiredCount = Math.min(50, Math.max(2, Math.floor(Number(desiredCount)) || 2));
+      const testMode = PRO_PLAN.paypalClientId === 'sb';
+      document.getElementById('pro-modal-title').textContent = 'Husora Pro erwerben';
+      document.getElementById('pro-modal-subtitle').textContent = 'Einmalige Freischaltung für mehrere Ferienhäuser';
+      document.getElementById('pro-modal-body').innerHTML = `${testMode ? '<div class="pro-test-note"><strong>Testmodus:</strong> Die Zahlung läuft über die PayPal-Sandbox. Es wird kein echtes Geld bewegt. Zum Testen meldest du dich mit einem PayPal-Sandbox-Käuferkonto an.</div>' : ''}
+        <div class="pro-box"><h3>Produkt</h3><div class="pro-price"><strong>${formatMoney(PRO_PLAN.price)}</strong><span>einmalig · inkl. gesetzlicher MwSt.</span></div>
+          <ul class="pro-features" style="margin-top:12px"><li>Mehrere Ferienhäuser verwalten (bis zu 50)</li><li>Objektverwaltung, Hauskontrolle, Hausmodell und Servicepartner je Haus</li><li>Kalender, Aufgaben, Dokumente und Jahreskosten je Haus</li><li>Keine laufenden Kosten, kein Abo</li></ul></div>
+        <div class="pro-box"><h3>Deine Angaben</h3><div class="profile-grid" style="padding:0">
+          <label><span class="form-label">Name *</span><input class="form-control" id="pro-name" maxlength="80" autocomplete="name" value="${escapeHtml(profileData.name || '')}"></label>
+          <label><span class="form-label">E-Mail für den Beleg *</span><input class="form-control" id="pro-email" type="email" maxlength="120" autocomplete="email" value="${escapeHtml(profileData.email || '')}"></label>
+          <label class="full"><span class="form-label">Gewünschte Anzahl Ferienhäuser</span><input class="form-control" id="pro-count" type="number" min="2" max="50" value="${proDesiredCount}"></label></div></div>
+        <div class="pro-box"><h3>Bestellübersicht</h3><dl class="pro-summary"><div><dt>Produkt</dt><dd>${escapeHtml(PRO_PLAN.name)} – Mehrere Ferienhäuser</dd></div><div><dt>Zahlungsart</dt><dd>PayPal (auch Karte oder Lastschrift über PayPal)</dd></div><div><dt>Lieferung</dt><dd>Sofortige Freischaltung nach Zahlung</dd></div><div class="pro-total"><dt>Gesamtpreis</dt><dd>${formatMoney(PRO_PLAN.price)}</dd></div></dl></div>
+        <div class="pro-legal"><label><input type="checkbox" id="pro-terms"><span>Ich habe die Allgemeinen Geschäftsbedingungen und die Datenschutzhinweise gelesen und akzeptiere sie.</span></label>
+          <label><input type="checkbox" id="pro-withdrawal"><span>Ich stimme ausdrücklich zu, dass die Freischaltung sofort beginnt, und weiß, dass ich dadurch mein Widerrufsrecht bei digitalen Inhalten verliere.</span></label></div>
+        <div class="pro-paypal" id="paypal-button-container"><p class="pro-fineprint">PayPal wird geladen …</p></div>
+        <p class="pro-fineprint">Die Zahlung wird von PayPal abgewickelt. Zahlungsdaten gibst du nur bei PayPal ein und sie werden nicht in Husora gespeichert. Die Freischaltung gilt für diesen Browser${PRO_PLAN.supportEmail ? `. Fragen: ${escapeHtml(PRO_PLAN.supportEmail)}` : ''}.</p>`;
+      document.getElementById('pro-modal').classList.add('open');
+      renderPaypalButtons();
+    }
+    function proFormValues() {
+      const name = document.getElementById('pro-name')?.value.trim() || '';
+      const email = document.getElementById('pro-email')?.value.trim() || '';
+      const count = Math.min(50, Math.max(2, Math.floor(Number(document.getElementById('pro-count')?.value)) || 2));
+      const errors = [];
+      if (!name) errors.push('Bitte deinen Namen angeben.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Bitte eine gültige E-Mail-Adresse angeben.');
+      if (!document.getElementById('pro-terms')?.checked) errors.push('Bitte AGB und Datenschutzhinweise akzeptieren.');
+      if (!document.getElementById('pro-withdrawal')?.checked) errors.push('Bitte der sofortigen Freischaltung zustimmen.');
+      return { name, email, count, errors };
+    }
+    function renderPaypalButtons() {
+      const container = document.getElementById('paypal-button-container');
+      loadPaypalSdk().then((paypal) => {
+        if (!container.isConnected) return;
+        container.innerHTML = '';
+        paypal.Buttons({
+          style: { layout: 'vertical', shape: 'rect', label: 'pay', height: 44 },
+          onClick: (data, actions) => {
+            const { errors } = proFormValues();
+            if (errors.length) { showToast(errors[0]); return actions.reject(); }
+            return actions.resolve();
+          },
+          createOrder: (data, actions) => actions.order.create({
+            purchase_units: [{ description: `${PRO_PLAN.name} – Mehrere Ferienhäuser`, amount: { currency_code: PRO_PLAN.currency, value: PRO_PLAN.price } }]
+          }),
+          onApprove: (data, actions) => actions.order.capture().then((details) => completeProPurchase(details, proFormValues())),
+          onCancel: () => showToast('Der Kauf wurde abgebrochen.'),
+          onError: (error) => { console.error('PayPal-Fehler:', error); showToast('Die Zahlung konnte nicht abgeschlossen werden. Es wurde nichts berechnet.'); }
+        }).render('#paypal-button-container');
+      }).catch((error) => {
+        console.error(error);
+        if (container.isConnected) container.innerHTML = '<p class="pro-fineprint" style="color:#a84437">PayPal konnte nicht geladen werden. Bitte Internetverbindung und Werbeblocker prüfen.</p><button type="button" class="secondary-btn" id="pro-retry">Erneut versuchen</button>';
+      });
+    }
+    function completeProPurchase(details, form) {
+      const capture = details?.purchase_units?.[0]?.payments?.captures?.[0];
+      if (details?.status !== 'COMPLETED' || !details?.id) { showToast('Die Zahlung wurde von PayPal nicht bestätigt.'); return; }
+      proState = {
+        orderId: details.id,
+        captureId: capture?.id || '',
+        amount: capture?.amount?.value || PRO_PLAN.price,
+        currency: capture?.amount?.currency_code || PRO_PLAN.currency,
+        payerEmail: details.payer?.email_address || form.email,
+        name: form.name,
+        email: form.email,
+        testMode: PRO_PLAN.paypalClientId === 'sb',
+        purchasedAt: new Date().toISOString()
+      };
+      const nextProfile = { ...profileData, name: profileData.name || form.name, email: profileData.email || form.email, houseCount: form.count };
+      delete nextProfile.desiredHouseCount;
+      try {
+        localStorage.setItem('stugliv-pro', JSON.stringify(proState));
+        localStorage.setItem('stugliv-profile', JSON.stringify(nextProfile));
+        profileData = nextProfile;
+      } catch (error) {
+        console.error('Pro-Freischaltung konnte nicht gespeichert werden:', error);
+        showToast('Zahlung erfolgreich, aber die Freischaltung konnte nicht gespeichert werden. Bestellnummer: ' + details.id);
+      }
+      document.getElementById('pro-modal-title').textContent = 'Vielen Dank!';
+      document.getElementById('pro-modal-subtitle').textContent = 'Husora Pro ist freigeschaltet';
+      document.getElementById('pro-modal-body').innerHTML = `<div class="pro-success"><div class="pro-check">✓</div><p style="font-size:13px;line-height:1.6;margin:0 0 14px">Deine Zahlung ist eingegangen. Du kannst jetzt bis zu <strong>${profileData.houseCount}</strong> Ferienhäuser verwalten.</p></div>
+        <div class="pro-box"><h3>Beleg</h3><dl class="pro-summary"><div><dt>Bestellnummer</dt><dd>${escapeHtml(proState.orderId)}</dd></div><div><dt>Betrag</dt><dd>${escapeHtml(formatMoney(proState.amount))}</dd></div><div><dt>Datum</dt><dd>${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(proState.purchasedAt)))}</dd></div><div><dt>PayPal-Konto</dt><dd>${escapeHtml(proState.payerEmail)}</dd></div>${proState.testMode ? '<div><dt>Modus</dt><dd>Test (kein echtes Geld)</dd></div>' : ''}</dl></div>
+        <div class="form-actions"><button type="button" class="secondary-btn" id="pro-done">Schließen</button><button type="button" class="primary-btn" id="pro-add-house">Weiteres Ferienhaus hinzufügen</button></div>`;
+      render();
+    }
+    function closeProModal() { document.getElementById('pro-modal').classList.remove('open'); }
+    document.getElementById('close-pro-modal').addEventListener('click', closeProModal);
+    document.getElementById('pro-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'pro-modal') closeProModal();
+      if (event.target.id === 'pro-retry') renderPaypalButtons();
+      if (event.target.id === 'pro-done') closeProModal();
+      if (event.target.id === 'pro-add-house') { closeProModal(); openPropertyModal(); }
+    });
+    document.addEventListener('input', (event) => {
+      if (event.target.id !== 'house-count-input') return;
+      const count = Math.floor(Number(event.target.value)) || 1;
+      document.getElementById('buy-pro-btn').hidden = isPro() || count <= FREE_HOUSE_LIMIT;
+    });
+    document.addEventListener('submit', (event) => {
+      if (event.target.id !== 'house-settings-form') return;
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const usage = formData.get('usage') === 'self' ? 'self' : 'rental';
+      const requested = Math.min(50, Math.max(1, Math.floor(Number(formData.get('houseCount'))) || 1));
+      const next = { ...profileData, usage };
+      let message = 'Einstellungen wurden gespeichert.';
+      if (!isPro() && requested > FREE_HOUSE_LIMIT) {
+        next.desiredHouseCount = requested;
+        message = `Für ${requested} Ferienhäuser brauchst du Husora Pro. Deine Einstellung ist gemerkt.`;
+      } else {
+        if (requested < properties.length && !window.confirm(`Mit ${requested} Ferienhaus/Ferienhäusern werden ${properties.length - requested} Haus/Häuser samt Daten gelöscht. Fortfahren?`)) return;
+        next.houseCount = requested;
+        delete next.desiredHouseCount;
+      }
+      try {
+        localStorage.setItem('stugliv-profile', JSON.stringify(next));
+        profileData = next;
+        if (!removePropertiesBeyondProfileCount()) { render(); return; }
+      } catch (error) {
+        console.error('Einstellungen konnten nicht gespeichert werden:', error);
+        showToast('Einstellungen konnten nicht gespeichert werden. Browser-Speicher prüfen.');
+        return;
+      }
+      render();
+      showToast(message);
     });
     document.getElementById('task-form').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -3907,6 +4114,10 @@
         if (previous) properties[index] = previous;
         else properties = properties.filter((item) => item.id !== property.id);
         return;
+      }
+      if (!previous && isPro() && properties.length > Number(profileData.houseCount)) {
+        const grown = { ...profileData, houseCount: Math.min(50, properties.length) };
+        try { localStorage.setItem('stugliv-profile', JSON.stringify(grown)); profileData = grown; } catch (error) { console.error(error); }
       }
       closePropertyModal();
       currentPage = 'propertyDetail';
@@ -3999,6 +4210,7 @@
         closeSendPlan();
         closeInspectionPlan();
         closeControlPositions();
+        closeProModal();
         autoModal.classList.remove('open');
       }
     });
