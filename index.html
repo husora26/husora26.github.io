@@ -57,7 +57,14 @@
     .brand-region { padding-left: 2px; color: #e3d6bd; font-size: 9px; font-weight: 500; letter-spacing: .04em; line-height: 1; }
     .breadcrumb-separator, .breadcrumb #breadcrumb { display: none; }
     .top-actions { display: flex; align-items: center; gap: 12px; }
-    .plan-info { display: flex; align-items: center; gap: 9px; color: #e9f0e6; }
+    .plan-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; color: #e9f0e6; }
+    .plan-test { display: inline-flex; align-items: center; gap: 6px; color: #e9f0e6; font-size: 9.5px; font-weight: 700; letter-spacing: .3px; cursor: pointer; opacity: .9; user-select: none; }
+    .plan-test input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .plan-test-track { position: relative; width: 26px; height: 14px; border-radius: 8px; background: rgba(255, 253, 248, .3); transition: background .15s; }
+    .plan-test-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fffdf8; transition: transform .15s; }
+    .plan-test input:checked + .plan-test-track { background: #d9b24c; }
+    .plan-test input:checked + .plan-test-track::after { transform: translateX(12px); }
+    .plan-test input:focus-visible + .plan-test-track { outline: 2px solid var(--amber); outline-offset: 2px; }
     .plan-buy { padding: 5px 10px; border: 1px solid rgba(255, 253, 248, .75); border-radius: 14px; color: #fffdf8; background: rgba(255, 253, 248, .12); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
     .plan-buy:hover { color: var(--green-dark); background: #fffdf8; }
     .plan-pro { border: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 10px; border-radius: 18px; color: #fff7dc; background: rgba(185, 149, 95, .32); box-shadow: inset 0 0 0 1px rgba(227, 196, 106, .7); font-size: 15px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
@@ -1408,7 +1415,14 @@
     const FREE_HOUSE_LIMIT = PLANS.find((plan) => !plan.paid).houseLimit;
     let proState = null;
     try { proState = JSON.parse(localStorage.getItem('stugliv-pro') || 'null'); } catch (error) { proState = null; }
-    const currentPlan = () => (proState && proState.orderId ? planById(proState.planId || 'pro') : PLANS.find((plan) => !plan.paid));
+    const SHOW_PLAN_TEST_SWITCH = true;
+    let planOverride = null;
+    try { planOverride = localStorage.getItem('stugliv-test-plan') || null; } catch (error) { planOverride = null; }
+    const currentPlan = () => {
+      if (planOverride === 'pro') return planById('pro');
+      if (planOverride === 'free') return PLANS.find((plan) => !plan.paid);
+      return proState && proState.orderId ? planById(proState.planId || 'pro') : PLANS.find((plan) => !plan.paid);
+    };
     const isPro = () => currentPlan().paid;
     try {
       const savedProfile = localStorage.getItem('stugliv-profile');
@@ -1542,9 +1556,13 @@
     function updatePlanInfo() {
       const info = document.getElementById('plan-info');
       if (!info) return;
-      info.innerHTML = isPro()
+      const planButton = isPro()
         ? `<button type="button" class="plan-pro" data-page="plans" title="Versionen ansehen"><span class="plan-star" aria-hidden="true">★</span>${escapeHtml(currentPlan().name)}</button>`
         : '<button type="button" class="plan-buy" data-page="plans">Pro Version erwerben</button>';
+      const testSwitch = SHOW_PLAN_TEST_SWITCH
+        ? `<label class="plan-test" title="Nur zum Testen: zwischen kostenloser Version und Pro wechseln"><span>Free</span><input type="checkbox" role="switch" id="plan-test-toggle" aria-label="Testschalter: zwischen kostenloser Version und Pro wechseln" ${isPro() ? 'checked' : ''}><span class="plan-test-track" aria-hidden="true"></span><span>Pro</span></label>`
+        : '';
+      info.innerHTML = planButton + testSwitch;
     }
     function updateProfileSummary() {
       updatePlanInfo();
@@ -2060,7 +2078,7 @@
           <ul class="pro-features">${plan.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}</ul><div class="plan-action">${action}</div></article>`;
       }).join('');
       const license = isPro() ? `<section class="card plan-license"><div class="card-head"><div><h2 class="card-title">Deine Lizenz</h2><p class="card-caption">${escapeHtml(current.name)} · ${properties.length} von ${Math.max(properties.length, Number(profileData.houseCount) || 1)} Ferienhäusern angelegt</p></div></div>
-        <dl class="pro-summary" style="padding:4px 18px 18px">${proState.legacy ? '<div><dt>Status</dt><dd>Freigeschaltet (bestehende Nutzung)</dd></div>' : `<div><dt>Bestellnummer</dt><dd>${escapeHtml(proState.orderId)}</dd></div><div><dt>Gekauft am</dt><dd>${escapeHtml(dateText(proState.purchasedAt))}</dd></div><div><dt>Betrag</dt><dd>${escapeHtml(formatMoney(proState.amount || current.price))}</dd></div>${proState.testMode ? '<div><dt>Modus</dt><dd>Test (kein echtes Geld)</dd></div>' : ''}`}</dl></section>` : '';
+        <dl class="pro-summary" style="padding:4px 18px 18px">${!proState ? '<div><dt>Status</dt><dd>Testmodus – Pro über den Schalter aktiviert</dd></div>' : proState.legacy ? '<div><dt>Status</dt><dd>Freigeschaltet (bestehende Nutzung)</dd></div>' : `<div><dt>Bestellnummer</dt><dd>${escapeHtml(proState.orderId)}</dd></div><div><dt>Gekauft am</dt><dd>${escapeHtml(dateText(proState.purchasedAt))}</dd></div><div><dt>Betrag</dt><dd>${escapeHtml(formatMoney(proState.amount || current.price))}</dd></div>${proState.testMode ? '<div><dt>Modus</dt><dd>Test (kein echtes Geld)</dd></div>' : ''}`}</dl></section>` : '';
       return `<div class="welcome"><div><p class="eyebrow">Husora</p><h1>Versionen</h1><p class="subtitle">Wähle die Version, die zu dir und deinen Ferienhäusern passt.</p></div></div>
         <div class="plan-grid">${cards}<article class="card plan-card plan-soon"><h2>Weitere Versionen</h2><p class="plan-tagline">Folgen später. Hier erscheinen neue Angebote, sobald sie verfügbar sind.</p></article></div>${license}`;
     }
@@ -4071,6 +4089,14 @@
       render();
     }
     function closeProModal() { document.getElementById('pro-modal').classList.remove('open'); }
+    document.addEventListener('change', (event) => {
+      if (event.target.id !== 'plan-test-toggle') return;
+      planOverride = event.target.checked ? 'pro' : 'free';
+      try { localStorage.setItem('stugliv-test-plan', planOverride); } catch (error) { console.error(error); }
+      render();
+      document.getElementById('plan-test-toggle')?.focus();
+      showToast(event.target.checked ? 'Testmodus: Husora Pro aktiv.' : 'Testmodus: Kostenlose Version aktiv.');
+    });
     document.getElementById('close-pro-modal').addEventListener('click', closeProModal);
     document.getElementById('pro-modal').addEventListener('click', (event) => {
       if (event.target.id === 'pro-modal') closeProModal();
