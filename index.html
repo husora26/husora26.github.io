@@ -326,6 +326,8 @@
     .photo-thumb.cover { border-color: var(--green); }
     .photo-thumb .cover-badge { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0; color: white; background: rgba(40, 92, 69, .85); font-size: 9px; font-weight: 700; text-align: center; }
     .photo-thumb .thumb-remove { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border: 0; border-radius: 50%; color: white; background: rgba(0, 0, 0, .6); font-size: 12px; line-height: 18px; cursor: pointer; }
+    .house-map-card { margin-top: 16px; }
+    .house-map { display: block; width: 100%; height: 240px; border: 0; border-radius: 0 0 11px 11px; background: #e8eee4; }
     .photo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
     .photo-strip img { width: 110px; height: 76px; border-radius: 8px; object-fit: cover; }
     .property-grid.single { grid-template-columns: 1fr; }
@@ -534,6 +536,15 @@
     .house-fire-opening { position: absolute; left: 20%; right: 20%; bottom: 8%; height: 46%; border-radius: 4px 4px 0 0; background: radial-gradient(circle at 50% 100%, #ffb340 0%, #e0561b 45%, #2b1710 100%); box-shadow: inset 0 0 0 3px #3b3733; }
     .house-boiler { background: linear-gradient(90deg, #dfe4e6, #f7f9fa 50%, #cfd6d9); box-shadow: inset 0 0 0 2px #aeb7bb; }
     .house-boiler-panel { position: absolute; left: 22%; right: 22%; top: 10%; height: 18%; border-radius: 3px; background: #26343d; box-shadow: inset 0 0 0 2px #7b8a93; }
+    .house-face.reno-done { box-shadow: inset 0 0 0 3px rgba(102, 214, 146, .85); }
+    .house-face.reno-done::after { content: ''; position: absolute; inset: 0; background: rgba(110, 225, 150, .2); pointer-events: none; }
+    .house-wall.reno-done { box-shadow: inset 5px 0 #f1ebdf, inset -5px 0 #f1ebdf, inset 0 -6px #6a574a, inset 0 0 0 3px rgba(102, 214, 146, .85); }
+    .house-gutter.reno-done, .house-pipe.reno-done { box-shadow: 0 0 0 2px rgba(102, 214, 146, .9); }
+    .house-window.reno-done, .house-door.reno-done { outline: 3px solid rgba(102, 214, 146, .9); outline-offset: 1px; }
+    .house-pin.reno-done::after { content: '✓'; position: absolute; top: -9px; right: -10px; display: grid; place-items: center; width: 13px; height: 13px; border: 1.5px solid white; border-radius: 50%; color: white; background: #2fb36a; font-size: 8px; line-height: 1; }
+    .house-reno-tag { margin-left: 4px; padding: 1px 6px; border-radius: 8px; color: #1f6b41; background: #dff3e6; font-size: 9px; font-weight: 700; }
+    .house-dot.reno-key { background: transparent; border: 2px solid #5fd08e; }
+    .house-face.reno-done.selected, .house-face[data-part].selected.reno-done { box-shadow: inset 0 0 0 4px #ffd36b; }
     .house-status + .house-status { margin-left: 5px; }
     .house-status.st-none { color: #4f5852; background: #eceeea; }
     .house-status.reno-planned { color: #7a4d0a; background: #fbe6c2; }
@@ -2030,6 +2041,11 @@
         <section class="card"><div class="card-head"><div><h2 class="card-title">Sanierungshistorie</h2><p class="card-caption">Bisherige Maßnahmen und Jahre</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.lastRenovations ? escapeHtml(property.lastRenovations).replace(/\\n/g, '<br>') : 'Noch keine Sanierungen eingetragen.'}</div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Anstehende Sanierungen</h2><p class="card-caption">Voraussichtlicher Zeitraum und nächste Schritte</p></div></div><div class="property-notes" style="margin:0;padding:17px 19px">${property.plannedRenovations ? escapeHtml(property.plannedRenovations).replace(/\\n/g, '<br>') : 'Noch keine Maßnahmen geplant.'}</div></section>
         <section class="card" style="margin-top:16px"><div class="card-head"><div><h2 class="card-title">Zugeordnete Servicepartner</h2><p class="card-caption">Partner und deren Dokumente verwalten.</p></div><button class="text-btn" data-action="manage-assigned-providers" data-property="${escapeHtml(property.id)}">Servicepartner verwalten →</button></div><div class="property-notes" style="margin:0;padding:16px 19px;font-size:14px">${partnerListHtml(assignedProviders)}</div></section>
+        ${(() => {
+          const address = String(property.address || '').trim();
+          const query = [address, ...[property.region, 'Schweden'].filter((part) => part && !address.toLocaleLowerCase('de').includes(part.toLocaleLowerCase('de')))].filter(Boolean).join(', ') || property.name;
+          return `<section class="card house-map-card"><div class="card-head"><div><h2 class="card-title">Standort</h2><p class="card-caption">${escapeHtml(property.address || property.name)}</p></div><a class="text-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">In Google Maps öffnen ↗</a></div><iframe class="house-map" title="Google Maps: Standort von ${escapeHtml(property.name)}" src="https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=11&output=embed&hl=de" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></section>`;
+        })()}
         <section class="remove-property-section" aria-label="Ferienhaus entfernen"><div><strong>Ferienhaus dauerhaft entfernen</strong><p>Das Haus und die zugehörigen Aufgaben, Kosten sowie Hauskontrolldaten werden gelöscht.</p></div><button class="danger-btn" data-action="remove-property" data-property="${escapeHtml(property.id)}">Haus entfernen</button></section>`;
     }
     function providersPage() {
@@ -2106,12 +2122,15 @@
           return { text: clause, year: /\b(19|20)\d{2}\b/.test(clause) ? '' : year, yearInText: (clause.match(/\b(19|20)\d{2}\b/) || [''])[0] || year };
         }).filter(Boolean);
       });
-      const done = clausesFor(property.lastRenovations).map((entry) => ({ text: `${entry.year ? `${entry.year}: ` : ''}${entry.text}`, year: entry.yearInText }));
+      const isBuildYear = (entry) => /\bBJ\b|\bBaujahr\b/i.test(entry.text);
+      const historyClauses = clausesFor(property.lastRenovations);
+      const done = historyClauses.filter((entry) => !isBuildYear(entry)).map((entry) => ({ text: `${entry.year ? `${entry.year}: ` : ''}${entry.text}`, year: entry.yearInText }));
+      const notes = historyClauses.filter(isBuildYear).map((entry) => entry.text);
       const planned = clausesFor(property.plannedRenovations).map((entry) => `${entry.year ? `${entry.year}: ` : ''}${entry.text}`);
       const status = planned.length ? 'planned' : done.length ? 'done' : 'none';
-      return { done, planned, status };
+      return { done, planned, notes, status };
     }
-    const houseRenovationLabels = { planned: 'Sanierung geplant', done: 'Saniert', none: 'Keine Angaben' };
+    const houseRenovationLabels = { planned: 'Sanierung geplant', done: 'Saniert', none: 'Keine Sanierung eingetragen' };
     const houseIntervalDays = { w1: 7, w2: 14, m1: 30, q1: 91, h1: 182, y1: 365 };
     const houseStatusLabels = { ok: 'Aktuell', due: 'Kontrolle fällig', never: 'Noch nicht kontrolliert', none: 'Kein Prüfpunkt zugeordnet' };
     let houseRotation = { x: -24, y: -32 };
@@ -2152,7 +2171,8 @@
       const ago = (days) => (days === 0 ? 'heute' : days === 1 ? 'gestern' : `vor ${days} Tagen`);
       const renovationRows = [
         ...renovation.done.map((entry) => `<small>Saniert: ${escapeHtml(entry.text)}</small>`),
-        ...renovation.planned.map((text) => `<small>Geplant: ${escapeHtml(text)}</small>`)
+        ...renovation.planned.map((text) => `<small>Geplant: ${escapeHtml(text)}</small>`),
+        ...renovation.notes.map((text) => `<small>Angabe (keine Sanierung): ${escapeHtml(text)}</small>`)
       ].join('') || '<small>Zu diesem Bauteil sind in der Objektverwaltung keine Sanierungen eingetragen.</small>';
       const inspectionRows = info.rows.length
         ? info.rows.map((row) => `<div class="house-info-row"><strong>${escapeHtml(row.item.title)}</strong><small>Letzte Kontrolle: ${row.last ? `${escapeHtml(formatInspectionDate(row.last))} (${ago(row.days)})` : 'noch nicht protokolliert'}</small><small>Kontrolltaktung: ${row.frequency ? escapeHtml(planFrequencyLabel(row.frequency)) : 'nicht festgelegt (Richtwert: jährlich)'}</small></div>`).join('')
@@ -2161,7 +2181,7 @@
       const conditionBlock = part.interior ? `<div class="house-info-row"><strong>Zustand</strong>${conditionRows.length ? conditionRows.map((text) => `<small>${escapeHtml(text)}</small>`).join('') : '<small>Dazu sind in der Objektverwaltung noch keine Angaben eingetragen.</small>'}</div>` : '';
       return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span><span class="house-status reno-${renovation.status}">${houseRenovationLabels[renovation.status]}</span>${inspectionRows}${conditionBlock}<div class="house-info-row"><strong>Sanierungsstatus</strong>${renovationRows}</div><button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button> <button class="text-btn" type="button" data-action="view-property" data-property="${escapeHtml(property.id)}">Zur Objektverwaltung →</button></div>`;
     }
-    function houseModelHtml(statuses, property) {
+    function houseModelHtml(statuses, property, renovated = {}) {
       const W = 220, D = 150, H = 100, R = 60, OH = 14;
       const slopeLen = Math.hypot(D / 2, R);
       const sinB = R / slopeLen, cosB = (D / 2) / slopeLen;
@@ -2171,11 +2191,12 @@
       const eaveY = -H / 2 + sinB * OH, eaveZ = D / 2 + cosB * OH;
       const parts = activeHouseParts(property);
       const number = Object.fromEntries(parts.map((part, index) => [part.id, index + 1]));
-      const pin = (id, style) => `<i class="house-pin st-${statuses[id]}" data-part="${id}" style="${style}">${number[id]}</i>`;
-      const face = (cls, w, h, transform, inner = '', part = '') => `<div class="house-face ${cls}"${part ? ` data-part="${part}"` : ''} style="width:${w}px;height:${h}px;margin:${-h / 2}px 0 0 ${-w / 2}px;transform:${transform}">${inner}</div>`;
-      const win = (left) => `<span class="house-window" data-part="windows" style="left:${left}px;top:22px"></span>`;
-      const winPinned = (left) => `<span class="house-window" data-part="windows" style="left:${left}px;top:22px">${pin('windows', 'left:50%;top:50%')}</span>`;
-      const front = face('house-wall', W, H, `translate3d(0,0,${D / 2}px)`, `${winPinned(24)}${win(W - 24 - 42 - 8)}<span class="house-door" data-part="door">${pin('door', 'left:50%;top:40%')}</span>${pin('facade', 'left:22px;top:84px')}`, 'facade');
+      const reno = (id) => (renovated[id] ? ' reno-done' : '');
+      const pin = (id, style) => `<i class="house-pin st-${statuses[id]}${reno(id)}" data-part="${id}" style="${style}">${number[id]}</i>`;
+      const face = (cls, w, h, transform, inner = '', part = '') => `<div class="house-face ${cls}${part ? reno(part) : ''}"${part ? ` data-part="${part}"` : ''} style="width:${w}px;height:${h}px;margin:${-h / 2}px 0 0 ${-w / 2}px;transform:${transform}">${inner}</div>`;
+      const win = (left) => `<span class="house-window${reno('windows')}" data-part="windows" style="left:${left}px;top:22px"></span>`;
+      const winPinned = (left) => `<span class="house-window${reno('windows')}" data-part="windows" style="left:${left}px;top:22px">${pin('windows', 'left:50%;top:50%')}</span>`;
+      const front = face('house-wall', W, H, `translate3d(0,0,${D / 2}px)`, `${winPinned(24)}${win(W - 24 - 42 - 8)}<span class="house-door${reno('door')}" data-part="door">${pin('door', 'left:50%;top:40%')}</span>${pin('facade', 'left:22px;top:84px')}`, 'facade');
       const back = face('house-wall back', W, H, `rotateY(180deg) translate3d(0,0,${D / 2}px)`, `${win(24)}${winPinned(W / 2 - 25)}${win(W - 24 - 50)}${pin('facade', 'left:22px;top:84px')}`, 'facade');
       const sideInner = `${win(D / 2 - 25)}`;
       const right = face('house-wall side', D, H, `rotateY(90deg) translate3d(0,0,${W / 2}px)`, sideInner, 'facade');
@@ -2224,13 +2245,14 @@
       const property = properties.find((item) => item.id === houseModelProperty) || properties[0];
       const statuses = Object.fromEntries(housePartDefs.map((part) => [part.id, housePartInfo(property.id, part).status]));
       const selected = housePartDefs.find((part) => part.id === selectedHousePart);
+      const renovated = Object.fromEntries(activeHouseParts(property).map((part) => [part.id, houseRenovationInfo(propertyWithDefaults(property), part).done.length > 0]));
       const selector = singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="house-property" class="filter-select" aria-label="Ferienhaus für das Hausmodell wählen">${properties.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`;
       return `<div class="welcome"><div><p class="eyebrow">Gebäudehülle · ${escapeHtml(property.region || 'Schweden')}</p><h1>Hausmodell</h1><p class="subtitle">Dreh ${singleHouse() ? 'dein Ferienhaus' : 'das Haus'} mit Finger oder Maus, öffne das Dach für den Blick ins Innere und wähle ein Bauteil, um Kontrolle und Zustand zu sehen.</p></div></div>
         ${selector}
         <section class="card house-card"><div class="card-head"><div><h2 class="card-title">${escapeHtml(property.name)}</h2><p class="card-caption">Gebäudehülle und Innenausstattung · ziehen zum Drehen · Mausrad oder zwei Finger zum Zoomen</p></div><div class="house-controls"><button type="button" id="house-open-btn" data-house-action="toggle-open" aria-pressed="${houseOpen}">${houseOpen ? 'Dach schließen' : 'Dach öffnen'}</button><button type="button" data-house-action="zoom-in" aria-label="Näher heranzoomen">Zoom +</button><button type="button" data-house-action="zoom-out" aria-label="Weiter herauszoomen">Zoom −</button><button type="button" data-house-action="rotate-left" aria-label="Nach links drehen">⟲ Links</button><button type="button" data-house-action="rotate-right" aria-label="Nach rechts drehen">Rechts ⟳</button><button type="button" data-house-action="reset">Zurücksetzen</button></div></div>
-          <div class="house-scene ${houseOpen ? 'open' : ''}" id="house-scene" tabindex="0" aria-label="3D-Modell des Ferienhauses. Mit den Pfeiltasten drehen, mit Plus und Minus zoomen."><div class="house-stage-wrap" id="house-stage-wrap"><div class="house-stage" id="house-stage" style="transform:rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)">${houseModelHtml(statuses, property)}</div></div><div id="house-info-slot">${selected ? houseInfoHtml(property.id, selected) : ''}</div></div>
-          <div class="house-legend">${activeHouseParts(property).map((part, index) => `<button class="house-chip-btn ${part.id === selectedHousePart ? 'selected' : ''}" type="button" data-part="${part.id}"><i class="house-dot st-${statuses[part.id]}"></i>${index + 1}. ${escapeHtml(part.label)}</button>`).join('')}</div>
-          <div class="house-key"><span><i class="house-dot st-ok"></i>Aktuell</span><span><i class="house-dot st-due"></i>Kontrolle fällig</span><span><i class="house-dot st-never"></i>Noch nicht kontrolliert</span></div>
+          <div class="house-scene ${houseOpen ? 'open' : ''}" id="house-scene" tabindex="0" aria-label="3D-Modell des Ferienhauses. Mit den Pfeiltasten drehen, mit Plus und Minus zoomen."><div class="house-stage-wrap" id="house-stage-wrap"><div class="house-stage" id="house-stage" style="transform:rotateX(${houseRotation.x}deg) rotateY(${houseRotation.y}deg)">${houseModelHtml(statuses, property, renovated)}</div></div><div id="house-info-slot">${selected ? houseInfoHtml(property.id, selected) : ''}</div></div>
+          <div class="house-legend">${activeHouseParts(property).map((part, index) => `<button class="house-chip-btn ${part.id === selectedHousePart ? 'selected' : ''}" type="button" data-part="${part.id}"><i class="house-dot st-${statuses[part.id]}"></i>${index + 1}. ${escapeHtml(part.label)}${renovated[part.id] ? '<span class="house-reno-tag">saniert</span>' : ''}</button>`).join('')}</div>
+          <div class="house-key"><span><i class="house-dot st-ok"></i>Aktuell</span><span><i class="house-dot st-due"></i>Kontrolle fällig</span><span><i class="house-dot st-never"></i>Noch nicht kontrolliert</span><span><i class="house-dot reno-key"></i>Saniert (grüner Rand)</span></div>
         </section>`;
     }
     function fitHouseScene() {
