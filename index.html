@@ -67,9 +67,8 @@
     .plan-test input:focus-visible + .plan-test-track { outline: 2px solid var(--amber); outline-offset: 2px; }
     .plan-buy { padding: 5px 10px; border: 1px solid rgba(255, 253, 248, .75); border-radius: 14px; color: #fffdf8; background: rgba(255, 253, 248, .12); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
     .plan-buy:hover { color: var(--green-dark); background: #fffdf8; }
-    .plan-pro { border: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 10px; border-radius: 18px; color: #fff7dc; background: rgba(185, 149, 95, .32); box-shadow: inset 0 0 0 1px rgba(227, 196, 106, .7); font-size: 15px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
-    .plan-star { color: #f0cd6b; font-size: 18px; line-height: 1; }
-    @media (max-width: 520px) { .plan-pro { padding: 4px 10px 4px 8px; font-size: 13px; } .plan-star { font-size: 15px; } .plan-buy { padding: 4px 8px; } }
+    .plan-pro { border: 0; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 18px; color: #fff7dc; background: rgba(185, 149, 95, .32); box-shadow: inset 0 0 0 1px rgba(227, 196, 106, .7); font-size: 15px; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+    @media (max-width: 520px) { .plan-pro { padding: 4px 10px; font-size: 13px; } .plan-buy { padding: 4px 8px; } }
     .notification-wrap { position: relative; }
     .notification-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 31; display: none; width: min(360px, calc(100vw - 26px)); max-height: min(70vh, 480px); overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 16px 42px rgba(35,48,39,.16); }
     .notification-panel.open { display: block; }
@@ -1557,7 +1556,7 @@
       const info = document.getElementById('plan-info');
       if (!info) return;
       const planButton = isPro()
-        ? `<button type="button" class="plan-pro" data-page="plans" title="Versionen ansehen"><span class="plan-star" aria-hidden="true">★</span>${escapeHtml(currentPlan().name)}</button>`
+        ? `<button type="button" class="plan-pro" data-page="plans" title="Versionen ansehen">${escapeHtml(currentPlan().name)}</button>`
         : '<button type="button" class="plan-buy" data-page="plans">Pro Version erwerben</button>';
       const testSwitch = SHOW_PLAN_TEST_SWITCH
         ? `<label class="plan-test" title="Nur zum Testen: zwischen kostenloser Version und Pro wechseln"><span>Free</span><input type="checkbox" role="switch" id="plan-test-toggle" aria-label="Testschalter: zwischen kostenloser Version und Pro wechseln" ${isPro() ? 'checked' : ''}><span class="plan-test-track" aria-hidden="true"></span><span>Pro</span></label>`
@@ -2059,7 +2058,7 @@
     }
     function proProfileCard() {
       const plan = currentPlan();
-      return `<section class="card profile-form pro-profile-card"><div class="card-head"><div><h2 class="card-title">Deine Version</h2><p class="card-caption">${isPro() ? `${escapeHtml(plan.name)} ist freigeschaltet.` : `Du nutzt die kostenlose Version mit ${FREE_HOUSE_LIMIT} Ferienhaus.`}</p></div>${isPro() ? `<span class="plan-pro" style="color:#5a4310;background:#fbeec4;box-shadow:inset 0 0 0 1px #d9b24c"><span class="plan-star" style="color:#c99a1c">★</span>${escapeHtml(plan.name)}</span>` : '<span class="pro-badge off">Kostenlose Version</span>'}</div>
+      return `<section class="card profile-form pro-profile-card"><div class="card-head"><div><h2 class="card-title">Deine Version</h2><p class="card-caption">${isPro() ? `${escapeHtml(plan.name)} ist freigeschaltet.` : `Du nutzt die kostenlose Version mit ${FREE_HOUSE_LIMIT} Ferienhaus.`}</p></div>${isPro() ? `<span class="plan-pro" style="color:#5a4310;background:#fbeec4;box-shadow:inset 0 0 0 1px #d9b24c">${escapeHtml(plan.name)}</span>` : '<span class="pro-badge off">Kostenlose Version</span>'}</div>
         <div style="padding:4px 18px 18px"><button type="button" class="secondary-btn" data-page="plans">Versionen ansehen</button></div></section>`;
     }
     function plansPage() {
@@ -2071,7 +2070,7 @@
         const action = isCurrent
           ? '<button type="button" class="secondary-btn" disabled>Aktuelle Version</button>'
           : plan.paid
-            ? `<button type="button" class="primary-btn" data-action="open-pro" data-plan="${escapeHtml(plan.id)}">★ ${escapeHtml(plan.name)} erwerben</button>`
+            ? `<button type="button" class="primary-btn" data-action="open-pro" data-plan="${escapeHtml(plan.id)}">${escapeHtml(plan.name)} erwerben</button>`
             : '<button type="button" class="secondary-btn" disabled>Im Funktionsumfang enthalten</button>';
         return `<article class="card plan-card ${plan.highlight ? 'highlight' : ''} ${isCurrent ? 'current' : ''}">${isCurrent ? '<span class="plan-current-tag">Deine Version</span>' : ''}<h2>${escapeHtml(plan.name)}</h2><p class="plan-tagline">${escapeHtml(plan.tagline)}</p>
           <div class="plan-price"><strong>${plan.paid ? escapeHtml(formatMoney(plan.price)) : 'Kostenlos'}</strong><span>${escapeHtml(billingText(plan))}</span></div>
@@ -2137,7 +2136,7 @@
           <label><span class="form-label">Anzahl Ferienhäuser</span><input class="form-control" name="houseCount" id="house-count-input" type="number" min="1" max="50" required value="${desired}"></label>
         </div>
         <p class="pro-hint" id="pro-hint" ${needsPro ? '' : 'hidden'}>Für mehr als ${FREE_HOUSE_LIMIT} Ferienhaus brauchst du Husora Pro. Alle Versionen findest du unter <button type="button" class="text-btn" data-page="plans" style="padding:0">Versionen</button>.</p>
-        <div class="house-settings-actions"><button type="submit" class="secondary-btn">Übernehmen</button><button type="button" class="primary-btn" id="buy-pro-btn" data-action="open-pro" data-plan="pro" ${needsPro ? '' : 'hidden'}>★ Husora Pro erwerben</button></div></form></section>`;
+        <div class="house-settings-actions"><button type="submit" class="secondary-btn">Übernehmen</button><button type="button" class="primary-btn" id="buy-pro-btn" data-action="open-pro" data-plan="pro" ${needsPro ? '' : 'hidden'}>Husora Pro erwerben</button></div></form></section>`;
     }
     function propertiesPage() {
       return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div>${isPro() ? `<button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button>` : ''}</div>
