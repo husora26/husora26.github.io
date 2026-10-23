@@ -4315,12 +4315,32 @@
       const type = /kakelugn/.test(value) ? 'Kachelofen' : /öppen spis|öppen kamin/.test(value) ? 'Offener Kamin' : /vedspis/.test(value) ? 'Holzherd' : /pellets/.test(value) ? 'Pellet-Ofen' : /braskamin|kaminkassett|kamin/.test(value) ? 'Kaminofen' : 'Sonstige';
       return { fireplace: 'yes', fireplaceType: type };
     }
+    const IMPORT_NO_DATA = 'Keine Angabe im Inserat';
+    const IMPORT_HOME_TYPES = { fritidshus: 'Ferienhaus', villa: 'Villa / Einfamilienhaus', radhus: 'Reihenhaus', parhus: 'Doppelhaushälfte', kedjehus: 'Kettenhaus', gård: 'Hof / Landgut', gard: 'Hof / Landgut', lägenhet: 'Wohnung', bostadsrätt: 'Eigentumswohnung', tomt: 'Grundstück', 'småhus': 'Einfamilienhaus' };
+    const importHomeType = (text) => IMPORT_HOME_TYPES[importClean(text).toLowerCase()] || '';
+    function pinKeyFacts(facts, removeLabels, entries) {
+      const drop = new Set(removeLabels.map((entry) => entry.join('|')));
+      const rest = facts.filter((fact) => !drop.has(`${fact.group}|${fact.label}`));
+      const pinned = entries.map(([label, value, translate]) => {
+        const text = importClean(value);
+        return text ? { group: 'Wichtige Angaben', label, value: text, tv: translate } : { group: 'Wichtige Angaben', label, value: IMPORT_NO_DATA, tv: false };
+      });
+      let at = rest.length;
+      while (at > 0 && rest[at - 1].group !== 'Inserat') at -= 1;
+      rest.splice(at, 0, ...pinned);
+      return rest;
+    }
+    function splitRights(text) {
+      const lines = importClean(text).split('\n').map((line) => line.trim()).filter(Boolean);
+      const isEasement = (line) => /servitut|ledningsrätt|nyttjanderätt|vägrätt|officialrätt|avtalsrätt/i.test(line);
+      return { easement: lines.filter(isEasement).join('\n'), rights: lines.filter((line) => !isEasement(line)).join('\n') };
+    }
     function mapFastighetsbyran(json, link) {
       const object = json && json.maeklarObjekt;
       if (!object || !object.basfakta) throw importError('Das Inserat enthält keine lesbaren Objektdaten.');
       const base = object.basfakta;
-      const posts = (object.fakta?.detaljer || []).flatMap((block) => (block.post || []).filter((entry) => entry.rubrik && importClean(entry.subItem)).map((entry) => ({ group: importLabel(block.rubrik || 'Sonstiges'), rawLabel: entry.rubrik, label: importLabel(entry.rubrik), value: importClean(entry.subItem) })));
-      const fact = (label) => posts.find((entry) => entry.rawLabel.toLowerCase() === label.toLowerCase())?.value || '';
+      const posts = (object.fakta?.detaljer || []).flatMap((block) => (block.post || []).filter((entry) => entry.rubrik && importClean(entry.subItem)).map((entry) => ({ group: importLabel(block.rubrik || 'Sonstiges'), rawLabel: entry.rubrik, block: block.rubrik, label: entry.rubrik === 'VA' && block.rubrik === 'Ekonomi' ? 'Wasser & Abwasser (Kosten)' : importLabel(entry.rubrik), value: importClean(entry.subItem) })));
+      const fact = (label, block) => posts.find((entry) => entry.rawLabel.toLowerCase() === label.toLowerCase() && (!block || entry.block === block))?.value || '';
       const county = String(object.laenNamn || '').replace(/ län$/i, '').replace(/(land|arna|holm|botten|borg)s$/i, '$1');
       const street = importClean(base.gatuadress);
       const area = importClean(base.zon);
@@ -4347,6 +4367,19 @@
       if (base.area) facts.push({ group: 'Gebäude', label: 'Wohn-/Nebenfläche', value: importClean(base.area).replace(/kvm/gi, 'm²'), tv: false });
       posts.forEach((entry) => facts.push({ group: entry.group, label: entry.label, value: entry.value, tl: entry.label === entry.rawLabel }));
       (object.objektsbeskrivning?.rumsbeskrivning || []).forEach((room) => { if (room.rubrik && importClean(room.broedText)) facts.push({ group: 'Räume', label: room.rubrik, value: importClean(room.broedText), tl: true }); });
+      const energyNote = importClean((object.fakta?.detaljer || []).flatMap((block) => block.post || []).map((entry) => (entry.rubrik ? '' : importClean(entry.subItem))).find((text) => /energi/i.test(text)));
+      const energyClass = (`${fact('Energiklass')} ${energyNote}`.match(/energiklass\s*:?\s*([A-G])\b/i) || fact('Energiklass').match(/^([A-G])\b/i) || [])[1] || '';
+      const rightsParts = splitRights(fact('Servitut etc', 'Fastighet'));
+      const powerUse = importClean(fact('Elförbrukning')).replace(/kwh\/år/gi, 'kWh/Jahr');
+      facts.splice(0, facts.length, ...pinKeyFacts(facts, [['Gebäude', 'Gebäudetyp'], ['Kosten', 'Stromverbrauch'], ['Grundstück', 'Wasser/Abwasser'], ['Grundstück', 'Dienstbarkeiten']], [
+        ['Gebäudetyp', fact('Byggnadstyp'), true],
+        ['Unterkunftstyp', importHomeType(base.boendeform || base.bostadsTyp) || base.boendeform || base.bostadsTyp, !importHomeType(base.boendeform || base.bostadsTyp)],
+        ['Energieklasse', energyClass ? `Klasse ${energyClass.toUpperCase()}` : energyNote, !energyClass],
+        ['Jahresenergieverbrauch', powerUse, false],
+        ['Wasser & Abwasser', fact('VA', 'Fastighet'), true],
+        ['Dienstbarkeit', rightsParts.easement, true],
+        ['Sonstige Rechte', rightsParts.rights, true]
+      ]));
       const broker = object.maeklare;
       if (broker && (broker.foernamn || broker.efternamn)) facts.push({ group: 'Kontakt', label: 'Makler', tv: false, value: [`${broker.foernamn || ''} ${broker.efternamn || ''}`.trim(), object.kontor?.namn ? `Fastighetsbyrån ${object.kontor.namn}` : '', broker.mobiltelefonnummer || ''].filter(Boolean).join(' · ') });
       const imageUrl = (entry) => (/^https:\/\//.test(entry?.url || '') ? entry.url : '');
@@ -4386,6 +4419,7 @@
       const unique = (list) => list.filter((part, index, all) => part && all.findIndex((other) => other.toLowerCase() === part.toLowerCase()) === index);
       const kr = (value, suffix = '') => (Number(value) > 0 ? `${Math.round(Number(value)).toLocaleString('de-DE')} kr${suffix}` : '');
       const sqm = (value) => (Number(value) > 0 ? `${Math.round(Number(value))} m²` : '');
+      const rightsText = estate.enrollments || {};
       const rooms = (estate.rooms || []).filter((room) => room.heading && importClean(room.text));
       const searchable = [building.heating, building.otherAboutTheBuildning, building.generealDescription, estate.descriptions?.longSellingDescription, rooms.map((room) => `${room.heading} ${room.text}`).join(' ')].join(' ');
       const fireplace = importFireplace(searchable);
@@ -4414,17 +4448,14 @@
       add('Gebäude', 'Wohnfläche', sqm(building.livingSpace), false);
       add('Gebäude', 'Nebenfläche', sqm(building.otherSpace), false);
       add('Gebäude', 'Baujahr', building.buildingYear, false);
-      [['Gebäudetyp', 'buildingType'], ['Fundament', 'foundation'], ['Sockel', 'foundationWall'], ['Tragwerk', 'frame'], ['Fassade', 'facade'], ['Fenster', 'windows'], ['Geschossdecke', 'beam'], ['Dach', 'roof'], ['Blecharbeiten außen', 'externallySheetMetalWork'], ['Heizung', 'heating'], ['Weitere Angaben zum Gebäude', 'otherAboutTheBuildning'], ['Nebengebäude', 'otherBuildings']].forEach(([label, key]) => add('Gebäude', label, building[key]));
+      [['Fundament', 'foundation'], ['Sockel', 'foundationWall'], ['Tragwerk', 'frame'], ['Fassade', 'facade'], ['Fenster', 'windows'], ['Geschossdecke', 'beam'], ['Dach', 'roof'], ['Blecharbeiten außen', 'externallySheetMetalWork'], ['Heizung', 'heating'], ['Weitere Angaben zum Gebäude', 'otherAboutTheBuildning'], ['Nebengebäude', 'otherBuildings']].forEach(([label, key]) => add('Gebäude', label, building[key]));
       add('Grundstück', 'Grundstücksfläche', sqm(building.plotSize), false);
       add('Grundstück', 'Grundstücksbezeichnung', building.propertyUnitDesignation, false);
       add('Grundstück', 'Grundstück', building.otherPlot);
-      add('Grundstück', 'Wasser/Abwasser', estate.waterAndDrain);
-      add('Grundstück', 'Gemeinschaftsanlagen', estate.enrollments?.preferentialAndCommunity);
-      add('Grundstück', 'Dienstbarkeiten', estate.enrollments?.enrolledEasement);
       add('Grundstück', 'Bebauungsplan', estate.enrollments?.planRegulations);
       add('Kosten', 'Strom', kr(operation.electricity, '/Jahr'), false);
       add('Kosten', 'Heizung', kr(operation.heating, '/Jahr'), false);
-      add('Kosten', 'Wasser/Abwasser', kr(operation.waterAndDrain, '/Jahr'), false);
+      add('Kosten', 'Wasser & Abwasser (Kosten)', kr(operation.waterAndDrain, '/Jahr'), false);
       add('Kosten', 'Müllabfuhr', kr(operation.sanitation, '/Jahr'), false);
       add('Kosten', 'Schornsteinfeger', kr(operation.chimneySweeping, '/Jahr'), false);
       add('Kosten', 'Straße & Gemeinschaftsanlagen', kr(grounds, '/Jahr'), false);
@@ -4438,13 +4469,25 @@
       add('Steuer', 'Immobilienabgabe', kr(assess.taxFee, '/Jahr'), false);
       add('Strom & Internet', 'Stromanbieter', estate.electricity?.company, false);
       add('Strom & Internet', 'Netzbetreiber', estate.electricity?.distributor, false);
-      add('Strom & Internet', 'Stromverbrauch', estate.electricity?.powerConsumptionKWH ? `${Math.round(estate.electricity.powerConsumptionKWH).toLocaleString('de-DE')} kWh/Jahr` : '', false);
       add('Strom & Internet', 'Breitband/TV', [estate.tvAndBroadband?.broadband, estate.tvAndBroadband?.tv].filter(Boolean).join(' '));
-      add('Energie', 'Energieklasse', estate.energyDeclaration?.energyClass, false);
       add('Terrasse', 'Terrasse/Balkon', estate.balconyPatio?.summary);
       add('Umgebung', 'Gegend', estate.surrounding?.generalAboutArea);
       add('Umgebung', 'Entfernungen', estate.surrounding?.other);
       rooms.forEach((room) => { add('Räume', room.heading, room.text); facts[facts.length - 1].tl = true; });
+      const declaration = estate.energyDeclaration || {};
+      const energyClass = importClean(declaration.energyClass);
+      const powerUse = estate.electricity?.powerConsumptionKWH ? `${Math.round(estate.electricity.powerConsumptionKWH).toLocaleString('de-DE')} kWh/Jahr` : '';
+      const energyUse = importClean(declaration.energyConsumption);
+      const pinned = [
+        ['Gebäudetyp', building.buildingType, true],
+        ['Unterkunftstyp', importHomeType(estate.estateTypeAsString || estate.propertyType) || estate.estateTypeAsString || estate.propertyType, !importHomeType(estate.estateTypeAsString || estate.propertyType)],
+        ['Energieklasse', energyClass ? `Klasse ${energyClass.toUpperCase()}` : declaration.completed, !energyClass],
+        ['Jahresenergieverbrauch', energyUse || powerUse, Boolean(energyUse)],
+        ['Wasser & Abwasser', estate.waterAndDrain, true],
+        ['Dienstbarkeit', rightsText.enrolledEasement, true],
+        ['Sonstige Rechte', rightsText.preferentialAndCommunity, true]
+      ];
+      facts.splice(0, facts.length, ...pinKeyFacts(facts, [], pinned));
       const broker = (estate.brokers || [])[0];
       if (broker && broker.name) add('Kontakt', 'Makler', [broker.name, estate.officeInfo?.name ? `Länsförsäkringar Fastighetsförmedling ${estate.officeInfo.name}` : '', broker.phone].filter(Boolean).join(' · '), false);
       const descriptions = estate.descriptions || {};
