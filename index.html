@@ -273,6 +273,8 @@
     .currency-switch input:focus-visible + .currency-track { outline: 3px solid var(--amber); outline-offset: 2px; }
     .currency-switch .on { color: var(--green-dark); }
     .fx-note { color: var(--muted); font-size: 11px; }
+    .cost-source { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; color: #805526; background: var(--amber-soft); font-size: 9px; font-weight: 700; vertical-align: middle; }
+    .cost-source-note { margin: 0; padding: 10px 20px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .portal-card { margin-bottom: 0; }
     .portal-link-note { margin: 0 0 17px; color: var(--muted); font-size: 11.5px; }
     .portal-link-note .text-btn { padding: 0 0 0 4px; }
@@ -1688,6 +1690,8 @@
           <div class="portal-actions" style="display:flex;flex-wrap:wrap;gap:8px"><button type="submit" class="primary-btn" ${icalBusy ? 'disabled' : ''}>${icalBusy ? 'Abgleich läuft …' : 'Speichern und abgleichen'}</button></div></form>
         <p class="portal-hint">Airbnb liefert im Kalender-Link nur Zeitraum und Buchungscode, keinen Gastnamen und keine Personenzahl. Diese Angaben bleiben leer. Blockierte Tage („nicht verfügbar“) werden nicht als Buchung übernommen.</p>${message}</section>`;
     }
+    let costSources = {};
+    try { const savedSources = JSON.parse(localStorage.getItem('stugliv-cost-sources') || '{}'); if (savedSources && typeof savedSources === 'object') costSources = savedSources; } catch (error) { costSources = {}; }
     let costCurrency = 'SEK';
     try { if (localStorage.getItem('stugliv-cost-currency') === 'EUR') costCurrency = 'EUR'; } catch (error) { /* Einstellung optional */ }
     let fxRate = { rate: 0.09, date: '', live: false };
@@ -2073,6 +2077,7 @@
       const nextDocuments = documents.filter((document) => document.propertyId !== propertyId);
       const withoutProperty = (record) => Object.fromEntries(Object.entries(record).filter(([id]) => id !== propertyId));
       const nextCosts = withoutProperty(annualCosts);
+      const nextCostSources = withoutProperty(costSources);
       const nextInspectionChecks = withoutProperty(inspectionChecks);
       const nextInspectionLog = withoutProperty(inspectionLog);
       const nextInspectionSelections = withoutProperty(inspectionSelections);
@@ -2085,6 +2090,7 @@
         'stugliv-bookings': nextBookings,
         'stugliv-documents': nextDocuments,
         'stugliv-costs': nextCosts,
+        'stugliv-cost-sources': nextCostSources,
         'stugliv-inspection-checks': nextInspectionChecks,
         'stugliv-inspection-log': nextInspectionLog,
         'stugliv-inspection-selections': nextInspectionSelections,
@@ -2114,6 +2120,7 @@
       documents = nextDocuments;
       if (editingBookingId && !bookings.some((booking) => booking.id === editingBookingId)) resetBookingEditor();
       annualCosts = nextCosts;
+      costSources = nextCostSources;
       inspectionChecks = nextInspectionChecks;
       inspectionLog = nextInspectionLog;
       inspectionSelections = nextInspectionSelections;
@@ -2960,7 +2967,8 @@
         <div class="cost-summary"><article class="cost-total"><small>Geschätzte Jahreskosten · ${escapeHtml(property.name)}</small><strong id="annual-total">${money(total)}</strong><span>Ändere die Beträge unten, um dein eigenes Budget abzubilden.</span></article><article class="card cost-average"><span>Monatlicher Budgetdurchschnitt</span><strong id="monthly-total">${money(Math.round(total / 12))}</strong></article></div>
         <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Posten nach Anteil an den Jahreskosten sortiert · ${escapeHtml(property.name)}</p></div></div><ul class="cost-bars" id="cost-bars" aria-label="Kostenverteilung als Balkendiagramm">${costBarsHtml(costs)}</ul></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><span class="status pending">Planwerte bearbeiten</span></div>
-          <div class="cost-list">${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
+          ${Object.keys(costSources[property.id] || {}).length ? `<p class="cost-source-note">Positionen mit „Kosten aus Inserat“ stammen aus dem Inserat (${escapeHtml([...new Set(Object.values(costSources[property.id]))].join(', '))}, Jahreswerte in SEK). Alle anderen Positionen sind Planwerte. Sobald du einen Betrag änderst, entfällt die Markierung.</p>` : ''}
+          <div class="cost-list">${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}${costSources[property.id]?.[category.id] ? `<span class="cost-source" title="Quelle: ${escapeHtml(costSources[property.id][category.id])}">Kosten aus Inserat</span>` : ''}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
           <div class="cost-disclaimer">Orientierungsbudget, keine Kostenprognose: Versicherungs-, Energie-, Wasser-/Abwasser-, Abfall-, Kamin- und Wartungskosten unterscheiden sich je nach Haus, Nutzung und Gemeinde. Die Werte sind editierbare Beispiel-Planwerte. Die Immobilienabgabe 2026 ist mit dem gesetzlichen Höchstbetrag von 10 425 kr angesetzt; sie beträgt grundsätzlich 0,75 % des Steuerwerts bis zum Höchstbetrag. Ersetze Planwerte durch Bescheide und Angebote.</div>
           <p class="source-note">Quellen: <a href="https://www.skatteverket.se/privat/fastigheterochbostad/fastighetsskattfastighetsavgift.4.69ef368911e1304a625800013531.html" target="_blank" rel="noopener noreferrer">Skatteverket · Immobilienabgabe</a> · <a href="https://www.svensktvatten.se/om-oss/verksamhet-och-strategi/fakta-om-vatten/va-taxa/" target="_blank" rel="noopener noreferrer">Svenskt Vatten · lokale VA-Tarife</a> · <a href="https://www.konsumenternas.se/forsakringar/boendeforsakringar/fritidshusforsakringar/" target="_blank" rel="noopener noreferrer">Konsumenternas · Ferienhausversicherung</a>.</p>
         </section>`;
@@ -4341,6 +4349,11 @@
       if (event.target.matches('[data-cost]')) {
         const costs = annualCosts[costProperty] || (annualCosts[costProperty] = { ...initialCosts[costProperty] });
         costs[event.target.dataset.cost] = Math.max(0, Math.round(displayToSek(Number(event.target.value) || 0)));
+        if (costSources[costProperty]?.[event.target.dataset.cost]) {
+          delete costSources[costProperty][event.target.dataset.cost];
+          event.target.closest('.cost-item')?.querySelector('.cost-source')?.remove();
+          pageContent.querySelector('.cost-source-note')?.toggleAttribute('hidden', !Object.keys(costSources[costProperty]).length);
+        }
         const total = costCategories.reduce((sum, category) => sum + (Number(costs[category.id]) || 0), 0);
         document.getElementById('annual-total').textContent = formatCost(total);
         document.getElementById('monthly-total').textContent = formatCost(Math.round(total / 12));
@@ -4483,7 +4496,7 @@
         return;
       }
       if (event.target.matches('[data-cost]')) {
-        try { localStorage.setItem('stugliv-costs', JSON.stringify(annualCosts)); }
+        try { localStorage.setItem('stugliv-costs', JSON.stringify(annualCosts)); localStorage.setItem('stugliv-cost-sources', JSON.stringify(costSources)); }
         catch (error) { console.error('Jahreskosten konnten nicht gespeichert werden:', error); showToast('Kosten konnten nicht gespeichert werden.'); }
       }
       if (event.target.matches('[data-inspection-check]')) {
@@ -5319,7 +5332,7 @@
         pendingPropertyPhotos = photos;
         pendingPropertyPhoto = photos[0] || '';
         renderPhotoGallery();
-        pendingImport = full ? { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs, floorplans } : null;
+        pendingImport = full ? { facts: result.facts, description: result.description, sourceUrl: result.sourceUrl, sourceName: result.sourceName, costs: result.costs, floorplans } : (Object.keys(result.costs || {}).length ? { costs: result.costs, costSource: result.sourceName } : null);
         document.getElementById('property-modal-title').textContent = 'Importiertes Ferienhaus prüfen';
         const notes = [];
         if (full && result.translationFailures) notes.push(result.translationFailures >= result.translationTotal ? 'Die Übersetzung war nicht erreichbar, die Texte stehen im Original.' : 'Einige Texte konnten nicht übersetzt werden.');
@@ -5376,7 +5389,7 @@
         condition: String(formData.get('condition')),
         lastRenovations: String(formData.get('lastRenovations')).trim(),
         plannedRenovations: String(formData.get('plannedRenovations')).trim(),
-        ...(!previous && pendingImport ? { facts: pendingImport.facts, description: pendingImport.description, sourceUrl: pendingImport.sourceUrl, sourceName: pendingImport.sourceName, floorplans: pendingImport.floorplans || [] } : {})
+        ...(!previous && pendingImport?.facts ? { facts: pendingImport.facts, description: pendingImport.description, sourceUrl: pendingImport.sourceUrl, sourceName: pendingImport.sourceName, floorplans: pendingImport.floorplans || [] } : {})
       });
       const index = properties.findIndex((item) => item.id === property.id);
       if (index === -1) properties.push(property);
@@ -5385,7 +5398,9 @@
       annualCosts[property.id] ||= { ...initialCosts[property.id] };
       if (!previous && pendingImport?.costs && Object.keys(pendingImport.costs).length) {
         annualCosts[property.id] = { ...annualCosts[property.id], ...pendingImport.costs };
-        try { localStorage.setItem('stugliv-costs', JSON.stringify(annualCosts)); } catch (error) { console.error('Jahreskosten konnten nicht gespeichert werden:', error); }
+        const sourceName = pendingImport.sourceName || pendingImport.costSource || 'Inserat';
+        costSources[property.id] = Object.fromEntries(Object.keys(pendingImport.costs).filter((id) => costCategories.some((category) => category.id === id)).map((id) => [id, sourceName]));
+        try { localStorage.setItem('stugliv-costs', JSON.stringify(annualCosts)); localStorage.setItem('stugliv-cost-sources', JSON.stringify(costSources)); } catch (error) { console.error('Jahreskosten konnten nicht gespeichert werden:', error); }
       }
       selectedPropertyId = property.id;
       if (!saveProperties()) {
