@@ -564,6 +564,7 @@
     .control-card-main { min-width: 0; display: grid; gap: 3px; }
     .control-card-main strong { font-size: 13px; }
     .control-card-main small { color: var(--muted); font-size: 11px; }
+    .control-status-line { margin: 0; padding: 0 18px 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .control-due { color: #1f6b41 !important; font-weight: 700; }
     .control-due.overdue { color: var(--red) !important; }
     .control-card-partner { font-size: 12px; color: var(--ink); }
@@ -2334,7 +2335,13 @@
             return `<div class="exchange-actions"><button class="primary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">${icon('plus')} Kontrolle erstellen</button></div><p class="control-list-title">Erstellte Kontrollen (${controls.length})</p>${controls.length ? `<div class="control-list">${controlCards}</div>` : '<div class="empty">Noch keine Kontrolle erstellt. Lege eine Kontrolle an und weise ihr einen Servicepartner zu.</div>'}`;
           })()}</div>
         </section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Kontrollpositionen</h2><p class="card-caption">${controlsFor(property.id).length} ${controlsFor(property.id).length === 1 ? 'Kontrolle' : 'Kontrollen'} für ${escapeHtml(property.name)}</p></div></div>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Kontrollpositionen</h2><p class="card-caption">${controlsFor(property.id).length} ${controlsFor(property.id).length === 1 ? 'Kontrolle' : 'Kontrollen'} für ${escapeHtml(property.name)}</p></div>${inspectionStatusBadge(property.id)}</div>
+          <p class="control-status-line">${(() => {
+            const last = lastAbsenceInspection(property.id);
+            if (!last.entry) return 'Noch keine Abwesenheitskontrolle protokolliert – die Abwesenheitskontrolle ist fällig.';
+            const count = last.entry.checkedItems.length;
+            return `Letzte Abwesenheitskontrolle: ${escapeHtml(formatInspectionDate(last.entry.date))} · ${count} ${count === 1 ? 'Position' : 'Positionen'} geprüft · ${last.current ? `gültig bis ${escapeHtml(formatInspectionDate(last.validUntil))}` : `seit ${escapeHtml(formatInspectionDate(last.validUntil))} nicht mehr gültig – Abwesenheitskontrolle fällig`}`;
+          })()}</p>
           <div class="manual-check-bar" style="border-top:0"><p>Alle Prüfpositionen deiner Kontrollen mit dem jeweiligen Servicepartner.</p><div class="control-card-actions"><button class="primary-btn" type="button" data-action="show-control-positions">Kontrollpositionen anzeigen</button><button class="secondary-btn" type="button" data-action="toggle-manual-check" aria-expanded="${inspectionManual}">${inspectionManual ? 'Manuelles Abhaken schließen' : 'Prüfliste manuell abhaken'}</button></div></div>
         </section>
         ${inspectionManual ? `<section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste manuell abhaken</h2><p class="card-caption">${complete} von ${selectedItems.length} ausgewählten Punkten erledigt</p></div>${selectedItems.length ? `<div class="winter-progress"><progress max="${selectedItems.length}" value="${complete}" aria-label="${complete} von ${selectedItems.length} Abwesenheitspunkten erledigt"></progress><strong>${absenceProgress} %</strong></div>` : ''}<span class="status ${selectedItems.length && complete === selectedItems.length ? '' : 'pending'}">${selectedItems.length && complete === selectedItems.length ? 'Bereit zum Protokollieren' : selectedItems.length ? 'Kontrolle offen' : 'Keine Prüfpunkte ausgewählt'}</span></div>
@@ -3111,29 +3118,22 @@
       }
       return [];
     }
+    function lastAbsenceInspection(propertyId) {
+      const today = localDateKey(new Date());
+      const entry = inspectionLogEntries(propertyId)
+        .filter((item) => item.date <= today)
+        .sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+      if (!entry) return { entry: null, validUntil: '', current: false };
+      const validUntil = new Date(`${entry.date}T12:00:00`);
+      const originalDay = validUntil.getDate();
+      validUntil.setDate(1);
+      validUntil.setMonth(validUntil.getMonth() + 1);
+      validUntil.setDate(Math.min(originalDay, new Date(validUntil.getFullYear(), validUntil.getMonth() + 1, 0).getDate()));
+      const validUntilKey = localDateKey(validUntil);
+      return { entry, validUntil: validUntilKey, current: today <= validUntilKey };
+    }
     function inspectionIsCurrent(propertyId) {
-      const selectedIds = Array.isArray(inspectionSelections[propertyId])
-        ? inspectionSelections[propertyId]
-        : absenceChecklist.map((item) => item.id);
-      if (!selectedIds.length) return false;
-      const checks = inspectionChecks[propertyId] || {};
-      if (selectedIds.every((id) => checks[id])) return true;
-      const latest = inspectionLogEntries(propertyId)
-        .filter((entry) => selectedIds.every((id) => entry.checkedItems.includes(id)))
-        .sort((a, b) => b.date.localeCompare(a.date))[0];
-      if (!latest || latest.date > localDateKey(new Date())) return false;
-      const lastCompleted = new Date(`${latest.date}T12:00:00`);
-      const dueDate = new Date(lastCompleted);
-      if (inspectionCadence[propertyId] === 'weekly') {
-        dueDate.setDate(dueDate.getDate() + 7);
-      } else {
-        const originalDay = dueDate.getDate();
-        dueDate.setDate(1);
-        dueDate.setMonth(dueDate.getMonth() + 1);
-        const lastDayOfDueMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0).getDate();
-        dueDate.setDate(Math.min(originalDay, lastDayOfDueMonth));
-      }
-      return new Date(`${localDateKey(new Date())}T12:00:00`) <= dueDate;
+      return lastAbsenceInspection(propertyId).current;
     }
     function winterIsReady(propertyId) {
       const checked = winterChecks[`${new Date().getFullYear()}:${propertyId}`] || {};
