@@ -444,10 +444,29 @@
     .house-service-row:last-child { border-bottom: 0; }
     .house-service-row strong { display: block; font-size: 12px; }
     .house-service-row small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .checklist-dot { flex: none; width: 8px; height: 8px; margin: 6px 3px 0 4px; border-radius: 50%; background: var(--green); }
+    .manual-check-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px 16px; border-top: 1px solid var(--line); }
+    .manual-check-bar p { margin: 0; color: var(--muted); font-size: 11px; }
     .item-frequency { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 12px; color: var(--green); background: #e6f1ea; font-size: 9px; font-weight: 700; }
     @media (max-width: 720px) { .plan-row { grid-template-columns: 1fr; } .house-service-row { align-items: flex-start; flex-direction: column; } }
     #pdf-viewer-modal { z-index: 80; }
     .pdf-viewer-modal { width: min(760px, 100%); }
+    .pdf-preview { max-height: 60vh; overflow-y: auto; padding: 22px 24px; border: 1px solid var(--line); border-radius: 8px; background: white; color: #1a241d; box-shadow: inset 0 0 0 4px #f4f4f2; }
+    .pdf-preview[hidden] { display: none; }
+    .pdf-preview h3 { margin: 0 0 4px; font-size: 18px; }
+    .pdf-preview h4 { margin: 18px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .pdf-preview .pdf-meta { margin: 0 0 6px; color: #5b665e; font-size: 11px; line-height: 1.5; }
+    .pdf-preview dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin: 0; }
+    .pdf-preview dt { color: #6b756d; font-size: 10px; }
+    .pdf-preview dd { margin: 1px 0 0; font-size: 12px; font-weight: 700; }
+    .pdf-preview ul { margin: 0; padding: 0; list-style: none; }
+    .pdf-preview li { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef0ec; }
+    .pdf-preview .pdf-box { flex: none; width: 14px; height: 14px; margin-top: 2px; border: 1px solid #40504a; }
+    .pdf-preview li strong { display: block; font-size: 12px; }
+    .pdf-preview li small { display: block; margin-top: 2px; color: #5b665e; font-size: 10.5px; line-height: 1.45; }
+    .pdf-preview .pdf-field { height: 28px; margin-top: 6px; border: 1px solid #b3bab4; border-radius: 3px; }
+    .pdf-preview .pdf-field.tall { height: 70px; }
+    .pdf-viewer-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
     .pdf-viewer-frame { width: 100%; height: 60vh; border: 1px solid var(--line); border-radius: 8px; background: #f4f4f2; }
     .pdf-viewer-modal .form-actions a { text-decoration: none; display: inline-flex; align-items: center; }
     .control-list { display: grid; gap: 10px; padding: 4px 18px 16px; }
@@ -739,7 +758,9 @@
   <div class="modal-backdrop" id="pdf-viewer-modal" role="dialog" aria-modal="true" aria-labelledby="pdf-viewer-title">
     <section class="modal pdf-viewer-modal">
       <div class="modal-head"><div><h2 id="pdf-viewer-title">PDF</h2><p id="pdf-viewer-name"></p></div><button class="close-btn" type="button" id="close-pdf-viewer" aria-label="Schließen">✕</button></div>
+      <div class="pdf-preview" id="pdf-viewer-preview" hidden></div>
       <object id="pdf-viewer-frame" type="application/pdf" class="pdf-viewer-frame"></object>
+      <p class="pdf-viewer-note" id="pdf-viewer-note">Wird die PDF hier nicht angezeigt, nutze „In neuem Tab öffnen“ oder „PDF speichern“.</p>
       <div class="form-actions"><a class="secondary-btn" id="pdf-viewer-open" target="_blank" rel="noopener">In neuem Tab öffnen</a><a class="primary-btn" id="pdf-viewer-save">PDF speichern</a></div>
     </section>
   </div>
@@ -1216,6 +1237,7 @@
     let documentsProperty = properties[0].id;
     let inspectionProperty = properties[0].id;
     let inspectionView = 'absence';
+    let inspectionManual = false;
     let pendingInspection = null;
     const firstCalendarEventDate = guestChanges[0]?.date || localDateKey(new Date());
     let calendarMonth = new Date(Number(firstCalendarEventDate.slice(0, 4)), Number(firstCalendarEventDate.slice(5, 7)) - 1, 1);
@@ -2012,11 +2034,15 @@
             return `<div class="exchange-actions"><button class="primary-btn" type="button" data-action="create-inspection" data-property="${escapeHtml(property.id)}">${icon('plus')} Kontrolle erstellen</button></div><p class="control-list-title">Erstellte Kontrollen (${controls.length})</p>${controls.length ? `<div class="control-list">${controlCards}</div>` : '<div class="empty">Noch keine Kontrolle erstellt. Lege eine Kontrolle an und weise ihr einen Servicepartner zu.</div>'}`;
           })()}</div>
         </section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste bei Abwesenheit</h2><p class="card-caption">${complete} von ${selectedItems.length} ausgewählten Punkten erledigt</p></div>${selectedItems.length ? `<div class="winter-progress"><progress max="${selectedItems.length}" value="${complete}" aria-label="${complete} von ${selectedItems.length} Abwesenheitspunkten erledigt"></progress><strong>${absenceProgress} %</strong></div>` : ''}<span class="status ${selectedItems.length && complete === selectedItems.length ? '' : 'pending'}">${selectedItems.length && complete === selectedItems.length ? 'Bereit zum Protokollieren' : selectedItems.length ? 'Kontrolle offen' : 'Keine Prüfpunkte ausgewählt'}</span></div>
-          ${selectedItems.length ? `<div class="checklist">${selectedItems.map((item) => `<label class="checklist-item"><input type="checkbox" data-inspection-check="${item.id}" ${checks[item.id] ? 'checked' : ''}><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small>${planFor(property.id).items?.[item.id] ? `<span class="item-frequency">${planFrequencyLabel(planFor(property.id).items[item.id])}</span>` : ''}</span></label>`).join('')}</div>` : '<div class="empty">Wähle oben mindestens einen Prüfpunkt für dieses Haus aus.</div>'}
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste</h2><p class="card-caption">${absenceChecklist.length} Positionen für ${escapeHtml(property.name)}</p></div></div>
+          <div class="checklist">${absenceChecklist.map((item) => `<div class="checklist-item"><span class="checklist-dot"></span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small>${planFor(property.id).items?.[item.id] ? `<span class="item-frequency">${planFrequencyLabel(planFor(property.id).items[item.id])}</span>` : ''}</span></div>`).join('')}</div>
+          <div class="manual-check-bar"><p>Hake die Positionen selbst ab und protokolliere die Kontrolle.</p><button class="primary-btn" type="button" data-action="toggle-manual-check" aria-expanded="${inspectionManual}">${inspectionManual ? 'Manuelles Abhaken schließen' : 'Prüfliste manuell abhaken'}</button></div>
+        </section>
+        ${inspectionManual ? `<section class="card"><div class="card-head"><div><h2 class="card-title">Prüfliste manuell abhaken</h2><p class="card-caption">${complete} von ${selectedItems.length} ausgewählten Punkten erledigt</p></div>${selectedItems.length ? `<div class="winter-progress"><progress max="${selectedItems.length}" value="${complete}" aria-label="${complete} von ${selectedItems.length} Abwesenheitspunkten erledigt"></progress><strong>${absenceProgress} %</strong></div>` : ''}<span class="status ${selectedItems.length && complete === selectedItems.length ? '' : 'pending'}">${selectedItems.length && complete === selectedItems.length ? 'Bereit zum Protokollieren' : selectedItems.length ? 'Kontrolle offen' : 'Keine Prüfpunkte ausgewählt'}</span></div>
+          ${selectedItems.length ? `<div class="checklist">${selectedItems.map((item) => `<label class="checklist-item"><input type="checkbox" data-inspection-check="${item.id}" ${checks[item.id] ? 'checked' : ''}><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small>${planFor(property.id).items?.[item.id] ? `<span class="item-frequency">${planFrequencyLabel(planFor(property.id).items[item.id])}</span>` : ''}</span></label>`).join('')}</div>` : '<div class="empty">Keine Prüfpunkte ausgewählt. Erstelle zuerst eine Kontrolle mit mindestens einer Position.</div>'}
           <div class="inspection-completion-date"><label class="form-label" for="inspection-completed-date">Tatsächlich durchgeführt am</label><input class="form-control" id="inspection-completed-date" type="date" max="${today}" value="${today}" ${!selectedItems.length || complete < selectedItems.length ? 'disabled' : ''}><button class="primary-btn" data-action="finish-inspection" ${!selectedItems.length || complete < selectedItems.length ? 'disabled title="Bitte alle ausgewählten Prüfpunkte abhaken"' : ''}>Kontrolle protokollieren</button></div>
           <div class="inspection-status">Bei akuter Gefahr, Wasserschaden oder Einbruch: Abstand halten und Eigentümer bzw. zuständigen Notdienst informieren. Die Prüfliste ist eine organisatorische Hilfe und ersetzt keine fachgerechte Prüfung.</div>
-        </section>
+        </section>` : ''}
         <section class="card"><div class="card-head"><div><h2 class="card-title">Archiv der Prüfprotokolle</h2><p class="card-caption">${entries.length + (planUploads[property.id] || []).length} ${entries.length + (planUploads[property.id] || []).length === 1 ? 'Protokoll' : 'Protokolle'} für ${escapeHtml(property.name)}</p></div></div>
           ${(planUploads[property.id] || []).length ? `<div class="inspection-archive-list">${(planUploads[property.id] || []).slice().reverse().map((upload) => `<article class="inspection-archive-row"><div class="inspection-archive-main"><strong>Hochgeladene PDF · ${escapeHtml(upload.name)}</strong><small>Archiviert ${escapeHtml(new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date(upload.uploadedAt)))} · ${Math.max(1, Math.round(upload.size / 1024))} KB</small></div><div class="inspection-archive-actions"><button class="secondary-btn" type="button" data-open-upload="${escapeHtml(upload.id)}">PDF anzeigen</button><button class="secondary-btn" type="button" data-delete-upload="${escapeHtml(upload.id)}">Löschen</button></div></article>`).join('')}</div>` : ''}
           ${archiveEntries.length ? `<div class="inspection-archive-list">${archiveEntries.map(({ entry, index }) => {
@@ -2323,13 +2349,29 @@
       return bytes;
     }
     let pdfViewerUrl = '';
-    function showPdf(bytes, fileName, title) {
+    function planPreviewHtml(property, items, control) {
+      const provider = control ? providers.find((entry) => entry.id === control.providerId) : null;
+      const date = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(new Date());
+      return `<h3>Kontrollplan / Prüfprotokoll</h3><p class="pdf-meta">${control ? `Kontrolle „${escapeHtml(control.name)}“${provider ? ` · Servicepartner: ${escapeHtml(provider.name)}` : ''}` : 'Abwesenheitskontrolle'} · erstellt am ${escapeHtml(date)}</p>
+        <h4>Angaben zum Gebäude</h4><dl>${inspectionHouseDetails(property).map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
+        <h4>Prüfpositionen</h4><p class="pdf-meta">Bitte jede Position nach der Kontrolle im Kästchen ankreuzen.</p>
+        <ul>${items.map((item) => `<li><span class="pdf-box"></span><span><strong>${escapeHtml(item.title)}</strong><small>${control?.items?.[item.id] ? `Taktung: ${escapeHtml(planFrequencyLabel(control.items[item.id]))} · ` : ''}${escapeHtml(item.detail || '')}</small></span></li>`).join('')}</ul>
+        <h4>Abschluss</h4><dl><div><dt>Kontrolliert von</dt><dd><div class="pdf-field"></div></dd></div><div><dt>Datum</dt><dd><div class="pdf-field"></div></dd></div></dl>
+        <p class="pdf-meta" style="margin-top:12px">Bemerkungen / Auffälligkeiten</p><div class="pdf-field tall"></div>`;
+    }
+    function showPdf(bytes, fileName, title, previewHtml) {
       if (pdfViewerUrl) URL.revokeObjectURL(pdfViewerUrl);
       pdfViewerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
       document.getElementById('pdf-viewer-title').textContent = title || 'PDF';
       document.getElementById('pdf-viewer-name').textContent = fileName;
       const frame = document.getElementById('pdf-viewer-frame');
-      frame.data = pdfViewerUrl;
+      const preview = document.getElementById('pdf-viewer-preview');
+      preview.hidden = !previewHtml;
+      preview.innerHTML = previewHtml || '';
+      frame.hidden = Boolean(previewHtml);
+      document.getElementById('pdf-viewer-note').hidden = Boolean(previewHtml);
+      if (previewHtml) frame.removeAttribute('data');
+      else frame.data = pdfViewerUrl;
       const open = document.getElementById('pdf-viewer-open');
       open.href = pdfViewerUrl;
       const save = document.getElementById('pdf-viewer-save');
@@ -2340,6 +2382,7 @@
     function closePdfViewer() {
       document.getElementById('pdf-viewer-modal').classList.remove('open');
       document.getElementById('pdf-viewer-frame').removeAttribute('data');
+      document.getElementById('pdf-viewer-preview').innerHTML = '';
     }
     function downloadFile(bytes, fileName, type) {
       const url = URL.createObjectURL(new Blob([bytes], { type }));
@@ -2401,7 +2444,7 @@
       const items = controlItems(control);
       if (!items.length) { showToast('Bitte zuerst eine Kontrolle erstellen.'); return; }
       const bytes = buildPlanPdf(property, items, 'monthly', control);
-      showPdf(bytes, planFileName(property), 'Kontrollplan');
+      showPdf(bytes, planFileName(property), 'Kontrollplan', planPreviewHtml(property, items, control));
     }
     function pickPlanUpload(file) {
       pendingPlanUpload = null;
@@ -2588,6 +2631,7 @@
         console.error('Abgehakte Prüfpunkte konnten nach dem Archivieren nicht zurückgesetzt werden:', error);
       }
       closeInspectionConfirmation();
+      inspectionManual = false;
       render();
       showToast(checksCleared
         ? 'Prüfprotokoll wurde im Hauskontroll-Archiv gespeichert.'
@@ -2946,6 +2990,7 @@
         bookingView = 'list';
         render();
       }
+      if (action === 'toggle-manual-check') { inspectionManual = !inspectionManual; render(); }
       if (action === 'finish-inspection') finishInspection();
       if (action === 'send-inspection-plan') openSendPlan(event.target.closest('[data-action]').dataset.control);
       if (action === 'view-inspection-plan') viewInspectionPlan(event.target.closest('[data-action]').dataset.control);
@@ -3454,7 +3499,7 @@
     document.getElementById('send-plan-web').addEventListener('click', sendPlanViaWebmail);
     document.getElementById('send-plan-pdf').addEventListener('click', () => {
       const { property, items, control } = sendPlanState;
-      showPdf(buildPlanPdf(property, items, 'monthly', control), planFileName(property), 'Kontrollplan');
+      showPdf(buildPlanPdf(property, items, 'monthly', control), planFileName(property), 'Kontrollplan', planPreviewHtml(property, items, control));
     });
     document.getElementById('send-plan-modal').addEventListener('click', (event) => { if (event.target.id === 'send-plan-modal') closeSendPlan(); });
     document.getElementById('export-inspection-pdf').addEventListener('click', exportInspectionPdf);
