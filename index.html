@@ -4330,6 +4330,39 @@
       rest.splice(at, 0, ...pinned);
       return rest;
     }
+    const RENO_PATTERN = /(renover|ombyggn|ombygg|tillbygg|moderniser|uppgrader|upprust|byte av|\bbytt|utbytt|byttes|bytts|nytt tak|nya fönster|ny panel|nymål|nylagd|nyinstaller|installerad|installerades|dräner|omlagt|omlagd|omlagda|ny(a)? (kök|badrum|golv|tak|fönster|panel|värmepump|eldstad|spis|kamin|el|ledning|ledningar|vatten|avlopp|brunn|bastu|altan|trall|fasad|dörr|dörrar|golvvärme|ventilation)|nyrenoverad|totalrenoverad|helrenoverad|tilläggsisolerad|isolerad|stambyte|dränering)/i;
+    const RENO_NEGATIVE = /(renoveringsbehov|renoveringsobjekt|upprustningsbehov|underhållsbehov|slitet|sliten|slitage|bör (bytas|renoveras|åtgärdas)|behöver (bytas|renoveras|åtgärdas)|dåligt skick|fuktskada|rötskada|mögel|läckage)/i;
+    const RENO_POSITIVE = /(välskött|väl underhåll|gott skick|mycket gott skick|fint skick|bra skick|nyskick|nyrenoverad|totalrenoverad|helrenoverad|nyproduktion)/i;
+    function extractRenovations(texts, yearBuilt) {
+      const sentences = texts.flatMap((text) => importClean(text).split(/\n+|(?<=[.!?])\s+/)).map((sentence) => sentence.trim()).filter((sentence) => sentence.length > 12);
+      const seen = new Set();
+      const items = [];
+      sentences.forEach((sentence) => {
+        if (!RENO_PATTERN.test(sentence) || RENO_NEGATIVE.test(sentence) || /\b(kan|ska|bör|möjlighet|möjligt|planerad|planerat)\b/i.test(sentence)) return;
+        const year = (sentence.match(/\b(19[5-9]\d|20[0-3]\d)\b/) || [])[1] || '';
+        if (year && yearBuilt && Number(year) === Number(yearBuilt) && /byggd|byggdes|uppfört|byggår/i.test(sentence)) return;
+        const text = sentence.length > 220 ? `${sentence.slice(0, 217).trim()}…` : sentence;
+        const key = text.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        items.push({ year, text });
+      });
+      const whole = sentences.join(' ');
+      const built = Number(yearBuilt) || 0;
+      const years = items.map((item) => Number(item.year)).filter(Boolean);
+      const recent = years.some((year) => year >= new Date().getFullYear() - 10);
+      let condition = '';
+      if (RENO_NEGATIVE.test(whole)) condition = 'Sanierungsbedarf';
+      else if (/nyrenoverad|totalrenoverad|helrenoverad|nyproduktion/i.test(whole) || (items.length >= 3 && recent)) condition = 'Sehr gut';
+      else if (RENO_POSITIVE.test(whole) || items.length || (built >= 2000)) condition = 'Gut';
+      return { items: items.slice(0, 8), condition };
+    }
+    function addRenovationFacts(facts, texts, yearBuilt) {
+      const result = extractRenovations(texts, yearBuilt);
+      if (result.condition) facts.push({ group: 'Zustand & Sanierungen', label: 'Zustandseinschätzung', value: `${result.condition} (automatisch aus Inserat und Baujahr abgeleitet, bitte prüfen)`, tv: false, condition: result.condition });
+      result.items.forEach((item, index) => facts.push({ group: 'Zustand & Sanierungen', label: `Sanierung/Erneuerung ${index + 1}`, value: item.text, tv: true, year: item.year, reno: true }));
+      return result;
+    }
     function splitRights(text) {
       const lines = importClean(text).split('\n').map((line) => line.trim()).filter(Boolean);
       const isEasement = (line) => /servitut|ledningsrätt|nyttjanderätt|vägrätt|officialrätt|avtalsrätt/i.test(line);
@@ -4380,6 +4413,7 @@
         ['Dienstbarkeit', rightsParts.easement, true],
         ['Sonstige Rechte', rightsParts.rights, true]
       ]));
+      const renovation = addRenovationFacts(facts, [object.beskrivningKort, ...(object.objektsbeskrivning?.rumsbeskrivning || []).map((room) => room.broedText), ...(object.fakta?.detaljer || []).flatMap((block) => (block.post || []).filter((entry) => !entry.rubrik || entry.rubrik === 'Övrigt').map((entry) => entry.subItem))], base.byggnadsAar || fact('Byggnadsår'));
       const broker = object.maeklare;
       if (broker && (broker.foernamn || broker.efternamn)) facts.push({ group: 'Kontakt', label: 'Makler', tv: false, value: [`${broker.foernamn || ''} ${broker.efternamn || ''}`.trim(), object.kontor?.namn ? `Fastighetsbyrån ${object.kontor.namn}` : '', broker.mobiltelefonnummer || ''].filter(Boolean).join(' · ') });
       const imageUrl = (entry) => (/^https:\/\//.test(entry?.url || '') ? entry.url : '');
@@ -4420,6 +4454,7 @@
       const kr = (value, suffix = '') => (Number(value) > 0 ? `${Math.round(Number(value)).toLocaleString('de-DE')} kr${suffix}` : '');
       const sqm = (value) => (Number(value) > 0 ? `${Math.round(Number(value))} m²` : '');
       const rightsText = estate.enrollments || {};
+      const descriptions0 = estate.descriptions || {};
       const rooms = (estate.rooms || []).filter((room) => room.heading && importClean(room.text));
       const searchable = [building.heating, building.otherAboutTheBuildning, building.generealDescription, estate.descriptions?.longSellingDescription, rooms.map((room) => `${room.heading} ${room.text}`).join(' ')].join(' ');
       const fireplace = importFireplace(searchable);
@@ -4488,6 +4523,7 @@
         ['Sonstige Rechte', rightsText.preferentialAndCommunity, true]
       ];
       facts.splice(0, facts.length, ...pinKeyFacts(facts, [], pinned));
+      addRenovationFacts(facts, [descriptions0.longSellingDescription, descriptions0.generally, building.otherAboutTheBuildning, building.otherBuildings, estate.balconyPatio?.summary, ...rooms.map((room) => room.text)], building.buildingYear);
       const broker = (estate.brokers || [])[0];
       if (broker && broker.name) add('Kontakt', 'Makler', [broker.name, estate.officeInfo?.name ? `Länsförsäkringar Fastighetsförmedling ${estate.officeInfo.name}` : '', broker.phone].filter(Boolean).join(' · '), false);
       const descriptions = estate.descriptions || {};
@@ -4683,7 +4719,11 @@
         closeImportModal();
         openPropertyModal();
         const form = document.getElementById('property-form');
-        const fields = { ...result.fields, ...(full && result.heatingText ? { fireplaceNotes: `Heizung laut Inserat: ${result.heatingText}`.slice(0, 300) } : {}) };
+        const renovationFacts = full ? result.facts.filter((fact) => fact.reno) : [];
+        const conditionFact = full ? result.facts.find((fact) => fact.condition) : null;
+        const renovationLines = renovationFacts.map((fact) => `${fact.year && !fact.value.includes(fact.year) ? `${fact.year}: ` : ''}${fact.value}`);
+        result.facts.forEach((fact) => { delete fact.year; delete fact.reno; delete fact.condition; });
+        const fields = { ...result.fields, ...(conditionFact ? { condition: conditionFact.value.replace(/ \(.*$/, '') } : {}), ...(renovationLines.length ? { lastRenovations: renovationLines.join('\n').slice(0, 1500) } : {}), ...(full && result.heatingText ? { fireplaceNotes: `Heizung laut Inserat: ${result.heatingText}`.slice(0, 300) } : {}) };
         Object.entries(fields).forEach(([name, value]) => { if (form.elements[name] && value) form.elements[name].value = value; });
         pendingPropertyPhotos = photos;
         pendingPropertyPhoto = photos[0] || '';
@@ -4692,6 +4732,7 @@
         document.getElementById('property-modal-title').textContent = 'Importiertes Ferienhaus prüfen';
         const notes = [];
         if (full && result.translationFailures) notes.push(result.translationFailures >= result.translationTotal ? 'Die Übersetzung war nicht erreichbar, die Texte stehen im Original.' : 'Einige Texte konnten nicht übersetzt werden.');
+        if (full && (renovationLines.length || conditionFact)) notes.push(renovationLines.length ? `Zustand und ${renovationLines.length} erwähnte Sanierung${renovationLines.length === 1 ? '' : 'en'} wurden aus dem Text abgeleitet.` : 'Der Zustand wurde aus dem Text abgeleitet.');
         if (full && photos.length < result.photoUrls.length) notes.push('Nicht alle Fotos konnten geladen werden.');
         if (full && floorplans.length < result.floorplanUrls.length) notes.push('Nicht alle Grundrisse konnten geladen werden.');
         if (!full && !photos.length && result.photoUrls.length) notes.push('Das Foto konnte nicht geladen werden.');
