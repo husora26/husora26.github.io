@@ -2122,7 +2122,7 @@
         <div class="house-settings-actions"><button type="submit" class="secondary-btn">Übernehmen</button><button type="button" class="primary-btn" id="buy-pro-btn" data-action="open-pro" data-plan="pro" ${needsPro ? '' : 'hidden'}>★ Husora Pro erwerben</button></div></form></section>`;
     }
     function propertiesPage() {
-      return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div><button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button></div>
+      return `<div class="welcome"><div><p class="eyebrow">Schweden · Värmland · Dalarna · Bohuslän</p><h1>${singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser'}</h1><p class="subtitle">Ferienhaus-Details und Servicebedarf auf einen Blick.</p></div>${isPro() ? `<button class="primary-btn" data-action="add-property">${icon('plus')} Ferienhaus hinzufügen</button>` : ''}</div>
         ${houseSettingsCard()}
         <div class="property-grid ${singleHouse() ? 'single' : ''}">${properties.map((rawProperty) => {
           const property = propertyWithDefaults(rawProperty);
