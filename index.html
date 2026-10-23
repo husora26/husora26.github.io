@@ -954,7 +954,7 @@
       <div class="modal-head"><div><h2 id="import-modal-title">Ferienhaus importieren</h2><p>Link zu einem Inserat einfügen</p></div><button class="close-btn" type="button" id="close-import-modal" aria-label="Schließen">✕</button></div>
       <label><span class="form-label">Link zum Inserat</span><input class="form-control" id="import-url" type="url" inputmode="url" autocomplete="off" placeholder="https://www.fastighetsbyran.com/…/objekt/?objektID=…"></label>
       <fieldset class="import-modes"><legend class="form-label">Umfang des Imports</legend>
-        <label class="import-mode"><input type="radio" name="import-mode" value="simple" checked><span><strong>Einfacher Import</strong><small>Nur die üblichen Felder der Eingabemaske: Adresse, Baujahr, Flächen, Zimmer, Heizung und Kamin.</small></span></label>
+        <label class="import-mode"><input type="radio" name="import-mode" value="simple" checked><span><strong>Einfacher Import</strong><small>Die üblichen Felder der Eingabemaske (Adresse, Baujahr, Flächen, Zimmer, Heizung, Kamin) und 1 Foto des Hauses.</small></span></label>
         <label class="import-mode"><input type="radio" name="import-mode" value="full"><span><strong>Umfangreicher Import</strong><small>Zusätzlich Beschreibungen, Gebäude-, Grundstücks- und Kostenangaben (automatisch ins Deutsche übersetzt), 4 Fotos und Grundrisse.</small></span></label>
       </fieldset>
       <p class="import-hint">Du kannst alles vor dem Speichern prüfen und ändern. Für die Übersetzung werden die Inseratstexte an einen Übersetzungsdienst gesendet.<br><strong>Unterstützt:</strong> Fastighetsbyrån (fastighetsbyran.com). Hemnet blockiert automatische Abrufe und kann daher nicht eingelesen werden.</p>
@@ -4501,7 +4501,11 @@
         const result = await source.load(id, url.href);
         let photos = [];
         let floorplans = [];
-        if (full) {
+        if (!full) {
+          setImportStatus('Foto wird geladen …');
+          const [firstPhoto] = await Promise.allSettled(result.photoUrls.slice(0, 1).map((photoUrl) => importPhoto(photoUrl)));
+          if (firstPhoto?.status === 'fulfilled') photos = [firstPhoto.value];
+        } else {
           setImportStatus('Texte werden ins Deutsche übersetzt …');
           await translateImportResult(result, (done, total) => setImportStatus(`Texte werden ins Deutsche übersetzt … (${done}/${total})`));
           setImportStatus('Fotos und Grundrisse werden geladen …');
@@ -4526,7 +4530,8 @@
         if (full && result.translationFailures) notes.push(result.translationFailures >= result.translationTotal ? 'Die Übersetzung war nicht erreichbar, die Texte stehen im Original.' : 'Einige Texte konnten nicht übersetzt werden.');
         if (full && photos.length < result.photoUrls.length) notes.push('Nicht alle Fotos konnten geladen werden.');
         if (full && floorplans.length < result.floorplanUrls.length) notes.push('Nicht alle Grundrisse konnten geladen werden.');
-        showToast(full ? `Daten, ${photos.length} Fotos${floorplans.length ? ` und ${floorplans.length} Grundriss${floorplans.length === 1 ? '' : 'e'}` : ''} übernommen. ${notes.join(' ')} Bitte prüfen und speichern.`.replace(/\s+/g, ' ') : 'Daten aus dem Inserat übernommen. Bitte prüfen und speichern.');
+        if (!full && !photos.length && result.photoUrls.length) notes.push('Das Foto konnte nicht geladen werden.');
+        showToast(full ? `Daten, ${photos.length} Fotos${floorplans.length ? ` und ${floorplans.length} Grundriss${floorplans.length === 1 ? '' : 'e'}` : ''} übernommen. ${notes.join(' ')} Bitte prüfen und speichern.`.replace(/\s+/g, ' ') : `Daten${photos.length ? ' und 1 Foto' : ''} aus dem Inserat übernommen. ${notes.join(' ')} Bitte prüfen und speichern.`.replace(/\s+/g, ' '));
       } catch (error) {
         console.error('Import fehlgeschlagen:', error);
         setImportStatus(error.userMessage || 'Der Import ist fehlgeschlagen. Bitte den Link prüfen und erneut versuchen.', true);
