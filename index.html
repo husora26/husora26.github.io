@@ -1001,6 +1001,80 @@
       .booking-row { align-items: flex-start; flex-wrap: wrap; }
       .booking-row-actions { width: 100%; }
     }
+    .occupancy-pill { flex: none; padding: 4px 10px; border-radius: 20px; color: var(--green); background: var(--green-soft); font-size: 10.5px; font-weight: 700; }
+    .occupancy-pill.busy { color: #8b3e33; background: var(--red-soft); }
+    .occupancy-pill.turnover { color: #7a5a23; background: var(--amber-soft); }
+    @media (min-width: 1051px) {
+      .stats .stat-wide ~ .stat:last-child:nth-child(3n+2), .stats .stat:first-child:not(.stat-wide) ~ .stat:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+    }
+    @media (max-width: 1050px) {
+      .stats .stat-wide ~ .stat:last-child:nth-child(2n), .stats .stat:first-child:not(.stat-wide) ~ .stat:last-child:nth-child(2n+1) { grid-column: 1 / -1; }
+    }
+    .automation-summary.booking-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .booking-kpis strong { font-size: 22px; }
+    .booking-list-heading { grid-column: 1 / -1; margin: 10px 0 0; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .booking-status.live { color: #fff; background: var(--amber); }
+    @media (max-width: 900px) { .automation-summary.booking-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .booking-kpis.automation-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .booking-kpis > div { flex-direction: column; gap: 4px; } }
+    .calendar-today-btn { height: 31px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: white; font-size: 11px; font-weight: 700; }
+    /* Automatisierung */
+    .text-btn.inline { padding: 0; font-size: inherit; }
+    .care-steps { display: grid; gap: 4px; margin: 2px 0 4px; padding: 0; list-style: none; }
+    .care-steps li { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; font-size: 11.5px; }
+    .care-steps li i { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid #b9c5bc; border-radius: 50%; color: #fff; }
+    .care-steps li i svg { width: 10px; height: 10px; }
+    .care-steps li.done i { border-color: var(--green); background: var(--green); }
+    .care-steps li.done span { color: var(--muted); text-decoration: line-through; }
+    .care-steps small { color: var(--muted); font-size: 10.5px; white-space: nowrap; }
+    .care-progress { height: 5px; overflow: hidden; border-radius: 5px; background: #e4e9e3; }
+    .care-progress span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .care-package summary { cursor: pointer; color: var(--green); font-size: 11px; font-weight: 700; }
+    .care-package[open] summary { margin-bottom: 6px; }
+    .automation-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .automation-summary > div { display: flex; align-items: baseline; gap: 8px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: var(--shadow); }
+    .automation-summary strong { color: var(--green); font-size: 26px; line-height: 1; }
+    .automation-summary span { color: var(--muted); font-size: 11.5px; }
+    .automation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .automation-grid .card + .card { margin-top: 0; }
+    .automation-card.wide { grid-column: 1 / -1; }
+    .automation-head { display: flex; gap: 13px; align-items: flex-start; padding: 17px 19px; border-bottom: 1px solid var(--line); }
+    .automation-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 9px; color: var(--green); background: var(--green-soft); }
+    .automation-icon svg { width: 18px; height: 18px; }
+    .automation-body { display: grid; justify-items: start; gap: 12px; padding: 16px 19px 18px; }
+    .automation-steps { display: grid; gap: 8px; width: 100%; }
+    .automation-step { display: grid; grid-template-columns: 26px 1fr minmax(170px, auto); align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfa; }
+    .automation-step.off { opacity: .6; }
+    .automation-step-no { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: #fff; background: var(--green); font-size: 11px; font-weight: 700; }
+    .automation-step.off .automation-step-no { background: #a8b3ab; }
+    .automation-step-main { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .automation-step-main input { width: 16px; height: 16px; accent-color: var(--green); }
+    .automation-step-main strong { display: block; font-size: 12.5px; }
+    .automation-step-main small { color: var(--muted); font-size: 10.5px; }
+    .automation-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; width: 100%; color: var(--muted); font-size: 11.5px; }
+    .automation-foot strong { color: var(--ink); }
+    .automation-status { display: grid; gap: 6px; width: 100%; margin: 0; padding: 0; list-style: none; }
+    .automation-status li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 8px 10px; border-radius: 8px; background: #f6f4ee; font-size: 12px; font-weight: 600; }
+    .automation-status small { color: var(--muted); font-size: 10.5px; font-weight: 500; }
+    .automation-status small.ok { color: var(--green); }
+    .automation-status small.due { color: var(--amber); }
+    .automation-state { margin: 0; padding: 4px 10px; border-radius: 20px; color: #6d5a3c; background: var(--amber-soft); font-size: 11px; font-weight: 700; }
+    .automation-state.on { color: var(--green); background: var(--green-soft); }
+    .automation-log { display: grid; gap: 0; margin: 0; padding: 6px 19px 12px; list-style: none; }
+    .automation-log li { display: grid; grid-template-columns: 98px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee8dc; font-size: 11.5px; }
+    .automation-log li:last-child { border-bottom: 0; }
+    .automation-log small { color: var(--muted); }
+    .automation-log li.empty { display: block; }
+    .task-tag.overdue { color: var(--red); background: var(--red-soft); }
+    .task-tag.auto { color: #3d5a73; background: #e6edf3; }
+    .task-due.overdue { color: var(--red); font-weight: 700; }
+    @media (max-width: 860px) { .automation-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .automation-summary { grid-template-columns: 1fr; gap: 8px; }
+      .automation-summary > div { padding: 11px 14px; }
+      .automation-step { grid-template-columns: 24px 1fr; }
+      .automation-step select { grid-column: 2; width: 100%; }
+      .automation-log li { grid-template-columns: 1fr; gap: 2px; }
+    }
   </style>
 </head>
 <body>
@@ -1021,6 +1095,7 @@
             <button data-page="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h2m4 0h2m-8 3h2"/></svg><span>Kalender</span></button>
             <button data-page="bookings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3m2 0h3m-8 3h3"/></svg><span>Buchung</span></button>
             <button data-page="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 10h7m-7 4h7m-7 4h4"/></svg><span>Serviceaufgaben</span><i class="nav-count" id="nav-count">0</i></button>
+            <button data-page="automation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span>Automatisierung</span></button>
             <button data-page="inspections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span>Hauskontrolle</span></button>
             <button data-page="house3d" data-pro-only><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg><span>Hausmodell</span></button>
             <button data-page="providers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14.5 6.5a5 5 0 0 0-6.7 6.7L3 18l3 3 4.8-4.8a5 5 0 0 0 6.7-6.7l-3.1 3.1-3-3z"/><path d="m15.5 4.5 4 4"/></svg><span>Servicepartner finden</span></button>
@@ -1196,6 +1271,9 @@
     const icon = (name) => {
       const paths = {
         check: '<path d="m5 12 4 4L19 6"/>',
+        bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+        cube: '<path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
+        alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4m0 3h.01"/>',
         home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/>',
         property: '<path d="M4 21V5l8-2 8 2v16"/><path d="M8 8h2m4 0h2M8 12h2m4 0h2M10 21v-5h4v5"/>',
         task: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 10h7m-7 4h7m-7 4h4"/>',
@@ -1537,9 +1615,23 @@
     function careControlHtml({ enabled, plan, form, bookingId }) {
       const toggleAttrs = form ? 'name="careEnabled"' : `data-care-toggle="${escapeHtml(bookingId)}"`;
       const planAttrs = form ? 'name="carePlan"' : `data-care-plan="${escapeHtml(bookingId)}"`;
-      return `<div class="care-box"><div class="care-head"><strong>Automatik nach Buchung</strong><label class="currency-switch care-switch"><span class="${enabled ? '' : 'on'}">Aus</span><input type="checkbox" ${toggleAttrs} role="switch" aria-label="Automatik nach Buchung" ${enabled ? 'checked' : ''}><span class="currency-track"></span><span class="${enabled ? 'on' : ''}">An</span></label></div>
-        <div class="care-plan" data-care-plan-wrap ${enabled ? '' : 'hidden'}><label><span class="form-label">Husora Care Paket</span><select class="form-control" ${planAttrs} aria-label="Husora Care Paket"><option value="">Paket auswählen …</option>${CARE_PACKAGES.map((item) => `<option value="${item.id}" ${item.id === plan ? 'selected' : ''}>${escapeHtml(item.name)} · in Planung</option>`).join('')}</select></label>
-        <p class="care-note">Nach der Buchung startet Husora Care automatisch die Hausservice-Dienste des gewählten Pakets. Die Pakete werden später festgelegt.</p></div></div>`;
+      const steps = TURNOVER_STEPS.filter((step) => automation.turnover.steps[step.id]?.on !== false);
+      const linked = bookingId ? bookingTasks(bookingId) : [];
+      const doneCount = linked.filter((task) => task.done).length;
+      const progress = !form && enabled && linked.length
+        ? `<div class="care-progress" role="img" aria-label="${doneCount} von ${linked.length} Aufgaben erledigt"><span style="width:${Math.round((doneCount / linked.length) * 100)}%"></span></div><p class="care-note"><strong>${doneCount} von ${linked.length}</strong> Gästewechsel-Aufgaben erledigt · <button type="button" class="text-btn inline" data-page="tasks">Aufgaben ansehen →</button></p>`
+        : '';
+      const stepList = `<ul class="care-steps">${steps.map((step) => {
+        const task = linked.find((item) => item.step === step.id);
+        const offset = Number(automation.turnover.steps[step.id]?.offset ?? step.offset);
+        const started = bookingId && step.anchor === 'start' && !task && bookings.find((item) => item.id === bookingId)?.startDate < localDateKey(new Date());
+        const when = task ? fmtDate(task.date) : started ? 'entfällt (bereits angereist)' : `${offset === 0 ? 'am' : `${Math.abs(offset)} ${Math.abs(offset) === 1 ? 'Tag' : 'Tage'} ${offset < 0 ? 'vor' : 'nach'}`} ${step.anchor === 'start' ? (offset === 0 ? 'Anreisetag' : 'Anreise') : (offset === 0 ? 'Abreisetag' : 'Abreise')}`;
+        return `<li class="${task?.done ? 'done' : ''}"><i aria-hidden="true">${task?.done ? icon('check') : ''}</i><span>${escapeHtml(step.label)}</span><small>${escapeHtml(when)}</small></li>`;
+      }).join('')}</ul>`;
+      return `<div class="care-box"><div class="care-head"><strong>Gästewechsel automatisch planen</strong><label class="currency-switch care-switch"><span class="${enabled ? '' : 'on'}">Aus</span><input type="checkbox" ${toggleAttrs} role="switch" aria-label="Gästewechsel automatisch planen" ${enabled ? 'checked' : ''}><span class="currency-track"></span><span class="${enabled ? 'on' : ''}">An</span></label></div>
+        <div class="care-plan" data-care-plan-wrap ${enabled ? '' : 'hidden'}>${steps.length ? stepList : '<p class="care-note">In der Automatisierung sind alle Schritte ausgeschaltet.</p>'}${progress}
+        <details class="care-package"><summary>Husora Care Paket (optional)</summary><label><span class="form-label">Husora Care Paket</span><select class="form-control" ${planAttrs} aria-label="Husora Care Paket"><option value="">Kein Paket</option>${CARE_PACKAGES.map((item) => `<option value="${item.id}" ${item.id === plan ? 'selected' : ''}>${escapeHtml(item.name)} · in Planung</option>`).join('')}</select></label><p class="care-note">Mit einem Paket übernimmt künftig ein Husora-Servicepartner diese Schritte. Die Pakete werden noch festgelegt.</p></details>
+        <p class="care-note">Husora legt die Schritte als Serviceaufgaben an und verschiebt sie, wenn sich die Buchung ändert. <button type="button" class="text-btn inline" data-page="automation">Schritte anpassen →</button></p></div></div>`;
     }
     const PORTAL_API = 'https://api.repull.dev';
     const PORTAL_NAMES = { airbnb: 'Airbnb', 'booking.com': 'Booking.com', vrbo: 'Vrbo', direct: 'Direktbuchung', website: 'Website', owner: 'Eigentümer', other: 'Portal' };
@@ -1785,6 +1877,7 @@
             if (next.some((booking) => !booking.id.startsWith('ical-') && booking.propertyId === propertyId && booking.startDate === event.start && booking.endDate === event.end)) return;
             const existingIndex = next.findIndex((booking) => booking.id === id);
             const booking = { id, propertyId, guestName: `${sourceName}-Gast`, guestCount: '1', guestsUnknown: true, startDate: event.start, endDate: event.end, arrivalTime: '15:00', notes: [code ? `${sourceName} · Code ${code}` : '', phone ? `Telefon (letzte 4 Ziffern): ${phone}` : ''].filter(Boolean).join('\n'), source, externalId: String(event.uid || id), ...(existingIndex >= 0 && next[existingIndex].care ? { care: next[existingIndex].care } : {}) };
+            if (existingIndex >= 0 && next[existingIndex].care) booking.care = next[existingIndex].care;
             if (existingIndex < 0) { next.push(booking); stats.added += 1; }
             else if (JSON.stringify(next[existingIndex]) !== JSON.stringify(booking)) { next[existingIndex] = booking; stats.updated += 1; }
           });
@@ -1985,6 +2078,129 @@
       }
       return added.length;
     }
+    // Automatisierung der Abläufe: Gästewechsel je Buchung, Hauskontrolle bei Leerstand und saisonale Aufgaben.
+    const TURNOVER_STEPS = [
+      { id: 'welcome', title: 'Gast informieren: Anreiseinfos und Schlüsselcode senden', anchor: 'start', offset: -3, priority: 'soon', label: 'Gast informieren', hint: 'Anreiseinfos, Wegbeschreibung und Schlüsselcode' },
+      { id: 'prepare', title: 'Haus für Anreise vorbereiten (Heizung, Wasser, Bettwäsche)', anchor: 'start', offset: -1, priority: 'soon', label: 'Haus vorbereiten', hint: 'Heizung hochfahren, Wasser anstellen, Betten beziehen' },
+      { id: 'cleaning', title: 'Endreinigung und Wäschewechsel', anchor: 'end', offset: 0, priority: 'urgent', label: 'Endreinigung', hint: 'Reinigung und Wäschewechsel am Abreisetag', partnerCategory: 'house' },
+      { id: 'checkout', title: 'Kontrolle nach Abreise (Schäden, Inventar, Zählerstände)', anchor: 'end', offset: 0, priority: 'normal', label: 'Kontrolle nach Abreise', hint: 'Schäden, Inventar und Zählerstände prüfen' }
+    ];
+    const SEASON_RULES = [
+      { id: 'winter', title: 'Ferienhaus winterfest machen (Wintercheckliste)', months: [9, 10, 11], due: (year) => `${year}-10-31`, priority: 'urgent', label: 'Winterfest machen', hint: 'Oktober bis Dezember, erledigt sich mit der Wintercheckliste' },
+      { id: 'spring', title: 'Frühjahrsöffnung: Wasser anstellen, lüften, Winterschäden prüfen', months: [3, 4], due: (year) => `${year}-04-30`, priority: 'soon', label: 'Frühjahrsöffnung', hint: 'April und Mai' }
+    ];
+    let automation = { turnover: { defaultOn: true, steps: Object.fromEntries(TURNOVER_STEPS.map((step) => [step.id, { on: true, offset: step.offset }])) }, vacancyInspection: true, seasonal: true, created: {}, log: [] };
+    try {
+      const savedAutomation = JSON.parse(localStorage.getItem('stugliv-automation') || 'null');
+      if (savedAutomation && typeof savedAutomation === 'object') {
+        automation = {
+          ...automation,
+          ...savedAutomation,
+          turnover: { defaultOn: savedAutomation.turnover?.defaultOn !== false, steps: { ...automation.turnover.steps, ...(savedAutomation.turnover?.steps || {}) } },
+          created: savedAutomation.created && typeof savedAutomation.created === 'object' ? savedAutomation.created : {},
+          log: Array.isArray(savedAutomation.log) ? savedAutomation.log.slice(0, 20) : []
+        };
+      }
+    } catch (error) { console.error('Automatisierung konnte nicht geladen werden:', error); }
+    function persistAutomation() {
+      try { localStorage.setItem('stugliv-automation', JSON.stringify(automation)); return true; }
+      catch (error) { showToast('Speichern nicht möglich. Bitte Browser-Speicher prüfen.'); return false; }
+    }
+    const bookingAutomationOn = (booking) => (booking.care ? Boolean(booking.care.enabled) : automation.turnover.defaultOn);
+    const shiftDateKey = (dateKey, days) => { const date = new Date(`${dateKey}T12:00:00`); date.setDate(date.getDate() + days); return localDateKey(date); };
+    const guestInHouseCount = (dateKey) => properties.filter((property) => guestInHouse(property.id, dateKey)).length;
+    const bookingTasks = (bookingId) => tasks.filter((task) => task.bookingId === bookingId);
+    const guestInHouse = (propertyId, dateKey) => bookings.find((booking) => booking.propertyId === propertyId && booking.startDate <= dateKey && dateKey < booking.endDate) || null;
+    const inspectionDismissKey = (propertyId) => `dismiss-inspection|${propertyId}|${lastAbsenceInspection(propertyId).entry?.date || 'none'}`;
+    function dismissAutomatedTask(task) {
+      if (task.auto === 'turnover') automation.created[`dismiss|${task.bookingId}|${task.step}`] = localDateKey(new Date());
+      else if (task.auto === 'inspection') automation.created[inspectionDismissKey(task.propertyId)] = localDateKey(new Date());
+      else return;
+      persistAutomation();
+    }
+    function logAutomation(text) {
+      automation.log = [{ at: new Date().toISOString(), text }, ...automation.log].slice(0, 20);
+    }
+    function syncAutomation() {
+      const today = localDateKey(new Date());
+      let nextId = tasks.reduce((max, task) => Math.max(max, Number(task.id) || 0), Date.now());
+      const added = [];
+      const completed = [];
+      let changed = false;
+      let next = tasks.slice();
+      const propertyById = (id) => properties.find((property) => property.id === id);
+      const partnerFor = (propertyId, category) => providers.find((provider) => provider.category === category && (servicePartnerAssignments[propertyId] || []).includes(provider.id));
+      // Gästewechsel: Aufgaben je Buchung anlegen, bei Terminänderung verschieben, bei Storno entfernen.
+      const activeBookings = new Set();
+      (bookingsEnabled() ? bookings : []).forEach((booking) => {
+        const property = propertyById(booking.propertyId);
+        if (!property || booking.endDate < today) return;
+        activeBookings.add(booking.id);
+        const enabled = bookingAutomationOn(booking);
+        TURNOVER_STEPS.forEach((step) => {
+          const config = automation.turnover.steps[step.id] || { on: true, offset: step.offset };
+          const index = next.findIndex((task) => task.bookingId === booking.id && task.step === step.id);
+          const existing = index >= 0 ? next[index] : null;
+          if (!enabled || !config.on) {
+            if (existing && !existing.done) { next.splice(index, 1); changed = true; }
+            return;
+          }
+          const anchor = step.anchor === 'start' ? booking.startDate : booking.endDate;
+          let date = shiftDateKey(anchor, Number(config.offset) || 0);
+          if (date < today && anchor >= today) date = today;
+          const partner = step.partnerCategory ? partnerFor(property.id, step.partnerCategory) : null;
+          const title = `${step.title} · ${booking.guestName}`;
+          const description = `Automatisch geplant für die Buchung ${booking.guestName} (${fmtDate(booking.startDate)} – ${fmtDate(booking.endDate)}).${partner ? ` Servicepartner: ${partner.name}.` : ''}`;
+          if (!existing) {
+            if ((step.anchor === 'start' && booking.startDate < today) || automation.created[`dismiss|${booking.id}|${step.id}`]) return;
+            const task = { id: ++nextId, title, property: property.name, date, priority: step.priority, area: 'Gästewechsel', status: 'Offen', done: false, repeat: 'Einmalig', description, auto: 'turnover', bookingId: booking.id, step: step.id };
+            next.push(task);
+            added.push(task);
+          } else if (!existing.done && !existing.pinned && (existing.date !== date || existing.property !== property.name || existing.title !== title)) {
+            next[index] = { ...existing, date, property: property.name, title, description };
+            changed = true;
+          }
+        });
+      });
+      const before = next.length;
+      next = next.filter((task) => !(task.auto === 'turnover' && !task.done && !activeBookings.has(task.bookingId) && !bookings.some((booking) => booking.id === task.bookingId)));
+      if (next.length !== before) changed = true;
+      properties.forEach((property) => {
+        // Hauskontrolle bei Leerstand: Aufgabe anlegen, solange die Abwesenheitskontrolle fällig ist und kein Gast im Haus ist.
+        const inspectionIndex = next.findIndex((task) => task.auto === 'inspection' && task.propertyId === property.id && !task.done);
+        if (inspectionIsCurrent(property.id)) {
+          if (inspectionIndex >= 0) { next[inspectionIndex] = { ...next[inspectionIndex], status: 'Erledigt', done: true }; completed.push(next[inspectionIndex]); }
+        } else if (automation.vacancyInspection && inspectionIndex < 0 && !guestInHouse(property.id, today) && !automation.created[inspectionDismissKey(property.id)]) {
+          const task = { id: ++nextId, title: 'Abwesenheitskontrolle durchführen', property: property.name, date: today, priority: 'soon', area: 'Hauskontrolle', status: 'Offen', done: false, repeat: 'Einmalig', description: 'Automatisch erstellt: Die monatliche Abwesenheitskontrolle ist fällig und das Haus ist nicht belegt.', auto: 'inspection', propertyId: property.id };
+          next.push(task);
+          added.push(task);
+        }
+        // Saisonale Aufgaben: einmal pro Jahr und Haus, die Winteraufgabe erledigt sich mit der Wintercheckliste.
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth();
+        SEASON_RULES.forEach((rule) => {
+          const key = `${year}-${rule.id}|${property.id}`;
+          const openIndex = next.findIndex((task) => task.auto === 'season' && task.season === rule.id && task.propertyId === property.id && !task.done);
+          if (rule.id === 'winter' && openIndex >= 0 && winterIsReady(property.id)) { next[openIndex] = { ...next[openIndex], status: 'Erledigt', done: true }; completed.push(next[openIndex]); return; }
+          if (!automation.seasonal || !rule.months.includes(month) || automation.created[key]) return;
+          if (rule.id === 'winter' && winterIsReady(property.id)) return;
+          const due = rule.due(year);
+          const task = { id: ++nextId, title: rule.title, property: property.name, date: due < today ? today : due, priority: rule.priority, area: 'Saison', status: 'Offen', done: false, repeat: 'Einmalig', description: 'Automatisch erstellte Saisonaufgabe.', auto: 'season', season: rule.id, propertyId: property.id };
+          automation.created[key] = today;
+          next.push(task);
+          added.push(task);
+        });
+      });
+      if (!added.length && !completed.length && !changed) return 0;
+      const previousTasks = tasks;
+      tasks = next;
+      if (!persistTasks()) { tasks = previousTasks; return 0; }
+      if (added.length) logAutomation(`${added.length} ${added.length === 1 ? 'Aufgabe' : 'Aufgaben'} geplant: ${added.slice(0, 3).map((task) => task.title.split(' · ')[0]).join(', ')}${added.length > 3 ? ' …' : ''}`);
+      completed.forEach((task) => logAutomation(`Erledigt: ${task.title} (${task.property})`));
+      persistAutomation();
+      return added.length;
+    }
+    const automationActiveCount = () => [automation.turnover.defaultOn && bookingsEnabled(), automation.vacancyInspection, automation.seasonal, autoTasks.enabled, (portalConnected() && portalSync.auto) || (icalSync.auto && icalLinkCount() > 0)].filter(Boolean).length;
     const intervalLabel = (days) => ({ 30: 'monatlich', 90: 'vierteljährlich', 180: 'halbjährlich', 365: 'jährlich' }[days] || `alle ${days} Tage`);
     function renderAutoTemplates() {
       const priorityLabel = { urgent: 'Dringend', soon: 'Wichtig', normal: 'Normal' };
@@ -2051,7 +2267,7 @@
     let bookingEndDate = '';
     let editingBookingId = null;
     let bookingView = 'list';
-    let bookingDraft = { propertyId: properties[0]?.id || '', guestName: '', guestCount: '1', arrivalTime: '15:00', notes: '', careEnabled: false, carePlan: '' };
+    let bookingDraft = { propertyId: properties[0]?.id || '', guestName: '', guestCount: '1', arrivalTime: '15:00', notes: '', careEnabled: automation.turnover.defaultOn, carePlan: '' };
     let bookings = [];
     try {
       const savedBookings = localStorage.getItem('stugliv-bookings');
@@ -2389,7 +2605,7 @@
       editingBookingId = null;
       bookingStartDate = '';
       bookingEndDate = '';
-      bookingDraft = { propertyId: properties[0]?.id || '', guestName: '', guestCount: '1', arrivalTime: '15:00', notes: '', careEnabled: false, carePlan: '' };
+      bookingDraft = { propertyId: properties[0]?.id || '', guestName: '', guestCount: '1', arrivalTime: '15:00', notes: '', careEnabled: automation.turnover.defaultOn, carePlan: '' };
     }
     function editBooking(booking) {
       if (!booking) return;
@@ -2421,18 +2637,36 @@
     function taskRow(task) {
       const priority = task.priority === 'urgent' ? 'Dringend' : task.priority === 'soon' ? 'Wichtig' : 'Aufgabe';
       const tagClass = task.priority === 'urgent' ? 'urgent' : task.priority === 'soon' ? 'soon' : '';
+      const overdue = !task.done && task.date && task.date < localDateKey(new Date());
+      const extraTags = `${overdue ? '<span class="task-tag overdue">Überfällig</span>' : ''}${task.auto ? '<span class="task-tag auto">Automatisch</span>' : ''}`;
       return `<div class="task-row ${task.done ? 'is-done' : ''}">
         <button class="check ${task.done ? 'done' : ''}" data-toggle="${task.id}" aria-label="${task.done ? 'Als offen markieren' : 'Als erledigt markieren'}">${task.done ? icon('check') : ''}</button>
-        <div class="task-main"><button class="task-name ${task.done ? 'completed' : ''}" type="button" data-edit-task="${task.id}" aria-label="Aufgabe bearbeiten: ${escapeHtml(task.title)}">${escapeHtml(task.title)}</button><div class="task-meta"><span>${escapeHtml(task.property)}</span><span class="task-tag ${tagClass}">${priority}</span></div>        </div>
-        <div class="task-due">${fmtDate(task.date)}</div>
+        <div class="task-main"><button class="task-name ${task.done ? 'completed' : ''}" type="button" data-edit-task="${task.id}" aria-label="Aufgabe bearbeiten: ${escapeHtml(task.title)}">${escapeHtml(task.title)}</button><div class="task-meta"><span>${escapeHtml(task.property)}</span><span class="task-tag ${tagClass}">${priority}</span>${extraTags}</div>        </div>
+        <div class="task-due ${overdue ? 'overdue' : ''}">${fmtDate(task.date)}</div>
       </div>`;
     }
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
     }
+    function occupancyHtml(today) {
+      const dayDiff = (from, to) => Math.round((new Date(`${to}T12:00:00`) - new Date(`${from}T12:00:00`)) / 86400000);
+      return properties.map((property) => {
+        const guest = guestInHouse(property.id, today);
+        const nextArrival = bookings.filter((booking) => booking.propertyId === property.id && booking.startDate > today).sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+        const departureToday = bookings.find((booking) => booking.propertyId === property.id && booking.endDate === today);
+        let state = 'free';
+        let text = 'Frei · keine kommende Buchung';
+        if (guest) { state = 'busy'; text = `${guest.guestName} · bis ${fmtDate(guest.endDate)}`; }
+        else if (departureToday) { state = 'turnover'; text = `Abreise heute · ${departureToday.guestName}`; }
+        else if (nextArrival) { const days = dayDiff(today, nextArrival.startDate); text = `Frei · nächste Anreise ${days === 1 ? 'morgen' : `in ${days} Tagen`}`; }
+        const label = state === 'busy' ? 'Belegt' : state === 'turnover' ? 'Gästewechsel' : 'Frei';
+        return `<button class="house-service-row" data-page="bookings"><span class="house-service-name">${escapeHtml(property.name)}<small>${escapeHtml(text)}</small></span><span class="occupancy-pill ${state}">${label}</span></button>`;
+      }).join('');
+    }
     function dashboard() {
-      const open = tasks.filter((task) => !task.done);
+      const open = tasks.filter((task) => !task.done).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
       const today = localDateKey(new Date());
+      const overdueCount = open.filter((task) => task.date && task.date < today).length;
       const upcomingChanges = bookings
         .filter((booking) => booking.endDate >= today)
         .sort((a, b) => a.startDate.localeCompare(b.startDate))
@@ -2457,7 +2691,7 @@
           bookingId: booking.id,
           isPast: true
         }));
-      const dashboardBookings = [...upcomingChanges, ...pastBookings];
+      const dashboardBookings = upcomingChanges.length ? upcomingChanges.slice(0, 4) : pastBookings.slice(0, 2);
       const currentInspections = properties.filter((property) => inspectionIsCurrent(property.id)).length;
       const plannedAnnualCost = properties.reduce((total, property) => {
         const costs = annualCosts[property.id] || initialCosts[property.id] || {};
@@ -2468,15 +2702,18 @@
       return `<div class="welcome"><div><p class="eyebrow eyebrow-lg">Husora · Das Managementsystem für deine Stuga</p><p class="subtitle">${bookingsEnabled() ? 'Buchungen, Stugapflege' : 'Stugapflege'} und Serviceeinsätze für ${singleHouse() ? 'dein Ferienhaus' : 'deine Ferienhäuser'}.</p></div></div>
         <section class="stats" aria-label="Kennzahlen">
           <button class="stat ${singleHouse() ? 'stat-wide' : ''}" data-page="properties"><img class="stat-art" src="${escapeHtml((singleHouse() && properties[0]?.photo) || properties.find((item) => item.photo)?.photo || 'assets/meine-haeuser.jpg')}" alt="" aria-hidden="true"><div class="stat-head"><span>${singleHouse() ? 'Mein Haus' : 'Meine Häuser'}</span><span class="stat-icon">${icon('property')}</span></div><div class="stat-value">${singleHouse() ? escapeHtml(properties[0]?.name || '1') : properties.length}</div><div class="stat-note"><em>${singleHouse() ? escapeHtml(properties[0]?.region || 'Schweden') : 'Värmland · Dalarna · Bohuslän'}</em></div></button>
-          <button class="stat" data-page="tasks"><img class="stat-art" src="assets/hausservice.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Serviceaufgaben</span><span class="stat-icon amber">${icon('task')}</span></div><div class="stat-value">${open.filter((task) => taskStatus(task) !== 'In Bearbeitung').length} <span class="stat-open-word">offen</span></div><div class="stat-note"><em class="stat-urgent">${open.filter((task) => task.priority === 'urgent').length} dringend</em></div></button>
-          ${bookingsEnabled() ? `<button class="stat" data-page="bookings"><img class="stat-art" src="assets/booking-planer.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Buchungen</span><span class="stat-icon">${icon('calendar')}</span></div><div class="stat-value">${bookings.length}</div><div class="stat-note">Buchungen <em>verwalten</em></div></button>` : ''}
+          <button class="stat" data-page="tasks"><img class="stat-art" src="assets/hausservice.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Serviceaufgaben</span><span class="stat-icon amber">${icon('task')}</span></div><div class="stat-value">${open.filter((task) => taskStatus(task) !== 'In Bearbeitung').length} <span class="stat-open-word">offen</span></div><div class="stat-note"><em class="stat-urgent">${overdueCount ? `${overdueCount} überfällig` : `${open.filter((task) => task.priority === 'urgent').length} dringend`}</em></div></button>
+          ${bookingsEnabled() ? `<button class="stat" data-page="bookings"><img class="stat-art" src="assets/booking-planer.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Buchungen</span><span class="stat-icon">${icon('calendar')}</span></div><div class="stat-value">${upcomingChanges.length} <span class="stat-open-word">kommend</span></div><div class="stat-note">${guestInHouseCount(today) ? `<em>${guestInHouseCount(today)} ${guestInHouseCount(today) === 1 ? 'Haus' : 'Häuser'} belegt</em>` : `${bookings.length} gesamt · <em>verwalten</em>`}</div></button>` : ''}
           <button class="stat stat-inspection" data-page="inspections"><img class="stat-art" src="assets/hauskontrolle.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Hauskontrolle</span><span class="stat-icon">${icon('inspection')}</span></div><div class="stat-value">${properties.length - currentInspections} <span class="stat-open-word">offen</span></div></button>
           <button class="stat" data-page="documents"><img class="stat-art" src="assets/dokumente.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Dokumente</span><span class="stat-icon">${icon('document')}</span></div><div class="stat-value">${documents.length}</div><div class="stat-note"><em>${documents.length === 1 ? 'Datei' : 'Dateien'}</em> gespeichert</div></button>
           <button class="stat" data-page="costs"><img class="stat-art" src="assets/kosten.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Kosten</span><span class="stat-icon">${icon('cost')}</span></div><div class="stat-value">${formattedCost}</div><div class="stat-note"><em>Planwerte</em> pro Jahr${singleHouse() ? '' : ' · alle Häuser'}</div></button>
+          <button class="stat" data-page="automation"><img class="stat-art" src="assets/gaestewechsel.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Automatisierung</span><span class="stat-icon">${icon('bolt')}</span></div><div class="stat-value">${automationActiveCount()} <span class="stat-open-word">aktiv</span></div><div class="stat-note"><em>${tasks.filter((task) => task.auto && !task.done).length}</em> geplante Schritte</div></button>
+          ${isPro() ? `<button class="stat" data-page="house3d"><img class="stat-art" src="assets/ferienhaus.jpg" alt="" aria-hidden="true"><div class="stat-head"><span>Hausmodell</span><span class="stat-icon">${icon('cube')}</span></div><div class="stat-value">3D</div><div class="stat-note"><em>${properties.reduce((sum, property) => sum + activeHouseParts(property).filter((part) => housePartInfo(property.id, part).status === 'due').length, 0)}</em> Bauteile mit fälliger Kontrolle</div></button>` : ''}
         </section>
         <div class="columns">
           <section class="card"><div class="card-head"><div><h2 class="card-title">Service vor Ort</h2><p class="card-caption">${open.length} offene ${open.length === 1 ? 'Aufgabe' : 'Aufgaben'} ${singleHouse() ? 'an deinem schwedischen Ferienhaus' : 'an deinen schwedischen Ferienhäusern'}</p></div><button class="text-btn" data-page="tasks">Alle Aufgaben →</button></div><div class="task-list">${open.length ? open.slice(0, 4).map(taskRow).join('') : '<div class="empty">Alles erledigt — großartig!</div>'}</div></section>
           <div>
+            ${bookingsEnabled() ? `<section class="card"><div class="card-head"><div><h2 class="card-title">Heute im Ferienhaus</h2><p class="card-caption">${escapeHtml(fmtLongDate())}</p></div><button class="text-btn" data-page="calendar">Kalender →</button></div><div class="house-service-list">${occupancyHtml(today)}</div></section>` : ''}
             ${bookingsEnabled() ? `<section class="card"><div class="card-head"><div><h2 class="card-title">Nächste Buchungen</h2><p class="card-caption">Anreise, Endreinigung und Schlüssel</p></div><button class="text-btn" data-page="bookings">Buchungen →</button></div>
               ${dashboardBookings.length ? dashboardBookings.map((event) => {
                 const appointment = `<div class="date-tile"><b>${fmtDate(event.date).split(' ')[0]}</b><small>${fmtDate(event.date).split(' ')[1]}</small></div><div class="appointment-info"><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(event.isPast ? 'Gast hat ausgecheckt' : [event.detail, event.time].filter(Boolean).join(' · '))}</small></div>`;
@@ -2577,7 +2814,7 @@
       }
       const selectedLabel = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${calendarSelectedDate}T12:00:00`));
       return `<div class="welcome"><div><p class="eyebrow">Planung & Buchungen</p><h1>Kalender</h1><p class="subtitle">Buchungen und datierte Serviceaufgaben im Monatsüberblick.</p></div></div>
-        <section class="card"><div class="card-head"><h2 class="card-title">Termine</h2><div class="calendar-toolbar"><button class="calendar-nav" data-calendar-step="-1" aria-label="${calendarView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat'}">‹</button><strong>${escapeHtml(monthTitle)}</strong><button class="calendar-nav" data-calendar-step="1" aria-label="${calendarView === 'week' ? 'Nächste Woche' : 'Nächster Monat'}">›</button><div class="calendar-view-toggle" aria-label="Kalenderansicht"><button type="button" data-calendar-view="month" class="${calendarView === 'month' ? 'active' : ''}" aria-pressed="${calendarView === 'month'}">Monat</button><button type="button" data-calendar-view="week" class="${calendarView === 'week' ? 'active' : ''}" aria-pressed="${calendarView === 'week'}">Woche</button></div></div></div>
+        <section class="card"><div class="card-head"><h2 class="card-title">Termine</h2><div class="calendar-toolbar"><button class="calendar-nav" data-calendar-step="-1" aria-label="${calendarView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat'}">‹</button><strong>${escapeHtml(monthTitle)}</strong><button class="calendar-nav" data-calendar-step="1" aria-label="${calendarView === 'week' ? 'Nächste Woche' : 'Nächster Monat'}">›</button><button type="button" class="calendar-today-btn" data-calendar-today>Heute</button><div class="calendar-view-toggle" aria-label="Kalenderansicht"><button type="button" data-calendar-view="month" class="${calendarView === 'month' ? 'active' : ''}" aria-pressed="${calendarView === 'month'}">Monat</button><button type="button" data-calendar-view="week" class="${calendarView === 'week' ? 'active' : ''}" aria-pressed="${calendarView === 'week'}">Woche</button></div></div></div>
           <div class="calendar-grid calendar-page-grid ${calendarView === 'week' ? 'calendar-week-view' : ''}">${weekdayLabels.map((label) => `<div class="calendar-weekday">${label}</div>`).join('')}${cells.join('')}</div>
           <div class="calendar-legend">${bookingsEnabled() ? '<span><i class="calendar-dot booking"></i>Buchungen</span>' : ''}<span><i class="calendar-dot task"></i>Serviceaufgabe</span></div>
         </section>
@@ -2594,21 +2831,41 @@
     }
     function bookingsPage() {
       if (bookingView === 'list') {
-        const sortedBookings = [...bookings].sort((a, b) => a.startDate.localeCompare(b.startDate));
         const todayKey = localDateKey(new Date());
+        const upcomingBookings = bookings.filter((booking) => booking.endDate >= todayKey).sort((a, b) => a.startDate.localeCompare(b.startDate));
+        const pastBookingList = bookings.filter((booking) => booking.endDate < todayKey).sort((a, b) => b.startDate.localeCompare(a.startDate));
+        const now = new Date();
+        const monthStart = localDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
+        const monthEnd = localDateKey(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+        const yearStart = `${now.getFullYear()}-01-01`;
+        const yearEnd = `${now.getFullYear() + 1}-01-01`;
+        const nightsBetween = (from, to) => bookings.reduce((sum, booking) => {
+          if (!properties.some((property) => property.id === booking.propertyId)) return sum;
+          const start = booking.startDate > from ? booking.startDate : from;
+          const end = booking.endDate < to ? booking.endDate : to;
+          return sum + Math.max(0, Math.round((new Date(`${end}T12:00:00`) - new Date(`${start}T12:00:00`)) / 86400000));
+        }, 0);
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const occupancy = properties.length ? Math.round((nightsBetween(monthStart, monthEnd) / (daysInMonth * properties.length)) * 100) : 0;
+        const nextArrival = upcomingBookings.find((booking) => booking.startDate >= todayKey);
+        const kpi = (value, label) => `<div><strong>${value}</strong><span>${label}</span></div>`;
+        const bookingKpis = `<section class="automation-summary booking-kpis">${kpi(upcomingBookings.length, upcomingBookings.length === 1 ? 'kommende Buchung' : 'kommende Buchungen')}${kpi(`${Math.min(100, occupancy)} %`, `Belegung ${escapeHtml(new Intl.DateTimeFormat('de-DE', { month: 'long' }).format(now))}`)}${kpi(nightsBetween(yearStart, yearEnd), `Nächte ${now.getFullYear()} gebucht`)}${kpi(nextArrival ? escapeHtml(fmtDate(nextArrival.startDate)) : '—', 'nächste Anreise')}</section>`;
         const detailedDate = (date) => new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${date}T12:00:00`));
         const nightCount = (startDate, endDate) => Math.round((new Date(`${endDate}T12:00:00`) - new Date(`${startDate}T12:00:00`)) / 86400000);
         return `<div class="welcome"><div><p class="eyebrow">Buchungsplanung · Schweden</p><h1>Buchungen</h1><p class="subtitle">${singleHouse() ? 'Alle gebuchten Aufenthalte mit An- und Abreise und Gastdetails.' : 'Alle gebuchten Aufenthalte mit An- und Abreise, Ferienhaus und Gastdetails.'}</p></div><button class="primary-btn" data-action="new-booking">${icon('plus')} Neue Buchung</button></div>
           ${portalHintHtml()}
+          ${bookings.length ? bookingKpis : ''}
           <section class="card booking-overview"><div class="card-head"><div><h2 class="card-title">Gebuchte Termine</h2><p class="card-caption">${bookings.length} ${bookings.length === 1 ? 'Buchung' : 'Buchungen'} gespeichert</p></div></div>
-            ${sortedBookings.length ? `<div class="booking-overview-list">${sortedBookings.map((booking) => {
+            ${bookings.length ? `${upcomingBookings.length ? '' : '<div class="empty">Keine kommenden Buchungen. Über „Neue Buchung“ kannst du einen Aufenthalt erfassen.</div>'}<div class="booking-overview-list">${[...upcomingBookings, ...pastBookingList].map((booking, position) => {
               const propertyName = properties.find((property) => property.id === booking.propertyId)?.name || 'Ferienhaus entfernt';
               const checkedOut = booking.endDate < todayKey;
+              const inHouse = booking.startDate <= todayKey && todayKey < booking.endDate;
+              const pastHeading = position === upcomingBookings.length && pastBookingList.length ? `<h3 class="booking-list-heading">Vergangene Buchungen (${pastBookingList.length})</h3>` : '';
               const guests = Number(booking.guestCount) || 1;
               const nights = nightCount(booking.startDate, booking.endDate);
-              return `<article class="booking-overview-card ${checkedOut ? 'past' : ''}">
+              return `${pastHeading}<article class="booking-overview-card ${checkedOut ? 'past' : ''}">
                 <div class="booking-overview-title"><strong>${escapeHtml(booking.guestName)}${booking.source ? `<span class="booking-source">${escapeHtml(portalSourceName(booking.source))}</span>` : ''}</strong><small>${escapeHtml(propertyName)}</small></div>
-                <span class="booking-status ${checkedOut ? 'past' : ''}">${checkedOut ? 'Ausgecheckt' : 'Gebucht'}</span>
+                <span class="booking-status ${checkedOut ? 'past' : inHouse ? 'live' : ''}">${checkedOut ? 'Ausgecheckt' : inHouse ? 'Gast im Haus' : 'Gebucht'}</span>
                 <div class="booking-overview-dates"><div class="booking-overview-date"><span>Anreise</span><strong>${escapeHtml(detailedDate(booking.startDate))}</strong></div><div class="booking-overview-date"><span>Abreise</span><strong>${escapeHtml(detailedDate(booking.endDate))}</strong></div></div>
                 ${(() => {
                   const noteLines = String(booking.notes || '').split('\n');
@@ -2618,7 +2875,7 @@
                   return `<div class="booking-facts">${fact('users', 'Gäste', booking.guestsUnknown ? 'nicht angegeben' : `${guests} ${guests === 1 ? 'Person' : 'Personen'}`)}${fact('moon', 'Aufenthalt', `${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`)}${fact('clock', 'Ankunft', booking.arrivalTime ? `${booking.arrivalTime} Uhr` : '—')}${codeMatch ? fact('ticket', 'Buchungscode', codeMatch[1]) : ''}</div>${noteText ? `<div class="booking-note"><span class="booking-fact-icon">${icon('note')}</span><div><small>${booking.guestsUnknown ? 'Weitere Angaben aus dem Kalender' : booking.source ? 'Nachricht des Gasts' : 'Hinweise zur Buchung'}</small><p>${escapeHtml(noteText).replace(/\n/g, '<br>')}</p></div></div>` : ''}`;
                 })()}
                 ${booking.source ? `<div class="booking-row-actions"><span class="booking-managed">Wird automatisch über ${escapeHtml(portalSourceName(booking.source))} synchronisiert</span></div>` : `<div class="booking-row-actions"><button type="button" data-edit-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} bearbeiten" class="booking-edit-btn">${icon('edit')}Bearbeiten</button><button type="button" data-delete-booking="${escapeHtml(booking.id)}" aria-label="Buchung von ${escapeHtml(booking.guestName)} löschen" class="booking-delete-btn">${icon('trash')}Löschen</button></div>`}
-                ${careControlHtml({ enabled: Boolean(booking.care?.enabled), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
+                ${checkedOut && !bookingTasks(booking.id).length ? '' : careControlHtml({ enabled: bookingAutomationOn(booking), plan: carePlanId(booking.care?.plan), bookingId: booking.id })}
               </article>`;
             }).join('')}</div>` : '<div class="empty">Noch keine Buchungen vorhanden. Über „Neue Buchung“ kannst du einen Aufenthalt erfassen.</div>'}
           </section>`;
@@ -2741,24 +2998,71 @@
         const matchesProperty = taskPropertyFilter === 'all' || task.property === taskPropertyFilter;
         const matchesPriority = taskPriorityFilter === 'all' || (task.priority || 'normal') === taskPriorityFilter;
         return matchesStatus && matchesProperty && matchesPriority;
-      }).sort((a, b) => ((rank[a.priority] ?? 2) - (rank[b.priority] ?? 2)) || a.date.localeCompare(b.date));
+      }).sort((a, b) => (Number(taskStatus(a) === 'Erledigt') - Number(taskStatus(b) === 'Erledigt')) || (a.date || '9999').localeCompare(b.date || '9999') || ((rank[a.priority] ?? 2) - (rank[b.priority] ?? 2)));
       const rows = visible.map((task) => {
         const status = taskStatus(task);
         const overdue = status !== 'Erledigt' && task.date && task.date < today;
         const priority = task.priority || 'normal';
-        return `<tr class="prio-${priority} ${status === 'Erledigt' ? 'is-done' : ''}"><td><button type="button" class="cell-title ${status === 'Erledigt' ? 'completed' : ''}" data-edit-task="${task.id}" aria-label="Aufgabe bearbeiten: ${escapeHtml(task.title)}">${escapeHtml(task.title)}</button>${task.repeat && task.repeat !== 'Einmalig' ? `<div class="cell-sub">Wiederholt sich ${escapeHtml(task.repeat.toLowerCase())}</div>` : ''}${task.description ? `<div class="cell-sub">${escapeHtml(task.description)}</div>` : ''}</td>
+        return `<tr class="prio-${priority} ${status === 'Erledigt' ? 'is-done' : ''}"><td><button type="button" class="cell-title ${status === 'Erledigt' ? 'completed' : ''}" data-edit-task="${task.id}" aria-label="Aufgabe bearbeiten: ${escapeHtml(task.title)}">${escapeHtml(task.title)}</button>${overdue || task.auto ? `<div class="task-meta">${overdue ? '<span class="task-tag overdue">Überfällig</span>' : ''}${task.auto ? '<span class="task-tag auto">Automatisch geplant</span>' : ''}</div>` : ''}${task.repeat && task.repeat !== 'Einmalig' ? `<div class="cell-sub">Wiederholt sich ${escapeHtml(task.repeat.toLowerCase())}</div>` : ''}${task.description ? `<div class="cell-sub">${escapeHtml(task.description)}</div>` : ''}</td>
           <td>${escapeHtml(task.property)}<div class="cell-sub">${escapeHtml(task.area || '—')}</div></td>
-          <td class="${overdue ? 'overdue' : ''}">${fmtDate(task.date)}</td>
+          <td class="${overdue ? 'overdue' : ''}">${task.date ? fmtDate(task.date) : '—'}</td>
           <td><span class="badge-wrap ${priority}">${priorityText[priority] || 'Normal'}</span></td>
           <td><select class="filter-select status-select" data-status-task="${task.id}" aria-label="Status für ${escapeHtml(task.title)} ändern">${taskStatuses.map((value) => `<option ${status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></td>
           <td><div class="row-actions"><button type="button" class="small-action" data-edit-task="${task.id}" aria-label="Aufgabe bearbeiten">Bearbeiten</button><button type="button" class="small-action" data-delete-task="${task.id}" aria-label="Aufgabe löschen">Löschen</button></div></td></tr>`;
       }).join('');
       const openCount = tasks.filter((task) => taskStatus(task) !== 'Erledigt').length;
-      return `<div class="welcome"><div><p class="eyebrow">Buchungen & Instandhaltung</p><h1>Serviceaufgaben</h1><p class="subtitle">Koordiniere Reinigung, Schlüsselübergaben und saisonale Stugapflege.</p></div><button class="primary-btn" data-action="go-back">← Zurück</button></div>
-        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} automatisch angelegt.</p></div><div class="auto-task-actions"><button class="primary-btn" data-action="new-task">${icon('plus')} Aufgabe erstellen</button><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button></div></section>
+      return `<div class="welcome"><div><p class="eyebrow">Buchungen & Instandhaltung</p><h1>Serviceaufgaben</h1><p class="subtitle">Koordiniere Reinigung, Schlüsselübergaben und saisonale Stugapflege.</p></div><button class="secondary-btn back-btn" data-action="go-back">← Zurück</button></div>
+        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} automatisch angelegt.</p></div><div class="auto-task-actions"><button class="primary-btn" data-action="new-task">${icon('plus')} Aufgabe erstellen</button><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button><button class="secondary-btn" data-page="automation">${icon('bolt')} Alle Automatiken</button></div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Alle Serviceaufgaben</h2><p class="card-caption">${openCount} offen · ${tasks.length - openCount} erledigt</p></div></div>
         <div class="section-toolbar" style="padding:0 18px"><div class="toolbar-right"><select id="task-filter" class="filter-select" aria-label="Nach Status filtern"><option value="all">Alle Status</option>${taskStatuses.map((value) => `<option ${taskFilter === value ? 'selected' : ''}>${value}</option>`).join('')}</select>${singleHouse() ? '' : `<select id="task-property-filter" class="filter-select" aria-label="Nach Gebäude filtern"><option value="all">Alle Gebäude</option>${properties.map((property) => `<option value="${escapeHtml(property.name)}" ${taskPropertyFilter === property.name ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select>`}<select id="task-priority-filter" class="filter-select" aria-label="Nach Priorität filtern"><option value="all">Alle Prioritäten</option><option value="urgent" ${taskPriorityFilter === 'urgent' ? 'selected' : ''}>Dringend</option><option value="soon" ${taskPriorityFilter === 'soon' ? 'selected' : ''}>Wichtig</option><option value="normal" ${taskPriorityFilter === 'normal' ? 'selected' : ''}>Normal</option></select></div></div>
         <div class="task-table-wrap"><table class="task-table"><thead><tr><th>Aufgabe</th><th>Haus / Bereich</th><th>Fälligkeit</th><th>Priorität</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="empty">Keine Aufgaben gefunden. Erstelle eine Aufgabe oder ändere die Filter.</div></td></tr>'}</tbody></table></div></section>`;
+    }
+    function automationPage() {
+      const today = localDateKey(new Date());
+      const sw = (id, checked, label) => `<label class="switch"><input type="checkbox" id="${id}" ${checked ? 'checked' : ''}><span class="switch-track"></span><span>${label}</span></label>`;
+      const upcoming = bookings.filter((booking) => booking.endDate >= today && properties.some((property) => property.id === booking.propertyId));
+      const upcomingOn = upcoming.filter(bookingAutomationOn).length;
+      const offsetOptions = (step) => {
+        const current = Number(automation.turnover.steps[step.id]?.offset ?? step.offset);
+        const values = step.anchor === 'start' ? [-7, -5, -3, -2, -1, 0] : [0, 1, 2];
+        const name = step.anchor === 'start' ? 'Anreise' : 'Abreise';
+        return values.map((value) => `<option value="${value}" ${value === current ? 'selected' : ''}>${value === 0 ? `am ${name}stag` : `${Math.abs(value)} ${Math.abs(value) === 1 ? 'Tag' : 'Tage'} ${value < 0 ? 'vor' : 'nach'} ${name}`}</option>`).join('');
+      };
+      const turnoverCard = bookingsEnabled() ? `<section class="card automation-card wide"><div class="automation-head"><span class="automation-icon">${icon('calendar')}</span><div><h2 class="card-title">Gästewechsel je Buchung</h2><p class="card-caption">Für jede Buchung plant Husora die Aufgaben rund um An- und Abreise und verschiebt sie, wenn sich die Buchung ändert.</p></div></div>
+        <div class="automation-body">${sw('auto-turnover-default', automation.turnover.defaultOn, 'Für neue und synchronisierte Buchungen automatisch einschalten')}
+          <div class="automation-steps">${TURNOVER_STEPS.map((step, index) => {
+            const config = automation.turnover.steps[step.id] || { on: true };
+            return `<div class="automation-step ${config.on === false ? 'off' : ''}"><span class="automation-step-no">${index + 1}</span><label class="automation-step-main"><input type="checkbox" data-auto-step="${step.id}" ${config.on === false ? '' : 'checked'}><span><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.hint)}</small></span></label><select class="filter-select" data-auto-offset="${step.id}" aria-label="Zeitpunkt für ${escapeHtml(step.label)}" ${config.on === false ? 'disabled' : ''}>${offsetOptions(step)}</select></div>`;
+          }).join('')}</div>
+          <div class="automation-foot"><span>${upcoming.length ? `Aktiv für <strong>${upcomingOn} von ${upcoming.length}</strong> kommenden ${upcoming.length === 1 ? 'Buchung' : 'Buchungen'}.` : 'Noch keine kommenden Buchungen.'}</span>${upcoming.length && upcomingOn < upcoming.length ? '<button type="button" class="secondary-btn" data-action="auto-turnover-all">Für alle kommenden Buchungen einschalten</button>' : ''}</div></div></section>` : '';
+      const inspectionRows = properties.map((property) => {
+        const last = lastAbsenceInspection(property.id);
+        const guest = guestInHouse(property.id, today);
+        const state = last.current ? `Aktuell bis ${fmtDate(last.validUntil)}` : guest ? `Fällig · Gast bis ${fmtDate(guest.endDate)} im Haus` : 'Fällig';
+        return `<li><span>${escapeHtml(property.name)}</span><small class="${last.current ? 'ok' : 'due'}">${escapeHtml(state)}</small></li>`;
+      }).join('');
+      const icalCount = icalLinkCount();
+      const syncOn = (portalConnected() && portalSync.auto) || (icalSync.auto && icalCount > 0);
+      const lastSync = [portalSync.lastSync, icalSync.lastSync].filter(Boolean).sort().pop();
+      const nextSteps = tasks.filter((task) => task.auto && !task.done).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6);
+      const timeFmt = (iso) => new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+      return `<div class="welcome"><div><p class="eyebrow">Abläufe automatisieren</p><h1>Automatisierung</h1><p class="subtitle">Lege fest, welche Abläufe Husora für ${singleHouse() ? 'dein Ferienhaus' : 'deine Ferienhäuser'} selbst plant: Gästewechsel, Hauskontrolle, Saison und Wartung.</p></div><button class="secondary-btn" data-action="go-back">← Zurück</button></div>
+        <section class="automation-summary"><div><strong>${automationActiveCount()}</strong><span>von ${bookingsEnabled() ? 5 : 4} Automatiken aktiv</span></div><div><strong>${tasks.filter((task) => task.auto && !task.done).length}</strong><span>automatisch geplante Aufgaben offen</span></div><div><strong>${tasks.filter((task) => task.auto && task.done).length}</strong><span>davon bereits erledigt</span></div></section>
+        <div class="automation-grid">
+          ${turnoverCard}
+          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('inspection')}</span><div><h2 class="card-title">Hauskontrolle bei Leerstand</h2><p class="card-caption">Ist die monatliche Abwesenheitskontrolle fällig und kein Gast im Haus, legt Husora eine Aufgabe an. Mit dem Prüfprotokoll erledigt sie sich von selbst.</p></div></div>
+            <div class="automation-body">${sw('auto-vacancy', automation.vacancyInspection, 'Kontrollaufgabe automatisch anlegen')}<ul class="automation-status">${inspectionRows}</ul><button type="button" class="text-btn" data-page="inspections">Zur Hauskontrolle →</button></div></section>
+          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('moon')}</span><div><h2 class="card-title">Saisonale Aufgaben</h2><p class="card-caption">Einmal pro Jahr und Haus zur passenden Jahreszeit.</p></div></div>
+            <div class="automation-body">${sw('auto-seasonal', automation.seasonal, 'Saisonaufgaben automatisch anlegen')}<ul class="automation-status">${SEASON_RULES.map((rule) => `<li><span>${escapeHtml(rule.label)}</span><small>${escapeHtml(rule.hint)}</small></li>`).join('')}</ul></div></section>
+          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('task')}</span><div><h2 class="card-title">Wiederkehrende Wartung</h2><p class="card-caption">Rauchmelder, Dachrinnen, Wasser und mehr in festen Abständen.</p></div></div>
+            <div class="automation-body">${sw('auto-task-toggle', autoTasks.enabled, 'Wartungsaufgaben automatisch erstellen')}<p class="card-caption">${autoTasks.templates.filter((template) => template.selected).length} von ${autoTasks.templates.length} Vorlagen ausgewählt.</p><button type="button" class="secondary-btn" data-action="auto-task-config">Vorlagen auswählen / erstellen</button></div></section>
+          ${bookingsEnabled() ? `<section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('clock')}</span><div><h2 class="card-title">Kalender-Synchronisierung</h2><p class="card-caption">Buchungen von Airbnb, Booking.com und Vrbo laufen automatisch alle 15 Minuten ein.</p></div></div>
+            <div class="automation-body"><p class="automation-state ${syncOn ? 'on' : ''}">${syncOn ? 'Aktiv' : 'Nicht eingerichtet'}</p><p class="card-caption">${icalCount} ${icalCount === 1 ? 'Kalenderlink' : 'Kalenderlinks'}${portalConnected() ? ' · Repull verbunden' : ''}${lastSync ? ` · zuletzt ${escapeHtml(timeFmt(lastSync))}` : ''}</p><button type="button" class="secondary-btn" data-page="profile">Buchungsportale verwalten</button></div></section>` : ''}
+          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('clock')}</span><div><h2 class="card-title">Nächste automatische Schritte</h2><p class="card-caption">Offene Aufgaben, die Husora geplant hat.</p></div></div>
+            <div class="task-list">${nextSteps.length ? nextSteps.map(taskRow).join('') : '<div class="empty">Aktuell sind keine automatischen Aufgaben offen.</div>'}</div></section>
+          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('note')}</span><div><h2 class="card-title">Protokoll</h2><p class="card-caption">Was die Automatik zuletzt erledigt hat.</p></div></div>
+            <ul class="automation-log">${automation.log.length ? automation.log.slice(0, 8).map((entry) => `<li><small>${escapeHtml(timeFmt(entry.at))}</small><span>${escapeHtml(entry.text)}</span></li>`).join('') : '<li class="empty">Noch keine automatischen Aktionen.</li>'}</ul></section>
+        </div>`;
     }
     function houseSettingsCard() {
       const desired = Math.max(1, Math.floor(Number(profileData.desiredHouseCount || profileData.houseCount)) || 1);
@@ -2878,7 +3182,7 @@
           <div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town)}</span><span class="provider-distance">Entfernung ${providerDistanceKm(provider, property)} km</span></div></div>
         </article>`;
       }).join('');
-      return `<div class="welcome"><div><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div><button class="primary-btn" data-action="go-back">← Zurück</button></div>
+      return `<div class="welcome"><div><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div><button class="secondary-btn back-btn" data-action="go-back">← Zurück</button></div>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Betriebe im Umkreis von ${providerRadius} km</h2><p class="card-caption">${matches.length} passende Betriebe · nächstgelegene zuerst</p></div><button class="secondary-btn" data-action="toggle-favorites">${onlyFavorites ? 'Alle anzeigen' : `☆ Favoriten (${favorites.length})`}</button></div>
           <div class="provider-filters">
             ${singleHouse() ? '' : `<label><span class="form-label">Ferienhaus</span><select id="provider-property" class="filter-select" aria-label="Ferienhaus wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label>`}
@@ -2985,9 +3289,11 @@
       const inspectionRows = info.rows.length
         ? info.rows.map((row) => `<div class="house-info-row"><strong>${escapeHtml(row.item.title)}</strong><small>Letzte Kontrolle: ${row.last ? `${escapeHtml(formatInspectionDate(row.last))} (${ago(row.days)})` : 'noch nicht protokolliert'}</small><small>Kontrolltaktung: ${row.frequency ? escapeHtml(planFrequencyLabel(row.frequency)) : 'nicht festgelegt (Richtwert: jährlich)'}</small></div>`).join('')
         : '<div class="house-info-row"><strong>Kontrolle</strong><small>Für dieses Bauteil gibt es keinen eigenen Prüfpunkt in der Checkliste.</small></div>';
+      const partTasks = tasks.filter((task) => !task.done && task.property === property.name && String(task.area || '').toLowerCase() === part.label.toLowerCase());
+      const taskBlock = partTasks.length ? `<div class="house-info-row"><strong>Offene Aufgaben</strong>${partTasks.map((task) => `<small>${escapeHtml(fmtDate(task.date))}: ${escapeHtml(task.title)}</small>`).join('')}</div>` : '';
       const conditionRows = part.interior ? houseConditionRows(property, part) : null;
       const conditionBlock = part.interior ? `<div class="house-info-row"><strong>Zustand</strong>${conditionRows.length ? conditionRows.map((text) => `<small>${escapeHtml(text)}</small>`).join('') : '<small>Dazu sind in der Objektverwaltung noch keine Angaben eingetragen.</small>'}</div>` : '';
-      return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span><span class="house-status reno-${renovation.status}">${houseRenovationLabels[renovation.status]}</span>${inspectionRows}${conditionBlock}<div class="house-info-row"><strong>Sanierungsstatus</strong>${renovationRows}</div><button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button> <button class="text-btn" type="button" data-action="view-property" data-property="${escapeHtml(property.id)}">Zur Objektverwaltung →</button></div>`;
+      return `<div class="house-info" role="dialog" aria-label="Info zu ${escapeHtml(part.label)}"><button class="house-info-close" type="button" data-house-action="close" aria-label="Info schließen">✕</button><h3>${escapeHtml(part.label)}</h3><span class="house-status st-${info.status}">${houseStatusLabels[info.status]}</span><span class="house-status reno-${renovation.status}">${houseRenovationLabels[renovation.status]}</span>${inspectionRows}${taskBlock}${conditionBlock}<div class="house-info-row"><strong>Sanierungsstatus</strong>${renovationRows}</div><button class="text-btn" type="button" data-page="inspections">Zur Hauskontrolle →</button> <button class="text-btn" type="button" data-action="house-part-task" data-part="${escapeHtml(part.id)}" data-property="${escapeHtml(property.id)}">+ Aufgabe für ${escapeHtml(part.label)}</button> <button class="text-btn" type="button" data-action="view-property" data-property="${escapeHtml(property.id)}">Zur Objektverwaltung →</button></div>`;
     }
     function houseModelHtml(statuses, property, renovated = {}) {
       const W = 220, D = 150, H = 100, R = 60, OH = 14;
@@ -3164,7 +3470,7 @@
       const winterKey = `${new Date().getFullYear()}:${property.id}`;
       const checkedWinterItems = winterChecks[winterKey] || {};
       const winterComplete = winterChecklist.filter((item) => checkedWinterItems[item.id]).length;
-      const pageHeader = `<div class="welcome"><div><p class="eyebrow">${inspectionView === 'winter' ? 'Saisonvorbereitung · Schweden' : 'Bei längerer Abwesenheit'}</p><h1>${inspectionView === 'winter' ? 'Wintercheckliste' : 'Hauskontrolle'}</h1><p class="subtitle">${inspectionView === 'winter' ? `Bereite ${escapeHtml(property.name)} auf Frost, Schnee und lange Winternächte vor.` : `Prüfpunkte, Kontrolltaktung und durchgeführte Besuche ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} verwalten.`}</p></div><button class="primary-btn" data-action="go-back">← Zurück</button></div>`;
+      const pageHeader = `<div class="welcome"><div><p class="eyebrow">${inspectionView === 'winter' ? 'Saisonvorbereitung · Schweden' : 'Bei längerer Abwesenheit'}</p><h1>${inspectionView === 'winter' ? 'Wintercheckliste' : 'Hauskontrolle'}</h1><p class="subtitle">${inspectionView === 'winter' ? `Bereite ${escapeHtml(property.name)} auf Frost, Schnee und lange Winternächte vor.` : `Prüfpunkte, Kontrolltaktung und durchgeführte Besuche ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} verwalten.`}</p></div><button class="secondary-btn back-btn" data-action="go-back">← Zurück</button></div>`;
       const propertyAndTabs = `${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="inspection-property" class="filter-select" aria-label="Ferienhaus für Hauskontrolle wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
         <div class="inspection-tabs" role="tablist" aria-label="Hauskontrolllisten"><button class="inspection-tab ${inspectionView === 'absence' ? 'active' : ''}" type="button" role="tab" aria-selected="${inspectionView === 'absence'}" data-inspection-view="absence">Abwesenheitskontrolle</button><button class="inspection-tab ${inspectionView === 'winter' ? 'active' : ''}" type="button" role="tab" aria-selected="${inspectionView === 'winter'}" data-inspection-view="winter">Wintercheckliste</button></div>`;
       if (inspectionView === 'winter') {
@@ -4132,12 +4438,18 @@
       document.body.classList.toggle('no-bookings', !bookingsEnabled());
       if (!bookingsEnabled() && currentPage === 'bookings') currentPage = 'dashboard';
       document.querySelectorAll('[data-pro-only]').forEach((node) => { node.hidden = !isPro(); });
+      const plannedCount = syncAutomation();
+      if (plannedCount) setTimeout(() => {
+        const toast = document.getElementById('toast');
+        const prefix = toast.classList.contains('show') && !toast.textContent.includes('automatisch geplant') ? `${toast.textContent} ` : '';
+        showToast(`${prefix}${plannedCount} ${plannedCount === 1 ? 'Aufgabe' : 'Aufgaben'} automatisch geplant.`);
+      }, 0);
       if (currentPage === 'house3d' && !isPro()) {
         showToast('Das 3D-Hausmodell ist Teil von Husora Pro.');
         currentPage = 'plans';
       }
-      const pages = { dashboard, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, plans: plansPage, house3d: house3dPage, assignedProviders: assignedProvidersPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
-      const labels = { dashboard: 'Übersicht', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', plans: 'Versionen', house3d: 'Hausmodell', assignedProviders: 'Zugeordnete Servicepartner', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
+      const pages = { dashboard, automation: automationPage, tasks: tasksPage, properties: propertiesPage, propertyDetail: propertyDetailPage, plans: plansPage, house3d: house3dPage, assignedProviders: assignedProvidersPage, providers: providersPage, documents: documentsPage, costs: costsPage, inspections: inspectionsPage, calendar: calendarPage, bookings: bookingsPage, profile: profilePage };
+      const labels = { dashboard: 'Übersicht', automation: 'Automatisierung', tasks: 'Serviceaufgaben', properties: singleHouse() ? 'Mein Ferienhaus' : 'Ferienhäuser', propertyDetail: 'Objektübersicht', plans: 'Versionen', house3d: 'Hausmodell', assignedProviders: 'Zugeordnete Servicepartner', providers: 'Servicepartner', documents: 'Dokumente', costs: 'Jahreskosten', inspections: 'Hauskontrolle', calendar: 'Kalender', bookings: 'Buchung', profile: 'Benutzerprofil' };
       if (currentPage !== lastRenderedPage) {
         if (returningToPreviousPage) {
           returningToPreviousPage = false;
@@ -4334,6 +4646,12 @@
         render();
         return;
       }
+      if (event.target.closest('[data-calendar-today]')) {
+        calendarSelectedDate = localDateKey(new Date());
+        calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        render();
+        return;
+      }
       const calendarStepButton = event.target.closest('[data-calendar-step]');
       if (calendarStepButton) {
         const step = Number(calendarStepButton.dataset.calendarStep);
@@ -4364,6 +4682,7 @@
           const previousTasks = tasks;
           tasks = tasks.filter((item) => item.id !== task.id);
           if (!persistTasks()) { tasks = previousTasks; return; }
+          dismissAutomatedTask(task);
           render();
           showToast('Aufgabe wurde gelöscht.');
         }
@@ -4405,6 +4724,21 @@
       }
       const action = event.target.closest('[data-action]')?.dataset.action;
       if (action === 'new-task') openTaskModal();
+      if (action === 'house-part-task') {
+        const trigger = event.target.closest('[data-action="house-part-task"]');
+        const part = housePartDefs.find((item) => item.id === trigger.dataset.part);
+        const property = properties.find((item) => item.id === trigger.dataset.property);
+        openTaskModal();
+        const form = document.getElementById('task-form');
+        if (property) form.elements.property.value = property.name;
+        if (part) { form.elements.area.value = part.label; form.elements.title.value = `${part.label} prüfen`; form.elements.title.select(); }
+      }
+      if (action === 'auto-turnover-all') {
+        const today = localDateKey(new Date());
+        const nextBookings = bookings.map((booking) => (booking.endDate >= today && !bookingAutomationOn(booking) ? { ...booking, care: { ...(booking.care || {}), enabled: true, plan: booking.care?.plan || '' } } : booking));
+        if (persistBookings(nextBookings)) { bookings = nextBookings; render(); }
+        return;
+      }
       if (action === 'auto-task-config') { document.getElementById('auto-task-subtitle').textContent = singleHouse() ? 'Wähle aus, welche Aufgaben für dein Ferienhaus automatisch erstellt werden.' : 'Wähle aus, welche Aufgaben für jedes Ferienhaus automatisch erstellt werden.'; renderAutoTemplates(); document.getElementById('auto-task-modal').classList.add('open'); }
       if (action === 'new-booking') {
         resetBookingEditor();
@@ -4558,7 +4892,7 @@
         if (!persistBookings(nextBookings)) { render(); return; }
         bookings = nextBookings;
         if (event.target.matches('[data-care-toggle]')) { render(); document.querySelector(`[data-care-toggle="${CSS.escape(bookingId)}"]`)?.focus(); }
-        showToast(care.enabled ? (care.plan ? 'Automatik und Husora Care Paket gespeichert.' : 'Automatik aktiviert. Bitte ein Husora Care Paket wählen.') : 'Automatik für diese Buchung ausgeschaltet.');
+        showToast(event.target.matches('[data-care-plan]') ? 'Husora Care Paket gespeichert.' : care.enabled ? 'Gästewechsel wird automatisch geplant.' : 'Automatik für diese Buchung ausgeschaltet – offene Gästewechsel-Aufgaben wurden entfernt.');
         return;
       }
       if (event.target.id === 'portal-auto-toggle') {
@@ -4583,6 +4917,27 @@
           labels[0]?.classList.toggle('on', !event.target.checked);
           labels[1]?.classList.toggle('on', event.target.checked);
         }
+      }
+      if (event.target.id === 'auto-turnover-default' || event.target.id === 'auto-vacancy' || event.target.id === 'auto-seasonal') {
+        if (event.target.id === 'auto-turnover-default') automation.turnover.defaultOn = event.target.checked;
+        if (event.target.id === 'auto-vacancy') automation.vacancyInspection = event.target.checked;
+        if (event.target.id === 'auto-seasonal') automation.seasonal = event.target.checked;
+        if (event.target.id === 'auto-vacancy' && !event.target.checked) tasks = tasks.filter((task) => !(task.auto === 'inspection' && !task.done));
+        persistTasks();
+        persistAutomation();
+        render();
+        showToast(event.target.checked ? 'Automatik eingeschaltet.' : 'Automatik ausgeschaltet.');
+        return;
+      }
+      if (event.target.matches('[data-auto-step], [data-auto-offset]')) {
+        const stepId = event.target.dataset.autoStep || event.target.dataset.autoOffset;
+        const config = { ...(automation.turnover.steps[stepId] || {}) };
+        if (event.target.matches('[data-auto-step]')) config.on = event.target.checked; else config.offset = Number(event.target.value);
+        automation.turnover.steps[stepId] = config;
+        persistAutomation();
+        render();
+        showToast('Gästewechsel-Ablauf aktualisiert.');
+        return;
       }
       if (event.target.id === 'auto-task-toggle') {
         autoTasks.enabled = event.target.checked;
@@ -5045,6 +5400,7 @@
         repeat: String(formData.get('repeat')),
         description: String(formData.get('description')).trim()
       };
+      if (isEditing && updatedTask.auto === 'turnover') updatedTask.pinned = true;
       const previousStatus = isEditing ? taskStatus(tasks.find((task) => task.id === editingTaskId) || {}) : 'Offen';
       updatedTask.status = previousStatus;
       updatedTask.done = previousStatus === 'Erledigt';
@@ -5605,7 +5961,7 @@
       showToast(previous ? 'Ferienhausdaten wurden aktualisiert.' : 'Ferienhaus wurde angelegt.');
     });
     const autoModal = document.getElementById('auto-task-modal');
-    const closeAutoModal = () => { autoModal.classList.remove('open'); if (currentPage === 'tasks') render(); };
+    const closeAutoModal = () => { autoModal.classList.remove('open'); if (currentPage === 'tasks' || currentPage === 'automation') render(); };
     document.getElementById('close-auto-task-modal').addEventListener('click', closeAutoModal);
     document.getElementById('done-auto-task-modal').addEventListener('click', () => { runAutoTasks(true); closeAutoModal(); });
     autoModal.addEventListener('click', (event) => {
