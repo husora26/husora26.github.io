@@ -281,6 +281,14 @@
     .cost-toggle svg { width: 13px; height: 13px; transition: transform .2s; }
     .cost-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
     .cost-list[hidden] { display: none; }
+    .cost-import-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; margin: 14px 0 0; padding: 13px 16px; border: 1px solid #ecd9ab; border-left: 4px solid #d1a64a; border-radius: 10px; background: #fff8e8; }
+    .cost-import-banner > div { flex: 1 1 260px; min-width: 0; }
+    .cost-import-banner strong { display: block; color: #805526; font-size: 12.5px; }
+    .cost-import-banner p { margin: 3px 0 0; color: #5d665f; font-size: 11.5px; line-height: 1.5; }
+    .cost-import-icon { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: #805526; background: #f6e9c8; }
+    .cost-import-icon svg { width: 17px; height: 17px; }
+    .cost-toggle-count { padding: 1px 7px; border-radius: 999px; color: #805526; background: #fff8e8; font-size: 9px; }
+    .cost-source-mini { margin-left: 6px; padding: 1px 6px; font-size: 8.5px; }
     .cost-source { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; color: #805526; background: var(--amber-soft); font-size: 9px; font-weight: 700; vertical-align: middle; }
     .cost-source-note { margin: 0; padding: 10px 20px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .portal-card { margin-bottom: 0; }
@@ -3089,7 +3097,19 @@
       if (slot) slot.innerHTML = part ? houseInfoHtml(houseModelProperty, part) : '';
     }
     const COST_CHART_COLORS = ['#315c49', '#c17b4a', '#6f8d70', '#d1a64a', '#728da1', '#b66a60', '#9b805b', '#788c83', '#a27691'];
-    function costBarsHtml(costs) {
+    function costImportBannerHtml(propertyId) {
+      const sources = costSources[propertyId] || {};
+      const count = Object.keys(sources).length;
+      if (!count) return '';
+      const names = [...new Set(Object.values(sources))].join(', ');
+      return `<div class="cost-import-banner" id="cost-import-banner" role="note"><span class="cost-import-icon" aria-hidden="true">${icon('document')}</span><div><strong>Kosten aus Inserat importiert</strong><p>${count} ${count === 1 ? 'Kostenposten wurde' : 'Kostenposten wurden'} aus dem Inserat übernommen (${escapeHtml(names)}, Jahreswerte in SEK) und ${count === 1 ? 'ist' : 'sind'} mit „Kosten aus Inserat“ markiert. Alle anderen Posten sind Planwerte.</p></div><button type="button" class="secondary-btn" data-action="show-imported-costs">Posten anzeigen</button></div>`;
+    }
+    function refreshCostImportBanner() {
+      const current = document.getElementById('cost-import-banner');
+      const html = costImportBannerHtml(costProperty);
+      if (current) { if (html) current.outerHTML = html; else current.remove(); }
+    }
+    function costBarsHtml(costs, propertyId = costProperty) {
       const rows = costCategories.map((category, index) => ({ category, color: COST_CHART_COLORS[index % COST_CHART_COLORS.length], value: Math.max(0, Number(costs[category.id]) || 0) }));
       const total = rows.reduce((sum, row) => sum + row.value, 0);
       rows.sort((a, b) => b.value - a.value);
@@ -3097,7 +3117,7 @@
       return rows.map((row) => {
         const share = total ? row.value / total * 100 : 0;
         const width = top ? Math.max(row.value ? 2 : 0, row.value / top * 100) : 0;
-        return `<li class="cost-bar-row" data-cost-bar="${row.category.id}"><span class="cost-bar-label" title="${escapeHtml(row.category.label)}">${escapeHtml(row.category.label)}</span><span class="cost-bar-track"><span class="cost-bar-fill" style="width:${width}%;background:${row.color}"></span></span><span class="cost-bar-values"><strong>${formatCost(row.value)}</strong><small>${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%</small></span></li>`;
+        return `<li class="cost-bar-row" data-cost-bar="${row.category.id}"><span class="cost-bar-label" title="${escapeHtml(row.category.label)}">${escapeHtml(row.category.label)}${costSources[propertyId]?.[row.category.id] ? '<span class="cost-source cost-source-mini" title="Kosten aus Inserat">Inserat</span>' : ''}</span><span class="cost-bar-track"><span class="cost-bar-fill" style="width:${width}%;background:${row.color}"></span></span><span class="cost-bar-values"><strong>${formatCost(row.value)}</strong><small>${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(share)}%</small></span></li>`;
       }).join('');
     }
     function costsPage() {
@@ -3107,9 +3127,10 @@
       const money = formatCost;
       return `<div class="welcome"><div><p class="eyebrow">Årlig planering · ${isEuro() ? 'EUR' : 'SEK'}</p><h1>Ferienhaus-Kosten</h1><p class="subtitle">${singleHouse() ? 'Planwerte für dein Ferienhaus bearbeiten' : 'Planwerte pro Ferienhaus bearbeiten'} und laufende Kosten im Blick behalten.</p><div class="currency-bar"><label class="currency-switch"><span class="${isEuro() ? '' : 'on'}">SEK</span><input type="checkbox" id="cost-currency-toggle" role="switch" aria-label="Beträge in Euro anzeigen" ${isEuro() ? 'checked' : ''}><span class="currency-track"></span><span class="${isEuro() ? 'on' : ''}">EUR</span></label><span class="fx-note" id="fx-note">${isEuro() ? escapeHtml(fxNote()) : 'Schwedische Kronen · Umrechnung in Euro mit dem Schalter'}</span></div></div></div>
         ${singleHouse() ? '' : `<div class="section-toolbar"><label><span class="form-label">Ferienhaus</span><select id="cost-property" class="filter-select" aria-label="Ferienhaus für Jahreskosten wählen">${properties.map((item) => `<option value="${item.id}" ${item.id === property.id ? 'selected' : ''}>${escapeHtml(item.name)} · ${escapeHtml(item.region)}</option>`).join('')}</select></label></div>`}
+        ${costImportBannerHtml(property.id)}
         <div class="cost-summary"><article class="cost-total"><small>Geschätzte Jahreskosten · ${escapeHtml(property.name)}</small><strong id="annual-total">${money(total)}</strong><span>Ändere die Beträge unten, um dein eigenes Budget abzubilden.</span></article><article class="card cost-average"><span>Monatlicher Budgetdurchschnitt</span><strong id="monthly-total">${money(Math.round(total / 12))}</strong></article></div>
-        <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Posten nach Anteil an den Jahreskosten sortiert · ${escapeHtml(property.name)}</p></div></div><ul class="cost-bars" id="cost-bars" aria-label="Kostenverteilung als Balkendiagramm">${costBarsHtml(costs)}</ul></section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><button type="button" class="status pending cost-toggle" id="cost-toggle" data-action="toggle-cost-list" aria-expanded="${costListOpen}" aria-controls="cost-list"><span>Planwerte bearbeiten</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+        <section class="card cost-chart-card"><div class="card-head"><div><h2 class="card-title">Kostenverteilung</h2><p class="card-caption">Posten nach Anteil an den Jahreskosten sortiert · ${escapeHtml(property.name)}</p></div></div><ul class="cost-bars" id="cost-bars" aria-label="Kostenverteilung als Balkendiagramm">${costBarsHtml(costs, property.id)}</ul></section>
+        <section class="card"><div class="card-head"><div><h2 class="card-title">Jährliche Kostenposten</h2><p class="card-caption">${isEuro() ? 'Beträge in Euro (€) pro Jahr, umgerechnet aus Schwedischen Kronen' : 'Beträge in Schwedischen Kronen (SEK) pro Jahr'}</p></div><button type="button" class="status pending cost-toggle" id="cost-toggle" data-action="toggle-cost-list" aria-expanded="${costListOpen}" aria-controls="cost-list"><span>Planwerte bearbeiten</span>${Object.keys(costSources[property.id] || {}).length ? `<span class="cost-toggle-count">${Object.keys(costSources[property.id]).length} aus Inserat</span>` : ''}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
           ${Object.keys(costSources[property.id] || {}).length ? `<p class="cost-source-note">Positionen mit „Kosten aus Inserat“ stammen aus dem Inserat (${escapeHtml([...new Set(Object.values(costSources[property.id]))].join(', '))}, Jahreswerte in SEK). Alle anderen Positionen sind Planwerte. Sobald du einen Betrag änderst, entfällt die Markierung.</p>` : ''}
           <div class="cost-list" id="cost-list" ${costListOpen ? '' : 'hidden'}>${costCategories.map((category) => `<label class="cost-item"><span class="cost-item-main"><strong>${escapeHtml(category.label)}${costSources[property.id]?.[category.id] ? `<span class="cost-source" title="Quelle: ${escapeHtml(costSources[property.id][category.id])}">Kosten aus Inserat</span>` : ''}</strong><small>${escapeHtml(category.note)}</small></span><span class="cost-input-wrap"><input class="cost-input" type="number" min="0" step="${isEuro() ? 10 : 100}" inputmode="numeric" data-cost="${category.id}" aria-label="${escapeHtml(category.label)} pro Jahr" value="${Math.round(sekToDisplay(Number(costs[category.id]) || 0))}"><span>${isEuro() ? '€' : 'kr'}/Jahr</span></span></label>`).join('')}</div>
           <div class="cost-disclaimer">Orientierungsbudget, keine Kostenprognose: Versicherungs-, Energie-, Wasser-/Abwasser-, Abfall-, Kamin- und Wartungskosten unterscheiden sich je nach Haus, Nutzung und Gemeinde. Die Werte sind editierbare Beispiel-Planwerte. Die Immobilienabgabe 2026 ist mit dem gesetzlichen Höchstbetrag von 10 425 kr angesetzt; sie beträgt grundsätzlich 0,75 % des Steuerwerts bis zum Höchstbetrag. Ersetze Planwerte durch Bescheide und Angebote.</div>
@@ -4409,6 +4430,13 @@
         currentPage = 'inspections';
         render();
       }
+      if (action === 'show-imported-costs') {
+        costListOpen = true;
+        document.getElementById('cost-toggle')?.setAttribute('aria-expanded', 'true');
+        const list = document.getElementById('cost-list');
+        if (list) { list.hidden = false; list.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        return;
+      }
       if (action === 'toggle-cost-list') {
         costListOpen = !costListOpen;
         document.getElementById('cost-toggle')?.setAttribute('aria-expanded', String(costListOpen));
@@ -4508,7 +4536,8 @@
         const total = costCategories.reduce((sum, category) => sum + (Number(costs[category.id]) || 0), 0);
         document.getElementById('annual-total').textContent = formatCost(total);
         document.getElementById('monthly-total').textContent = formatCost(Math.round(total / 12));
-        document.getElementById('cost-bars').innerHTML = costBarsHtml(costs);
+        document.getElementById('cost-bars').innerHTML = costBarsHtml(costs, costProperty);
+        refreshCostImportBanner();
       }
     });
     pageContent.addEventListener('change', async (event) => {
