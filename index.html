@@ -252,6 +252,8 @@
     .provider-contact-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 10px; min-width: 0; }
     .provider-source { color: var(--green); font-size: 10px; font-weight: 700; text-decoration: none; }
     .provider-source:hover { text-decoration: underline; }
+    .provider-nocontact { color: var(--muted); font-weight: 600; }
+    .provider-hint { margin-top: 4px; color: var(--muted); font-size: 10px; font-style: italic; }
     .provider-specialty { color: #626c64; font-size: 9px; }
     .source-note { padding: 0 18px 14px; color: var(--muted); font-size: 9px; line-height: 1.5; }
     .cost-summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(190px, .6fr); gap: 14px; margin: 17px 0; }
@@ -1318,7 +1320,50 @@
       { id: 'varmland-h039', name: 'Carlstad Plattsättning AB', category: 'renovation', specialty: 'Bad / Fliesen', town: 'Hammarö / Karlstad', services: 'Fliesen, Nassräume, Badrenovierung', priority: 'B' },
       { id: 'varmland-h040', name: 'Grundels Fönstersystem AB', category: 'renovation', specialty: 'Fenster', town: 'Karlstad / Värmland', services: 'Fenstersysteme, Aufmaß, Montage, Qualitätskontrolle', phone: '054-18 05 01', priority: 'B' },
       { id: 'varmland-h041', name: 'Skåre bygg och måleri', category: 'renovation', specialty: 'Bau / Maler', town: 'Karlstad', services: 'Schreinerei, Bad, Malerarbeiten', phone: '070-435 98 80', priority: 'B' },
-      { id: 'varmland-h042', name: 'RCTM', category: 'renovation', specialty: 'Bau / Dach / Maler / Boden', town: 'Värmland', services: 'Bau, Dach, Boden, Fassade, Malerarbeiten', website: 'https://rctm.se/', priority: 'B' }
+      { id: 'varmland-h042', name: 'RCTM', category: 'renovation', specialty: 'Bau / Dach / Maler / Boden', town: 'Värmland', services: 'Bau, Dach, Boden, Fassade, Malerarbeiten', website: 'https://rctm.se/', priority: 'B' },
+      // HEMORA Partnerdatenbank Dalarna 2026 (Stand 24.10.2026, Kontaktdaten noch zu recherchieren)
+      { id: "dalarna-h001", name: "Svärdsjö Städ och Fastighetsservice AB", category: "inspection", specialty: "Hausbetreuung / Reinigung", town: "Svärdsjö / südliches Dalarna", services: "Gebäudereinigung, Privat- und Firmenreinigung, laufende Objektbetreuung", priority: "A", hint: "Eniro beschreibt Einsätze in ganz Süd-Dalarna", region: "dalarna" },
+      { id: "dalarna-h002", name: "Preventa Fastighetsservice AB", category: "inspection", specialty: "Hausbetreuung / Reinigung", town: "Sälen", services: "Regelmäßige Reinigung, Flyttstäd, Storstäd, Fensterputzen, Haushaltsnahe Dienste", priority: "A", hint: "Besonders interessant für Ferienhäuser im Sälen-Gebiet", region: "dalarna" },
+      { id: "dalarna-h003", name: "AM Berglund AB", category: "inspection", specialty: "Hausbetreuung / Reinigung", town: "Mora", services: "Reinigung und Servicedienstleistungen für Privat- und Firmenkunden", priority: "A", hint: "Städbolag mit Servicefokus in Mora", region: "dalarna" },
+      { id: "dalarna-h004", name: "RentPro - Städ och Service", category: "house", specialty: "Hausbetreuung / Reinigung", town: "Krylbo / Avesta", services: "Fensterputzen, Flyttstäd, Hausreinigung, Grobreinigung, Büroreinigung", priority: "A", hint: "Arbeitet in Dalarna und Västmanland", region: "dalarna" },
+      { id: "dalarna-h005", name: "Filippinsk Hemservice i Dalarna AB", category: "inspection", specialty: "Hausbetreuung / Garten", town: "Borlänge", services: "Hausservice, Reinigung, Gartenpflege und weitere Haushaltsdienste", priority: "A", hint: "Unternehmenszweck umfasst ausdrücklich Haus- und Gartendienstleistungen", region: "dalarna" },
+      { id: "dalarna-h006", name: "Diversearbetaren i Rättvik AB", category: "inspection", specialty: "Hausbetreuung / Allservice", town: "Rättvik", services: "Gartenpflege, Schneeräumung, Reparaturen, Bau/Erde, Reinigungsservice", priority: "A", hint: "Breites Allservice-Angebot für Ferienhauskunden", region: "dalarna" },
+      { id: "dalarna-h007", name: "Dala Träd & Gård", category: "house", specialty: "Garten / Winter", town: "Sundborn / Falun", services: "Baumfällung, Stubbenfräsen, Gartenpflege, Schneeschaufeln, Terrassenreinigung", priority: "A", hint: "Explizit Dalarna; ganzjährige Außenpflege", region: "dalarna" },
+      { id: "dalarna-h008", name: "Trädkultur Dalarna AB", category: "house", specialty: "Garten / Bäume", town: "Falun", services: "Baumpflege und Außenanlagen", priority: "A", hint: "Lokaler Anbieter in Falun", region: "dalarna" },
+      { id: "dalarna-h009", name: "Bågsträngen Hus och trädgårdservice", category: "inspection", specialty: "Garten / Hausservice", town: "Borlänge", services: "Haus- und Gartenservice", priority: "A", hint: "Lokaler Haus-/Gartenservice", region: "dalarna" },
+      { id: "dalarna-h010", name: "Borlänge Trädgårdsservice AB", category: "house", specialty: "Garten / Außenanlagen", town: "Borlänge", services: "Garten- und Außenanlagenpflege", priority: "A", hint: "Lokaler Gartenservice", region: "dalarna" },
+      { id: "dalarna-h011", name: "FLF Trädfällning och Skog", category: "house", specialty: "Garten / Bäume", town: "Stjärnsund", services: "Baumfällung, Abtransport, Stubbenfräsen, mobiles Sägewerk", priority: "A", hint: "Für größere Grundstücke/Ferienhäuser interessant", region: "dalarna" },
+      { id: "dalarna-h012", name: "Träd & Gård Äppelbo", category: "house", specialty: "Garten / Grundstück", town: "Äppelbo", services: "Baumpflege, Fällung, Grünflächen- und Hofpflege", priority: "A", hint: "Ganzjährige Außenpflege für Privat- und Firmenkunden", region: "dalarna" },
+      { id: "dalarna-h013", name: "Skogspraktikern", category: "house", specialty: "Garten / Grundstück", town: "Sveg / Dalarna-Einsätze", services: "Baumfällung, Gartenarbeit, Stubbenfräsen, äußere Grundstückspflege", priority: "A", hint: "Sitzt außerhalb Dalarna, nimmt laut Eintrag Aufträge in Dalarna an", region: "dalarna" },
+      { id: "dalarna-h014", name: "Dalvolt AB", category: "renovation", specialty: "Elektro / PV", town: "Stjärnsund / Dalarna", services: "Elektroinstallation bis 1000 V, Fehlersuche, Service, PV, Wallbox, Speicher, Wartungsverträge", priority: "A", hint: "Akkreditierter Elektroinstallateur laut Eintrag; gut für HEMORA-Objektservice", region: "dalarna" },
+      { id: "dalarna-h015", name: "Slätta Rörmokeri AB", category: "renovation", specialty: "VVS / Sanitär", town: "Falun", services: "VVS-Arbeiten, Installation, Service", priority: "A", hint: "Lokaler VVS-Betrieb in Falun", region: "dalarna" },
+      { id: "dalarna-h016", name: "Rönnäs Rör AB", category: "renovation", specialty: "VVS / Sanitär", town: "Rättvik", services: "VVS und Rohrarbeiten", priority: "A", hint: "Lokaler Anbieter in Rättvik", region: "dalarna" },
+      { id: "dalarna-h017", name: "Dalarnas Rörinstallation AB", category: "renovation", specialty: "VVS / Sanitär", town: "Borlänge", services: "Rohinstallation, VVS-Service", priority: "A", hint: "Regionaler VVS-Anbieter", region: "dalarna" },
+      { id: "dalarna-h018", name: "Dewalls VVS AB", category: "renovation", specialty: "VVS / Sanitär", town: "Vansbro", services: "VVS-Arbeiten und Service", priority: "A", hint: "Versorgt Dalarna aus Vansbro", region: "dalarna" },
+      { id: "dalarna-h019", name: "LGI VVS AB", category: "renovation", specialty: "VVS / Sanitär", town: "Leksand", services: "VVS und Sanitär", priority: "A", hint: "Lokaler Betrieb in Leksand", region: "dalarna" },
+      { id: "dalarna-h020", name: "Siljans VVS Entreprenad AB", category: "renovation", specialty: "VVS / Sanitär", town: "Leksand", services: "VVS- und Installationsarbeiten", priority: "A", hint: "Siljan-Region; gut für Ferienhausgebiet", region: "dalarna" },
+      { id: "dalarna-h021", name: "RA Rör & Fastighetsservice i Dalarna AB", category: "renovation", specialty: "VVS / Hausservice", town: "Djurmo / Gagnef", services: "VVS und Fastighetsservice", priority: "A", hint: "Kombination aus VVS und Objektservice ist für HEMORA besonders interessant", region: "dalarna" },
+      { id: "dalarna-h022", name: "Dala Rörservice AB", category: "renovation", specialty: "VVS / Wärmetechnik", town: "Borlänge", services: "Rörservice und Wärmetechnik", priority: "A", hint: "Regionaler Servicebetrieb", region: "dalarna" },
+      { id: "dalarna-h023", name: "Klimatmontage i Dalarna AB", category: "renovation", specialty: "Heizung / Klima", town: "Dala-Floda", services: "Klima-, Heizungs- und Montagearbeiten", priority: "A", hint: "Technischer Service für Ferienhäuser", region: "dalarna" },
+      { id: "dalarna-h024", name: "Krister Klaar Kyl & Värmepumpar AB", category: "renovation", specialty: "Wärmepumpe / Klima", town: "Säter", services: "Kälte, Wärmepumpen und Service", priority: "A", hint: "Wärmepumpenpartner für technische Hauskontrollen", region: "dalarna" },
+      { id: "dalarna-h025", name: "Enwell Mora", category: "renovation", specialty: "Heizung / Wärmepumpe", town: "Mora", services: "Wärmepumpen, Heizung, Service", priority: "A", hint: "Regionaler Wärmepumpen-/Heizungsanbieter", region: "dalarna" },
+      { id: "dalarna-h026", name: "Enwell Falun", category: "renovation", specialty: "Heizung / Wärmepumpe", town: "Falun", services: "Wärmepumpen, Heizung, Service", priority: "A", hint: "Regionaler Wärmepumpen-/Heizungsanbieter", region: "dalarna" },
+      { id: "dalarna-h027", name: "Mora Byggservice AB", category: "renovation", specialty: "Bau / Reparatur", town: "Mora", services: "Bau- und Reparaturarbeiten", priority: "A", hint: "Lokaler Baupartner in Mora", region: "dalarna" },
+      { id: "dalarna-h028", name: "Beja Bygg AB", category: "renovation", specialty: "Bau / Reparatur", town: "Mora", services: "Bauarbeiten und Renovierung", priority: "A", hint: "Lokaler Baupartner", region: "dalarna" },
+      { id: "dalarna-h029", name: "Dala Bygg & Entreprenad AB", category: "renovation", specialty: "Bau / Renovierung", town: "Leksand", services: "Bau und Renovierung", priority: "A", hint: "Regionaler Baupartner in Leksand", region: "dalarna" },
+      { id: "dalarna-h030", name: "Dala Snickaren Bygg & Montage AB", category: "renovation", specialty: "Bau / Schreiner", town: "Borlänge", services: "Schreiner-, Montage- und Bauarbeiten", priority: "A", hint: "Geeignet für kleinere Reparaturen und Umbauten", region: "dalarna" },
+      { id: "dalarna-h031", name: "ByggPartner i Dalarna AB", category: "renovation", specialty: "Bau / Renovierung", town: "Borlänge", services: "Bau- und Renovierungsarbeiten", priority: "A", hint: "Regionaler Anbieter in Borlänge", region: "dalarna" },
+      { id: "dalarna-h032", name: "Villaspecialisten i Dalarna AB", category: "renovation", specialty: "Bau / Holzhaus", town: "Leksand", services: "Hausbau, Holzbau und Bauleistungen", priority: "A", hint: "Interessant für größere Renovierungs-/Holzhausprojekte", region: "dalarna" },
+      { id: "dalarna-h033", name: "Basis Snickeri AB", category: "renovation", specialty: "Schreinerei", town: "Leksand", services: "Bauschreinerei und Holzarbeiten", priority: "A", hint: "Lokaler Schreiner in Leksand", region: "dalarna" },
+      { id: "dalarna-h034", name: "Siljan Bygg & Design", category: "renovation", specialty: "Bau / Design", town: "Siljansnäs / Leksand", services: "Bau, Innenausbau und Design", priority: "A", hint: "Regionaler Partner am Siljansee", region: "dalarna" },
+      { id: "dalarna-h035", name: "Takläggarna Dalarna AB", category: "renovation", specialty: "Dach / Reparatur", town: "Borlänge", services: "Dacharbeiten und Dachsanierung", priority: "A", hint: "Spezialist für Dacharbeiten", region: "dalarna" },
+      { id: "dalarna-h036", name: "Dalarnas Takmontage AB", category: "renovation", specialty: "Dach / Reparatur", town: "Falun", services: "Dachmontage und Dacharbeiten", priority: "A", hint: "Lokaler Dachbetrieb in Falun", region: "dalarna" },
+      { id: "dalarna-h037", name: "Christers Tak AB", category: "renovation", specialty: "Dach / Reparatur", town: "Falun", services: "Dacharbeiten und Reparaturen", priority: "A", hint: "Lokaler Dachanbieter", region: "dalarna" },
+      { id: "dalarna-h038", name: "VDT - Västerdala Tak AB", category: "renovation", specialty: "Dach / Reparatur", town: "Falun / Västerdalarna", services: "Dacharbeiten und Sanierung", priority: "A", hint: "Regionaler Dachanbieter", region: "dalarna" },
+      { id: "dalarna-h039", name: "TK Tak & Ventilation", category: "renovation", specialty: "Dach / Lüftung", town: "Mora", services: "Dach- und Lüftungsarbeiten", priority: "A", hint: "Kombiniert Dach und Lüftung", region: "dalarna" },
+      { id: "dalarna-h040", name: "Mora Plåtslageri AB", category: "renovation", specialty: "Dach / Metall", town: "Mora", services: "Spengler-, Blech- und Dacharbeiten", priority: "A", hint: "Lokaler Blech-/Dachbetrieb", region: "dalarna" },
+      { id: "dalarna-h041", name: "Svenska Tak & Fönster", category: "renovation", specialty: "Dach / Fenster", town: "Säter", services: "Dach- und Fensterarbeiten", priority: "A", hint: "Kombination für HEMORA-Objektchecks interessant", region: "dalarna" },
+      { id: "dalarna-h042", name: "M.A Snickeri & Projektpartner AB", category: "renovation", specialty: "Schreinerei / Projekt", town: "Leksand", services: "Schreinerei und Projektarbeiten", priority: "A", hint: "Regionaler Projektpartner in Leksand", region: "dalarna" }
     ];
     const varmlandDistanceByLocality = [
       ['kristinehamn', 80], ['filipstad', 78], ['säffle', 74], ['arvika', 60],
@@ -1326,7 +1371,7 @@
       ['hammarö', 63], ['karlstad', 54], ['forshaga', 48], ['deje', 43],
       ['vålberg', 55], ['grums', 50], ['kil', 35], ['värmland', 65]
     ];
-    databasePartners.forEach((provider) => {
+    databasePartners.filter((provider) => provider.region !== 'dalarna').forEach((provider) => {
       const location = provider.town.toLocaleLowerCase('sv');
       const coveredDistances = varmlandDistanceByLocality
         .filter(([locality]) => location.includes(locality))
@@ -1335,6 +1380,62 @@
       const initials = provider.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toLocaleUpperCase('sv');
       providers.push({ ...provider, initials, distances: { sunne: distance } });
     });
+    databasePartners.filter((provider) => provider.region === 'dalarna').forEach((provider) => {
+      const initials = provider.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toLocaleUpperCase('sv');
+      providers.push({ ...provider, initials, distances: {} });
+    });
+    const LOCALITIES = {
+      mora: [61.007, 14.544], orsa: [61.121, 14.617], 'rättvik': [60.887, 15.113], leksand: [60.735, 14.998], 'tällberg': [60.838, 14.990],
+      siljansnäs: [60.80, 14.68], falun: [60.607, 15.627], 'borlänge': [60.485, 15.436], 'sälen': [61.16, 13.26], 'säter': [60.346, 15.756],
+      vansbro: [60.51, 14.22], gagnef: [60.58, 15.09], djurmo: [60.55, 15.07], 'svärdsjö': [60.74, 15.83], sundborn: [60.70, 15.80],
+      'stjärnsund': [60.32, 15.58], 'äppelbo': [60.52, 14.05], krylbo: [60.12, 16.18], avesta: [60.145, 16.168], sveg: [62.03, 14.35],
+      'dala-floda': [60.62, 14.60], idre: [61.86, 12.71], 'älvdalen': [61.23, 14.04], malung: [60.69, 13.71], ludvika: [60.15, 15.19],
+      smedjebacken: [60.14, 15.41], hedemora: [60.28, 15.99], 'insjön': [60.68, 15.10], 'bjursås': [60.67, 15.45], furudal: [61.39, 15.13],
+      nusnäs: [60.85, 14.63], 'våmhus': [61.12, 14.43],
+      sunne: [59.84, 13.14], torsby: [60.14, 13.00], karlstad: [59.38, 13.50], arvika: [59.66, 12.59], kristinehamn: [59.31, 14.11],
+      filipstad: [59.71, 14.17], 'säffle': [59.13, 12.92], hagfors: [60.03, 13.65], kil: [59.50, 13.31], grums: [59.35, 13.10],
+      forshaga: [59.53, 13.48], 'hammarö': [59.33, 13.52], skoghall: [59.32, 13.42], 'vålberg': [59.39, 13.19], deje: [59.58, 13.47],
+      branäs: [60.55, 13.0], 'sysslebäck': [60.51, 12.88],
+      grebbestad: [58.69, 11.25], 'fjällbacka': [58.60, 11.29], hamburgsund: [58.56, 11.27], tanum: [58.72, 11.32], 'resö': [58.68, 11.28]
+    };
+    const REGION_CENTERS = { dalarna: [60.9, 14.9], 'värmland': [59.9, 13.2], 'bohuslän': [58.65, 11.3] };
+    const LOCALITY_KEYS = Object.keys(LOCALITIES).sort((a, b) => b.length - a.length);
+    const haversineKm = (a, b) => {
+      const rad = (value) => value * Math.PI / 180;
+      const h = Math.sin(rad(b[0] - a[0]) / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(rad(b[1] - a[1]) / 2) ** 2;
+      return 12742 * Math.asin(Math.sqrt(h));
+    };
+    const localitiesIn = (text) => LOCALITY_KEYS.filter((key) => text.includes(key)).map((key) => LOCALITIES[key]);
+    const regionIn = (text) => Object.keys(REGION_CENTERS).find((key) => text.includes(key)) || '';
+    const propertyGeoQuery = (property) => [property.address, property.region, 'Schweden'].filter(Boolean).join(', ');
+    function propertyOrigin(property) {
+      const cached = geoCache[propertyGeoQuery(property)];
+      const text = `${property.address || ''} ${property.name || ''} ${property.region || ''}`.toLocaleLowerCase('sv');
+      const spot = Array.isArray(cached) ? cached : (localitiesIn(text)[0] || REGION_CENTERS[regionIn(text)] || null);
+      if (!spot) return null;
+      const region = Object.entries(REGION_CENTERS).map(([key, center]) => [key, haversineKm(spot, center)]).sort((a, b) => a[1] - b[1])[0];
+      return { coords: spot, region: region[1] < 160 ? region[0] : '' };
+    }
+    const geocodeRequests = new Set();
+    function ensurePropertyGeocode(property) {
+      const query = propertyGeoQuery(property);
+      if (!property.address || Object.prototype.hasOwnProperty.call(geoCache, query) || geocodeRequests.has(query)) return;
+      geocodeRequests.add(query);
+      geocode(query).then((found) => { if (found && (currentPage === 'providers' || currentPage === 'assignedProviders')) render(); }).catch(() => {});
+    }
+    function providerDistanceKm(provider, property) {
+      const legacy = provider.distances?.[property.id];
+      if (Number.isFinite(legacy)) return legacy;
+      const origin = propertyOrigin(property);
+      if (!origin) return Infinity;
+      const text = `${provider.town || ''} ${provider.region || ''}`.toLocaleLowerCase('sv');
+      const spots = localitiesIn(text);
+      const providerRegion = provider.region || regionIn(text);
+      const wide = !spots.length || /ganz|einsätze|regional|region/i.test(text);
+      let best = spots.length ? Math.min(...spots.map((spot) => haversineKm(origin.coords, spot) * 1.25)) : Infinity;
+      if (wide && providerRegion && providerRegion === origin.region) best = Math.min(best, 65);
+      return Number.isFinite(best) ? Math.max(1, Math.round(best)) : Infinity;
+    }
     providers.find((provider) => provider.id === 'nortivo').priority = 'A';
     function providerContactLinks(provider) {
       const links = [];
@@ -1348,7 +1449,7 @@
       if (provider.website) {
         links.push(`<a class="provider-source" href="${escapeHtml(provider.website)}" target="_blank" rel="noopener noreferrer">Website ↗</a>`);
       }
-      return links.join('');
+      return links.length ? links.join('') : '<span class="provider-source provider-nocontact">Kontaktdaten folgen</span>';
     }
     let servicePartnerAssignments = {};
     try {
@@ -2698,7 +2799,7 @@
             return `<span>${escapeHtml(control.name)} · ${count} ${count === 1 ? 'Prüfposition' : 'Prüfpositionen'}${due ? ` · spätestens bis ${escapeHtml(formatInspectionDate(due))}` : ''}</span>`;
           }).join('')}<button type="button" class="text-btn" data-action="open-inspection" data-property="${escapeHtml(property.id)}">Zur Hauskontrolle →</button></div>`
           : '';
-        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" data-provider-property="${escapeHtml(property.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${provider.distances?.[property.id] != null ? `<span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span>` : ''}</div></div>${controlInfo}<div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
+        return `<article class="card assigned-provider-card"><div class="assigned-provider-head"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div class="assigned-provider-main"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services || '')}</p></div><label class="primary-btn">${icon('plus')} Dokument hochladen<input type="file" data-provider-document-upload="${escapeHtml(provider.id)}" data-provider-property="${escapeHtml(property.id)}" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" hidden></label></div><div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${partnerCategoryLabel(provider)}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}</div><div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town || '')}</span>${Number.isFinite(providerDistanceKm(provider, property)) ? `<span class="provider-distance">Entfernung ${providerDistanceKm(provider, property)} km</span>` : ''}</div></div>${controlInfo}<div class="assigned-provider-documents"><strong>Dokumente</strong>${providerDocuments.length ? `<div class="document-list">${providerDocuments.map((document) => `<article class="document-row"><span class="document-icon">${icon('document')}</span><span class="document-info"><strong title="${escapeHtml(document.name)}">${escapeHtml(document.name)}</strong><small>${fileSize(document.size)} · hinzugefügt am ${escapeHtml(document.createdAt)}</small></span><span class="document-actions"><a href="${escapeHtml(document.dataUrl)}" target="_blank" rel="noopener noreferrer">Öffnen</a><button class="danger-btn" data-delete-document="${escapeHtml(document.id)}" type="button">Löschen</button></span></article>`).join('')}</div>` : '<p class="card-caption">Noch keine Dokumente für diesen Servicepartner.</p>'}</div></article>`;
       }).join('');
       return `<div class="welcome"><div><p class="eyebrow">Objektverwaltung · ${escapeHtml(property.region || 'Schweden')}</p><h1>Zugeordnete Servicepartner</h1><p class="subtitle">Dokumente je Servicepartner verwalten.</p></div><button class="primary-btn" data-action="open-provider-search" data-property="${escapeHtml(property.id)}">Servicepartner finden</button></div>
         <section class="assigned-house-bar"><div class="assigned-house-name"><span>Ferienhaus</span><strong>${escapeHtml(property.name)}</strong>${property.address ? `<small>${escapeHtml(property.address)}</small>` : ''}</div>
@@ -2748,24 +2849,25 @@
     }
     function providersPage() {
       const property = properties.find((item) => item.id === providerProperty) || properties[0];
+      ensurePropertyGeocode(property);
       const matches = providers.filter((provider) => {
-        const distance = provider.distances[property.id];
+        const distance = providerDistanceKm(provider, property);
         const matchesCategory = providerCategory === 'all' || provider.category === providerCategory || (providerCategory === 'house' && provider.category === 'inspection');
         const matchesFavorite = !onlyFavorites || favorites.includes(provider.id);
         const haystack = `${provider.name} ${provider.town} ${provider.specialty || ''} ${provider.services} ${provider.phone || ''} ${provider.email || ''}`.toLocaleLowerCase('de');
         return Number.isFinite(distance) && distance <= providerRadius && matchesCategory && matchesFavorite && haystack.includes(providerSearch.toLocaleLowerCase('de'));
-      }).sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id)) || a.distances[property.id] - b.distances[property.id] || Number(b.priority === 'A') - Number(a.priority === 'A'));
+      }).sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id)) || providerDistanceKm(a, property) - providerDistanceKm(b, property) || Number(b.priority === 'A') - Number(a.priority === 'A'));
       const providerCards = matches.map((provider) => {
         const isFavorite = favorites.includes(provider.id);
         const isAssigned = (servicePartnerAssignments[property.id] || []).includes(provider.id);
         const categoryLabel = provider.category === 'renovation' ? 'Sanierung & Bau' : provider.category === 'inspection' ? 'Hauskontrolle' : 'Hausservice';
         return `<article class="provider-result">
-          <div class="provider-result-top"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div style="flex:1"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services)}</p></div>
+          <div class="provider-result-top"><div class="provider-avatar">${escapeHtml(provider.initials)}</div><div style="flex:1"><h3>${escapeHtml(provider.name)}</h3><p>${escapeHtml(provider.services)}</p>${provider.hint ? `<p class="provider-hint">${escapeHtml(provider.hint)}</p>` : ''}</div>
             <button class="assign-provider-btn ${isAssigned ? 'selected' : ''}" data-action="toggle-provider-assignment" data-provider="${escapeHtml(provider.id)}" data-property="${escapeHtml(property.id)}" aria-label="${isAssigned ? 'Zuordnung für ' + escapeHtml(property.name) + ' entfernen' : 'Diesem Ferienhaus zuordnen'}" aria-pressed="${isAssigned}" title="${isAssigned ? 'Zugeordnet – Klick zum Entfernen' : 'Diesem Ferienhaus zuordnen'}">${icon('check')}</button>
             <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-favorite="${escapeHtml(provider.id)}" aria-label="${isFavorite ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}" aria-pressed="${isFavorite}" title="${isFavorite ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}"><svg viewBox="0 0 24 24" fill="${isFavorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg></button>
           </div>
           <div class="provider-details"><span class="provider-type ${provider.category === 'renovation' ? 'renovation' : ''}">${categoryLabel}</span>${provider.specialty ? `<span class="provider-specialty">${escapeHtml(provider.specialty)}</span>` : ''}${properties.length > 1 ? properties.filter((item) => (servicePartnerAssignments[item.id] || []).includes(provider.id)).map((item) => `<span class="house-chip" title="Dieses Ferienhaus nutzt den Servicepartner">${icon('home')}${escapeHtml(item.name)}</span>`).join('') : ''}</div>
-          <div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town)}</span><span class="provider-distance">Entfernung ${provider.distances[property.id]} km</span></div></div>
+          <div class="provider-result-footer"><div class="provider-contact-links">${providerContactLinks(provider)}</div><div class="provider-location-distance"><span class="provider-town">${escapeHtml(provider.town)}</span><span class="provider-distance">Entfernung ${providerDistanceKm(provider, property)} km</span></div></div>
         </article>`;
       }).join('');
       return `<div class="welcome"><div><p class="eyebrow">Schwedische Betriebe vor Ort</p><h1>Servicepartner finden</h1><p class="subtitle">Hausservice und Sanierungsunternehmen im Umkreis ${singleHouse() ? 'deines Ferienhauses' : 'deiner Ferienhäuser'}.</p></div><button class="primary-btn" data-action="go-back">← Zurück</button></div>
@@ -3568,7 +3670,7 @@
       const assignedIds = servicePartnerAssignments[property.id] || [];
       const withMail = providers.filter((provider) => provider.email);
       const assigned = withMail.filter((provider) => assignedIds.includes(provider.id));
-      const nearby = withMail.filter((provider) => !assignedIds.includes(provider.id) && provider.category === 'inspection' && Number.isFinite(provider.distances?.[property.id]) && provider.distances[property.id] <= providerRadius);
+      const nearby = withMail.filter((provider) => !assignedIds.includes(provider.id) && provider.category === 'inspection' && Number.isFinite(providerDistanceKm(provider, property)) && providerDistanceKm(provider, property) <= providerRadius);
       return { assigned, nearby };
     }
     function planLetter(property, items, providerName) {
