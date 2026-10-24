@@ -1017,6 +1017,34 @@
     @media (max-width: 900px) { .automation-summary.booking-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) { .booking-kpis.automation-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .booking-kpis > div { flex-direction: column; gap: 4px; } }
     .calendar-today-btn { height: 31px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: white; font-size: 11px; font-weight: 700; }
+    .package-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; width: 100%; }
+    .package-card { display: grid; gap: 4px; align-content: start; padding: 14px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: #fbfcfa; text-align: left; transition: border-color .15s, box-shadow .15s; }
+    .package-card:hover { border-color: #b7c7bb; }
+    .package-card.active { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: #f3f7f2; }
+    .package-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 14px; font-weight: 750; }
+    .package-name i { padding: 2px 8px; border-radius: 20px; color: #fff; background: var(--green); font-size: 9.5px; font-style: normal; }
+    .package-card strong { margin-top: 6px; font-size: 12.5px; }
+    .package-card small { color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+    .package-summary { margin: 0; color: var(--muted); font-size: 11.5px; }
+    .package-summary strong { color: var(--ink); }
+    .package-details { width: 100%; }
+    .package-details summary { cursor: pointer; color: var(--green); font-size: 12px; font-weight: 700; }
+    .package-details[open] summary { margin-bottom: 10px; }
+    .template-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+    .template-group { display: grid; gap: 6px; align-content: start; }
+    .template-group-title { display: flex; justify-content: space-between; margin: 4px 0 2px; font-size: 11px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+    .template-group-title small { color: var(--muted); font-weight: 600; letter-spacing: 0; text-transform: none; }
+    #auto-template-list .template-group + .template-group { margin-top: 10px; }
+    .auto-template.is-selected { border-color: #c5d3c8; background: #f6f9f5; }
+    .template-badge { flex: none; padding: 2px 8px; border-radius: 20px; font-size: 9.5px; font-weight: 700; white-space: nowrap; }
+    .template-badge.package { color: var(--green); background: var(--green-soft); }
+    .template-badge.extra { color: #3d5a73; background: #e6edf3; }
+    .template-badge.off { color: var(--muted); background: #eeece6; }
+    .auto-inline-form { display: grid; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .auto-inline-grid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto; gap: 8px; }
+    @media (max-width: 1050px) { .package-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .auto-inline-grid { grid-template-columns: 1fr 1fr; } .auto-inline-grid input { grid-column: 1 / -1; } }
+    @media (max-width: 760px) { .template-list { grid-template-columns: 1fr; } }
+    @media (max-width: 520px) { .package-grid, .auto-inline-grid { grid-template-columns: 1fr; } }
     /* Automatisierung */
     .text-btn.inline { padding: 0; font-size: inherit; }
     .care-steps { display: grid; gap: 4px; margin: 2px 0 4px; padding: 0; list-style: none; }
@@ -1204,7 +1232,8 @@
         <span class="form-label">Eigene automatische Aufgabe erstellen</span>
         <div class="auto-new-grid">
           <label><span class="form-label">Aufgabe</span><input class="form-control" name="title" required maxlength="90" placeholder="z. B. Boot winterfest machen"></label>
-          <label><span class="form-label">Wiederholung</span><select class="form-control" name="interval"><option value="30">Monatlich</option><option value="90">Vierteljährlich</option><option value="180">Halbjährlich</option><option value="365" selected>Jährlich</option></select></label>
+          <label><span class="form-label">Wiederholung</span><select class="form-control" name="interval"><option value="14">Alle 2 Wochen</option><option value="30">Monatlich</option><option value="90">Vierteljährlich</option><option value="180">Halbjährlich</option><option value="365" selected>Jährlich</option></select></label>
+          <label><span class="form-label">Zeitraum</span><select class="form-control" name="season"><option value="all">Ganzjährig</option><option value="spring">Frühling (Apr–Mai)</option><option value="summer">Sommer (Jun–Aug)</option><option value="autumn">Herbst (Sep–Nov)</option><option value="winter">Winter (Dez–Mär)</option></select></label>
           <label><span class="form-label">Priorität</span><select class="form-control" name="priority"><option value="normal">Normal</option><option value="soon">Wichtig</option><option value="urgent">Dringend</option></select></label>
           <button type="submit" class="primary-btn">Hinzufügen</button>
         </div>
@@ -2031,20 +2060,88 @@
       console.error('Aufgaben konnten nicht geladen werden:', error);
       tasks = initialTasks;
     }
-    const defaultAutoTemplates = [
-      { id: 'tpl-smoke', title: 'Rauchmelder und Feuerlöscher prüfen', priority: 'urgent', interval: 180, selected: true },
-      { id: 'tpl-gutter', title: 'Dachrinnen und Dach kontrollieren', priority: 'soon', interval: 365, selected: true },
-      { id: 'tpl-water', title: 'Wasserleitungen und Heizung kontrollieren', priority: 'soon', interval: 90, selected: false },
-      { id: 'tpl-sauna', title: 'Saunaofen und Schornstein prüfen', priority: 'normal', interval: 365, selected: false },
-      { id: 'tpl-garden', title: 'Grundstück und Außenanlage pflegen', priority: 'normal', interval: 30, selected: false }
+    // Typische Jahresaufgaben eines schwedischen Ferienhauses. months = Monate (0–11), in denen die Aufgabe angelegt wird.
+    const TASK_CATEGORIES = [
+      { id: 'safety', label: 'Sicherheit & Brandschutz' },
+      { id: 'water', label: 'Wasser, Heizung & Technik' },
+      { id: 'building', label: 'Gebäude & Dach' },
+      { id: 'outdoor', label: 'Grundstück & Garten' },
+      { id: 'season', label: 'Saison & Winter' },
+      { id: 'admin', label: 'Verwaltung & Inventar' },
+      { id: 'custom', label: 'Eigene Aufgaben' }
     ];
-    let autoTasks = { enabled: false, templates: defaultAutoTemplates, created: {} };
+    const SEASONS = { all: { label: 'Ganzjährig', months: null }, spring: { label: 'Frühling (Apr–Mai)', months: [3, 4] }, summer: { label: 'Sommer (Jun–Aug)', months: [5, 6, 7] }, autumn: { label: 'Herbst (Sep–Nov)', months: [8, 9, 10] }, winter: { label: 'Winter (Dez–Mär)', months: [11, 0, 1, 2] } };
+    const defaultAutoTemplates = [
+      { id: 'tpl-smoke', title: 'Rauchmelder und Feuerlöscher prüfen', priority: 'urgent', interval: 180, category: 'safety', selected: true },
+      { id: 'tpl-chimney', title: 'Schornsteinfeger beauftragen (Sotning und Brandschutzkontrolle)', priority: 'urgent', interval: 365, category: 'safety', season: 'autumn' },
+      { id: 'tpl-locks', title: 'Schlösser, Schlüsselbox und Alarmanlage testen', priority: 'soon', interval: 180, category: 'safety' },
+      { id: 'tpl-electric', title: 'Elektrik prüfen: FI-Schalter testen, Sicherungen und Kabel kontrollieren', priority: 'soon', interval: 365, category: 'safety' },
+      { id: 'tpl-water', title: 'Wasserleitungen und Heizung kontrollieren', priority: 'soon', interval: 90, category: 'water' },
+      { id: 'tpl-heatpump', title: 'Wärmepumpe: Filter reinigen und Service', priority: 'normal', interval: 180, category: 'water' },
+      { id: 'tpl-ventilation', title: 'Lüftung und Abluftfilter reinigen', priority: 'normal', interval: 180, category: 'water' },
+      { id: 'tpl-well', title: 'Brunnenwasser untersuchen lassen (Wasserprobe)', priority: 'soon', interval: 365, category: 'water', season: 'summer' },
+      { id: 'tpl-septic', title: 'Kläranlage / Sammelgrube leeren lassen (Slamtömning)', priority: 'soon', interval: 365, category: 'water', season: 'summer' },
+      { id: 'tpl-sauna', title: 'Saunaofen und Schornstein prüfen', priority: 'normal', interval: 365, category: 'water' },
+      { id: 'tpl-gutter', title: 'Dachrinnen und Dach kontrollieren', priority: 'soon', interval: 365, category: 'building', season: 'autumn', selected: true },
+      { id: 'tpl-facade', title: 'Fassade und Holz auf Fäulnis prüfen, Falu-Farbe ausbessern', priority: 'normal', interval: 365, category: 'building', season: 'summer' },
+      { id: 'tpl-windows', title: 'Fenster putzen, Dichtungen und Rahmen prüfen', priority: 'normal', interval: 180, category: 'building' },
+      { id: 'tpl-crawlspace', title: 'Kriechkeller und Fundament auf Feuchtigkeit und Schimmel prüfen', priority: 'soon', interval: 365, category: 'building', season: 'spring' },
+      { id: 'tpl-pests', title: 'Schädlingskontrolle (Mäuse, Ameisen, Wespennester)', priority: 'normal', interval: 90, category: 'building' },
+      { id: 'tpl-garden', title: 'Grundstück und Außenanlage pflegen', priority: 'normal', interval: 30, category: 'outdoor', season: 'summer' },
+      { id: 'tpl-lawn', title: 'Rasen mähen und Wege freihalten', priority: 'normal', interval: 14, category: 'outdoor', months: [4, 5, 6, 7, 8] },
+      { id: 'tpl-deck', title: 'Terrasse und Holzdeck reinigen und ölen', priority: 'normal', interval: 365, category: 'outdoor', season: 'spring' },
+      { id: 'tpl-trees', title: 'Bäume und Sträucher schneiden, Laub entfernen', priority: 'normal', interval: 365, category: 'outdoor', season: 'autumn' },
+      { id: 'tpl-furniture', title: 'Gartenmöbel und Grill einlagern', priority: 'normal', interval: 365, category: 'season', months: [9] },
+      { id: 'tpl-boat', title: 'Boot und Steg winterfest machen', priority: 'normal', interval: 365, category: 'season', months: [9] },
+      { id: 'tpl-snow', title: 'Schneeräumung und Dachlast prüfen', priority: 'soon', interval: 30, category: 'season', season: 'winter' },
+      { id: 'tpl-frost', title: 'Frostschutz prüfen: Grundtemperatur, Leitungen und Außenhähne', priority: 'urgent', interval: 30, category: 'season', months: [11, 0, 1] },
+      { id: 'tpl-inventory', title: 'Inventar prüfen und Verbrauchsmaterial auffüllen', priority: 'normal', interval: 90, category: 'admin' },
+      { id: 'tpl-firstaid', title: 'Erste-Hilfe-Set und Notfallnummern aktualisieren', priority: 'normal', interval: 365, category: 'admin' },
+      { id: 'tpl-contracts', title: 'Versicherung, Strom-, Wasser- und Abfallverträge prüfen', priority: 'normal', interval: 365, category: 'admin', months: [0] },
+      { id: 'tpl-meter', title: 'Zählerstände ablesen und Verbrauch dokumentieren', priority: 'normal', interval: 90, category: 'admin' }
+    ].map((template) => ({ selected: false, ...template, builtin: true }));
+    const SERVICE_PACKAGES = [
+      { id: 'basis', name: 'Basis', tagline: 'Sicherheit und Pflichttermine', templates: ['tpl-smoke', 'tpl-chimney', 'tpl-locks', 'tpl-electric', 'tpl-water', 'tpl-gutter', 'tpl-frost'] },
+      { id: 'komfort', name: 'Komfort', tagline: 'Basis plus Technik und Pflege', templates: ['tpl-smoke', 'tpl-chimney', 'tpl-locks', 'tpl-electric', 'tpl-water', 'tpl-gutter', 'tpl-frost', 'tpl-heatpump', 'tpl-ventilation', 'tpl-pests', 'tpl-windows', 'tpl-garden', 'tpl-deck', 'tpl-inventory', 'tpl-furniture'] },
+      { id: 'vermietung', name: 'Vermietung', tagline: 'Für Häuser mit wechselnden Gästen', templates: ['tpl-smoke', 'tpl-chimney', 'tpl-locks', 'tpl-electric', 'tpl-water', 'tpl-gutter', 'tpl-frost', 'tpl-windows', 'tpl-pests', 'tpl-lawn', 'tpl-garden', 'tpl-inventory', 'tpl-firstaid', 'tpl-meter', 'tpl-contracts'] },
+      { id: 'premium', name: 'Rundum-sorglos', tagline: 'Alle typischen Jahresaufgaben', templates: defaultAutoTemplates.filter((template) => template.id !== 'tpl-boat').map((template) => template.id) }
+    ];
+    const templateMonths = (template) => (Array.isArray(template.months) ? template.months : SEASONS[template.season]?.months || null);
+    const templateCategory = (template) => TASK_CATEGORIES.find((item) => item.id === (template.builtin ? template.category : 'custom')) || TASK_CATEGORIES[TASK_CATEGORIES.length - 1];
+    const templateYearlyCount = (template) => Math.max(1, Math.round(((templateMonths(template)?.length || 12) * 30.4) / Math.max(14, Number(template.interval) || 365)));
+    const templateSeasonLabel = (template) => (Array.isArray(template.months) ? template.months.map((month) => new Intl.DateTimeFormat('de-DE', { month: 'short' }).format(new Date(2026, month, 1))).join(', ') : template.season && template.season !== 'all' ? SEASONS[template.season]?.label : 'Ganzjährig');
+    let autoTasks = { enabled: false, templates: defaultAutoTemplates.map((template) => ({ ...template })), created: {}, packageId: '', removed: [] };
     try {
       const savedAuto = JSON.parse(localStorage.getItem('stugliv-auto-tasks') || 'null');
-      if (savedAuto && Array.isArray(savedAuto.templates)) autoTasks = { enabled: !!savedAuto.enabled, templates: savedAuto.templates, created: savedAuto.created || {} };
+      if (savedAuto && Array.isArray(savedAuto.templates)) {
+        const removed = Array.isArray(savedAuto.removed) ? savedAuto.removed : [];
+        const savedById = new Map(savedAuto.templates.filter((template) => template && template.id).map((template) => [template.id, template]));
+        const builtins = defaultAutoTemplates.filter((template) => !removed.includes(template.id)).map((template) => ({ ...template, selected: savedById.has(template.id) ? Boolean(savedById.get(template.id).selected) : false }));
+        const customs = savedAuto.templates.filter((template) => template && template.id && !defaultAutoTemplates.some((item) => item.id === template.id)).map((template) => ({ ...template, builtin: false }));
+        autoTasks = { enabled: !!savedAuto.enabled, templates: [...builtins, ...customs], created: savedAuto.created || {}, packageId: SERVICE_PACKAGES.some((item) => item.id === savedAuto.packageId) ? savedAuto.packageId : '', removed };
+      }
     } catch (error) {
       console.error('Automatische Aufgaben konnten nicht geladen werden:', error);
     }
+    function applyServicePackage(packageId) {
+      const servicePackage = SERVICE_PACKAGES.find((item) => item.id === packageId);
+      if (!servicePackage) return 0;
+      autoTasks.removed = autoTasks.removed.filter((id) => !servicePackage.templates.includes(id));
+      defaultAutoTemplates.forEach((template) => {
+        if (servicePackage.templates.includes(template.id) && !autoTasks.templates.some((item) => item.id === template.id)) autoTasks.templates.push({ ...template });
+      });
+      autoTasks.templates.forEach((template) => { if (template.builtin) template.selected = servicePackage.templates.includes(template.id); });
+      autoTasks.packageId = packageId;
+      autoTasks.enabled = true;
+      persistAutoTasks();
+      return runAutoTasks(false);
+    }
+    const packageExtras = () => {
+      const servicePackage = SERVICE_PACKAGES.find((item) => item.id === autoTasks.packageId);
+      const selected = autoTasks.templates.filter((template) => template.selected);
+      if (!servicePackage) return { servicePackage: null, extras: selected, missing: [] };
+      return { servicePackage, extras: selected.filter((template) => !servicePackage.templates.includes(template.id)), missing: servicePackage.templates.filter((id) => !selected.some((template) => template.id === id)) };
+    };
     function persistAutoTasks() {
       try { localStorage.setItem('stugliv-auto-tasks', JSON.stringify(autoTasks)); return true; }
       catch (error) { showToast('Speichern nicht möglich. Bitte Browser-Speicher prüfen.'); return false; }
@@ -2058,14 +2155,21 @@
       const todayIso = localIsoDate(today);
       const dueDate = localIsoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7));
       const added = [];
-      autoTasks.templates.filter((template) => template.selected).forEach((template) => {
+      const servicePackage = SERVICE_PACKAGES.find((item) => item.id === autoTasks.packageId);
+      autoTasks.templates.filter((template) => template.selected).forEach((template, index) => {
+        const months = templateMonths(template);
+        if (months && !months.includes(today.getMonth())) return;
         properties.forEach((property) => {
           const key = `${template.id}|${property.name}`;
           const last = autoTasks.created[key];
           const age = last ? (new Date(todayIso) - new Date(last)) / 86400000 : Infinity;
           const hasOpen = tasks.some((task) => !task.done && task.title === template.title && task.property === property.name);
           if (age < template.interval || hasOpen) return;
-          added.push({ id: Date.now() + added.length, title: template.title, property: property.name, date: dueDate, priority: template.priority, done: false, status: 'Offen', repeat: 'Einmalig', auto: true });
+          // Beim ersten Mal ganzjährige Aufgaben über die nächsten Wochen verteilen, damit nicht alles in derselben Woche fällig wird.
+          const spread = !last && !months && Number(template.interval) >= 90 ? (index % 8) * 7 : 0;
+          const date = spread ? localIsoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7 + spread)) : dueDate;
+          const fromPackage = servicePackage && servicePackage.templates.includes(template.id);
+          added.push({ id: Date.now() + added.length, title: template.title, property: property.name, date, priority: template.priority, area: templateCategory(template).label, description: fromPackage ? `Aus dem Servicepaket „${servicePackage.name}“.` : 'Wiederkehrende Aufgabe (individuell ergänzt).', done: false, status: 'Offen', repeat: 'Einmalig', auto: 'maintenance' });
           autoTasks.created[key] = todayIso;
         });
       });
@@ -2201,10 +2305,55 @@
       return added.length;
     }
     const automationActiveCount = () => [automation.turnover.defaultOn && bookingsEnabled(), automation.vacancyInspection, automation.seasonal, autoTasks.enabled, (portalConnected() && portalSync.auto) || (icalSync.auto && icalLinkCount() > 0)].filter(Boolean).length;
-    const intervalLabel = (days) => ({ 30: 'monatlich', 90: 'vierteljährlich', 180: 'halbjährlich', 365: 'jährlich' }[days] || `alle ${days} Tage`);
-    function renderAutoTemplates() {
+    const intervalLabel = (days) => ({ 14: 'alle 2 Wochen', 30: 'monatlich', 90: 'vierteljährlich', 180: 'halbjährlich', 365: 'jährlich' }[days] || `alle ${days} Tage`);
+    function templateListHtml() {
       const priorityLabel = { urgent: 'Dringend', soon: 'Wichtig', normal: 'Normal' };
-      document.getElementById('auto-template-list').innerHTML = autoTasks.templates.map((template) => `<div class="auto-template"><label><input type="checkbox" data-auto-template="${escapeHtml(template.id)}" ${template.selected ? 'checked' : ''}><span>${escapeHtml(template.title)}<br><small>${intervalLabel(Number(template.interval))} · ${priorityLabel[template.priority] || 'Normal'}</small></span></label><button type="button" class="text-btn" data-auto-remove="${escapeHtml(template.id)}" aria-label="Vorlage entfernen">Entfernen</button></div>`).join('') || '<div class="empty">Keine Vorlagen vorhanden.</div>';
+      const { servicePackage } = packageExtras();
+      const groups = TASK_CATEGORIES.map((category) => ({ category, items: autoTasks.templates.filter((template) => templateCategory(template).id === category.id) })).filter((group) => group.items.length);
+      if (!groups.length) return '<div class="empty">Keine Vorlagen vorhanden.</div>';
+      return groups.map(({ category, items }) => `<div class="template-group"><h3 class="template-group-title">${escapeHtml(category.label)}<small>${items.filter((template) => template.selected).length} von ${items.length}</small></h3>${items.map((template) => {
+        const inPackage = servicePackage && servicePackage.templates.includes(template.id);
+        const badge = inPackage ? (template.selected ? '<span class="template-badge package">Im Paket</span>' : '<span class="template-badge off">Abgewählt</span>') : template.selected && servicePackage ? '<span class="template-badge extra">Zusatz</span>' : '';
+        return `<div class="auto-template ${template.selected ? 'is-selected' : ''}"><label><input type="checkbox" data-auto-template="${escapeHtml(template.id)}" ${template.selected ? 'checked' : ''}><span>${escapeHtml(template.title)}<br><small>${intervalLabel(Number(template.interval))} · ${escapeHtml(templateSeasonLabel(template))} · ${priorityLabel[template.priority] || 'Normal'}</small></span></label>${badge}<button type="button" class="text-btn" data-auto-remove="${escapeHtml(template.id)}" aria-label="Vorlage entfernen: ${escapeHtml(template.title)}">Entfernen</button></div>`;
+      }).join('')}</div>`).join('');
+    }
+    function renderAutoTemplates() {
+      document.getElementById('auto-template-list').innerHTML = templateListHtml();
+    }
+    function removeAutoTemplate(templateId) {
+      const template = autoTasks.templates.find((item) => item.id === templateId);
+      if (!template) return;
+      autoTasks.templates = autoTasks.templates.filter((item) => item.id !== templateId);
+      if (template.builtin && !autoTasks.removed.includes(templateId)) autoTasks.removed.push(templateId);
+      persistAutoTasks();
+    }
+    function addAutoTemplate(data) {
+      const title = String(data.get('title') || '').trim();
+      if (!title) return false;
+      const season = Object.hasOwn(SEASONS, String(data.get('season'))) ? String(data.get('season')) : 'all';
+      autoTasks.templates.push({ id: `tpl-${Date.now()}`, title, priority: String(data.get('priority') || 'normal'), interval: Number(data.get('interval')) || 365, season, category: 'custom', builtin: false, selected: true });
+      persistAutoTasks();
+      return true;
+    }
+    function servicePackagesHtml() {
+      const { servicePackage, extras, missing } = packageExtras();
+      const byId = (id) => autoTasks.templates.find((template) => template.id === id) || defaultAutoTemplates.find((template) => template.id === id);
+      const cards = SERVICE_PACKAGES.map((item) => {
+        const active = servicePackage?.id === item.id;
+        const yearly = item.templates.reduce((sum, id) => sum + (byId(id) ? templateYearlyCount(byId(id)) : 0), 0);
+        return `<button type="button" class="package-card ${active ? 'active' : ''}" data-service-package="${item.id}" aria-pressed="${active}"><span class="package-name">${escapeHtml(item.name)}${active ? '<i>Gewählt</i>' : ''}</span><small>${escapeHtml(item.tagline)}</small><strong>${item.templates.length} Aufgaben</strong><small>≈ ${yearly} Einsätze pro Jahr und Haus</small></button>`;
+      }).join('');
+      const selected = autoTasks.templates.filter((template) => template.selected);
+      const yearlyTotal = selected.reduce((sum, template) => sum + templateYearlyCount(template), 0);
+      const summary = servicePackage
+        ? `Paket <strong>${escapeHtml(servicePackage.name)}</strong>${extras.length ? ` + ${extras.length} ${extras.length === 1 ? 'Zusatzaufgabe' : 'Zusatzaufgaben'}` : ''}${missing.length ? ` · ${missing.length} abgewählt` : ''}`
+        : `<strong>Eigene Zusammenstellung</strong>`;
+      return `<div class="package-grid">${cards}</div>
+        <p class="package-summary">${summary} · ${selected.length} Aufgaben aktiv · ≈ ${yearlyTotal} Einsätze pro Jahr${singleHouse() ? '' : ' je Haus'}</p>
+        <details class="package-details" ${servicePackage ? '' : 'open'}><summary>Aufgaben auswählen und Paket individuell erweitern</summary>
+          <div class="template-list">${templateListHtml()}</div>
+          <form id="auto-inline-form" class="auto-inline-form"><span class="form-label">Eigene Jahresaufgabe ergänzen</span><div class="auto-inline-grid"><input class="form-control" name="title" required maxlength="90" placeholder="z. B. Bootsmotor warten lassen" aria-label="Aufgabe"><select class="form-control" name="interval" aria-label="Wiederholung">${[[14, 'Alle 2 Wochen'], [30, 'Monatlich'], [90, 'Vierteljährlich'], [180, 'Halbjährlich'], [365, 'Jährlich']].map(([value, label]) => `<option value="${value}" ${value === 365 ? 'selected' : ''}>${label}</option>`).join('')}</select><select class="form-control" name="season" aria-label="Zeitraum">${Object.entries(SEASONS).map(([key, value]) => `<option value="${key}">${escapeHtml(value.label)}</option>`).join('')}</select><select class="form-control" name="priority" aria-label="Priorität"><option value="normal">Normal</option><option value="soon">Wichtig</option><option value="urgent">Dringend</option></select><button type="submit" class="primary-btn">${icon('plus')} Hinzufügen</button></div></form>
+        </details>`;
     }
     let currentPage = 'dashboard';
     let lastRenderedPage = currentPage;
@@ -3012,7 +3161,7 @@
       }).join('');
       const openCount = tasks.filter((task) => taskStatus(task) !== 'Erledigt').length;
       return `<div class="welcome"><div><p class="eyebrow">Buchungen & Instandhaltung</p><h1>Serviceaufgaben</h1><p class="subtitle">Koordiniere Reinigung, Schlüsselübergaben und saisonale Stugapflege.</p></div><button class="secondary-btn back-btn" data-action="go-back">← Zurück</button></div>
-        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} automatisch angelegt.</p></div><div class="auto-task-actions"><button class="primary-btn" data-action="new-task">${icon('plus')} Aufgabe erstellen</button><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button><button class="secondary-btn" data-page="automation">${icon('bolt')} Alle Automatiken</button></div></section>
+        <section class="card auto-task-bar"><div><label class="switch"><input type="checkbox" id="auto-task-toggle" ${autoTasks.enabled ? 'checked' : ''}><span class="switch-track"></span><span>Aufgaben automatisch erstellen</span></label><p>${packageExtras().servicePackage ? `Servicepaket ${escapeHtml(packageExtras().servicePackage.name)} · ` : ''}${autoTasks.templates.filter((template) => template.selected).length} Vorlagen ausgewählt – werden ${singleHouse() ? 'für dein Ferienhaus' : 'je Ferienhaus'} automatisch angelegt.</p></div><div class="auto-task-actions"><button class="primary-btn" data-action="new-task">${icon('plus')} Aufgabe erstellen</button><button class="secondary-btn" data-action="auto-task-config">Aufgaben auswählen / erstellen</button><button class="secondary-btn" data-page="automation">${icon('bolt')} Alle Automatiken</button></div></section>
         <section class="card"><div class="card-head"><div><h2 class="card-title">Alle Serviceaufgaben</h2><p class="card-caption">${openCount} offen · ${tasks.length - openCount} erledigt</p></div></div>
         <div class="section-toolbar" style="padding:0 18px"><div class="toolbar-right"><select id="task-filter" class="filter-select" aria-label="Nach Status filtern"><option value="all">Alle Status</option>${taskStatuses.map((value) => `<option ${taskFilter === value ? 'selected' : ''}>${value}</option>`).join('')}</select>${singleHouse() ? '' : `<select id="task-property-filter" class="filter-select" aria-label="Nach Gebäude filtern"><option value="all">Alle Gebäude</option>${properties.map((property) => `<option value="${escapeHtml(property.name)}" ${taskPropertyFilter === property.name ? 'selected' : ''}>${escapeHtml(property.name)}</option>`).join('')}</select>`}<select id="task-priority-filter" class="filter-select" aria-label="Nach Priorität filtern"><option value="all">Alle Prioritäten</option><option value="urgent" ${taskPriorityFilter === 'urgent' ? 'selected' : ''}>Dringend</option><option value="soon" ${taskPriorityFilter === 'soon' ? 'selected' : ''}>Wichtig</option><option value="normal" ${taskPriorityFilter === 'normal' ? 'selected' : ''}>Normal</option></select></div></div>
         <div class="task-table-wrap"><table class="task-table"><thead><tr><th>Aufgabe</th><th>Haus / Bereich</th><th>Fälligkeit</th><th>Priorität</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6"><div class="empty">Keine Aufgaben gefunden. Erstelle eine Aufgabe oder ändere die Filter.</div></td></tr>'}</tbody></table></div></section>`;
@@ -3054,8 +3203,8 @@
             <div class="automation-body">${sw('auto-vacancy', automation.vacancyInspection, 'Kontrollaufgabe automatisch anlegen')}<ul class="automation-status">${inspectionRows}</ul><button type="button" class="text-btn" data-page="inspections">Zur Hauskontrolle →</button></div></section>
           <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('moon')}</span><div><h2 class="card-title">Saisonale Aufgaben</h2><p class="card-caption">Einmal pro Jahr und Haus zur passenden Jahreszeit.</p></div></div>
             <div class="automation-body">${sw('auto-seasonal', automation.seasonal, 'Saisonaufgaben automatisch anlegen')}<ul class="automation-status">${SEASON_RULES.map((rule) => `<li><span>${escapeHtml(rule.label)}</span><small>${escapeHtml(rule.hint)}</small></li>`).join('')}</ul></div></section>
-          <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('task')}</span><div><h2 class="card-title">Wiederkehrende Wartung</h2><p class="card-caption">Rauchmelder, Dachrinnen, Wasser und mehr in festen Abständen.</p></div></div>
-            <div class="automation-body">${sw('auto-task-toggle', autoTasks.enabled, 'Wartungsaufgaben automatisch erstellen')}<p class="card-caption">${autoTasks.templates.filter((template) => template.selected).length} von ${autoTasks.templates.length} Vorlagen ausgewählt.</p><button type="button" class="secondary-btn" data-action="auto-task-config">Vorlagen auswählen / erstellen</button></div></section>
+          <section class="card automation-card wide"><div class="automation-head"><span class="automation-icon">${icon('task')}</span><div><h2 class="card-title">Servicepakete & Jahresaufgaben</h2><p class="card-caption">Wähle ein Paket mit den typischen Jahresaufgaben eines Ferienhauses und erweitere es individuell. Husora legt die Aufgaben zur passenden Jahreszeit automatisch an.</p></div></div>
+            <div class="automation-body">${sw('auto-task-toggle', autoTasks.enabled, 'Jahresaufgaben automatisch erstellen')}${servicePackagesHtml()}</div></section>
           ${bookingsEnabled() ? `<section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('clock')}</span><div><h2 class="card-title">Kalender-Synchronisierung</h2><p class="card-caption">Buchungen von Airbnb, Booking.com und Vrbo laufen automatisch alle 15 Minuten ein.</p></div></div>
             <div class="automation-body"><p class="automation-state ${syncOn ? 'on' : ''}">${syncOn ? 'Aktiv' : 'Nicht eingerichtet'}</p><p class="card-caption">${icalCount} ${icalCount === 1 ? 'Kalenderlink' : 'Kalenderlinks'}${portalConnected() ? ' · Repull verbunden' : ''}${lastSync ? ` · zuletzt ${escapeHtml(timeFmt(lastSync))}` : ''}</p><button type="button" class="secondary-btn" data-page="profile">Buchungsportale verwalten</button></div></section>` : ''}
           <section class="card automation-card"><div class="automation-head"><span class="automation-icon">${icon('clock')}</span><div><h2 class="card-title">Nächste automatische Schritte</h2><p class="card-caption">Offene Aufgaben, die Husora geplant hat.</p></div></div>
@@ -4724,6 +4873,21 @@
       }
       const action = event.target.closest('[data-action]')?.dataset.action;
       if (action === 'new-task') openTaskModal();
+      const packageButton = event.target.closest('[data-service-package]');
+      if (packageButton) {
+        const chosen = SERVICE_PACKAGES.find((item) => item.id === packageButton.dataset.servicePackage);
+        const count = applyServicePackage(packageButton.dataset.servicePackage);
+        render();
+        showToast(`Servicepaket „${chosen?.name}“ gewählt${count ? ` – ${count} ${count === 1 ? 'Aufgabe' : 'Aufgaben'} angelegt` : ''}. Du kannst es unten individuell erweitern.`);
+        return;
+      }
+      const inlineRemove = event.target.closest('#page-content [data-auto-remove]');
+      if (inlineRemove) {
+        removeAutoTemplate(inlineRemove.dataset.autoRemove);
+        render();
+        showToast('Vorlage entfernt.');
+        return;
+      }
       if (action === 'house-part-task') {
         const trigger = event.target.closest('[data-action="house-part-task"]');
         const part = housePartDefs.find((item) => item.id === trigger.dataset.part);
@@ -4939,6 +5103,14 @@
         showToast('Gästewechsel-Ablauf aktualisiert.');
         return;
       }
+      if (event.target.dataset?.autoTemplate) {
+        const template = autoTasks.templates.find((item) => item.id === event.target.dataset.autoTemplate);
+        if (template) { template.selected = event.target.checked; persistAutoTasks(); }
+        const count = runAutoTasks(false);
+        render();
+        showToast(event.target.checked ? (count ? `Aufgabe aktiviert – ${count} neu angelegt.` : 'Aufgabe aktiviert.') : 'Aufgabe abgewählt.');
+        return;
+      }
       if (event.target.id === 'auto-task-toggle') {
         autoTasks.enabled = event.target.checked;
         persistAutoTasks();
@@ -5108,6 +5280,16 @@
         portalSync = { ...portalSync, apiKey: key, watermark: '' };
         portalMessage = null;
         if (persistPortal()) syncPortalBookings();
+        return;
+      }
+      if (event.target.id === 'auto-inline-form') {
+        event.preventDefault();
+        if (addAutoTemplate(new FormData(event.target))) {
+          const count = runAutoTasks(false);
+          render();
+          document.querySelector('.package-details')?.setAttribute('open', '');
+          showToast(`Eigene Jahresaufgabe ergänzt${count ? ' und angelegt' : ''}.`);
+        }
         return;
       }
       if (event.target.id === 'booking-form') {
@@ -5967,7 +6149,7 @@
     autoModal.addEventListener('click', (event) => {
       if (event.target === autoModal) closeAutoModal();
       const removeId = event.target.closest('[data-auto-remove]')?.dataset.autoRemove;
-      if (removeId) { autoTasks.templates = autoTasks.templates.filter((template) => template.id !== removeId); persistAutoTasks(); renderAutoTemplates(); }
+      if (removeId) { removeAutoTemplate(removeId); renderAutoTemplates(); }
     });
     autoModal.addEventListener('change', (event) => {
       const id = event.target.dataset?.autoTemplate;
@@ -5978,8 +6160,7 @@
     document.getElementById('auto-task-form').addEventListener('submit', (event) => {
       event.preventDefault();
       const data = new FormData(event.currentTarget);
-      autoTasks.templates.push({ id: `tpl-${Date.now()}`, title: String(data.get('title')).trim(), priority: String(data.get('priority')), interval: Number(data.get('interval')), selected: true });
-      persistAutoTasks();
+      addAutoTemplate(data);
       event.currentTarget.reset();
       renderAutoTemplates();
     });
